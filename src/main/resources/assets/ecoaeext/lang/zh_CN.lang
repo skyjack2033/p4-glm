@@ -1,0 +1,148 @@
+# ECOAE Extension - 中文本地化文件
+
+# 模组信息
+ecoaeext.name=ECOAE扩展
+ecoaeext.description=新星工程 - AE扩展：集成AE2的多方块存储、合成、计算子系统。
+
+# ============================================================================
+# EStorage - 存储子系统
+# ============================================================================
+
+# EStorage 控制器
+ecoaeext.machine.ECOAE_EStorage_L4.name=EStorage控制器 L4
+ecoaeext.machine.ECOAE_EStorage_L4.desc=可扩展AE2存储系统（HV等级）
+ecoaeext.machine.ECOAE_EStorage_L6.name=EStorage控制器 L6
+ecoaeext.machine.ECOAE_EStorage_L6.desc=可扩展AE2存储系统（IV等级）
+ecoaeext.machine.ECOAE_EStorage_L9.name=EStorage控制器 L9
+ecoaeext.machine.ECOAE_EStorage_L9.desc=可扩展AE2存储系统（LuV等级）
+
+# EStorage 方块
+ecoaeext.block.estorage_casing.name=EStorage外壳
+ecoaeext.block.estorage_cell_drive.name=EStorage单元驱动器
+ecoaeext.block.estorage_energy_cell.name=EStorage能量单元
+ecoaeext.block.estorage_me_channel.name=EStorage ME通道
+ecoaeext.block.estorage_vent.name=EStorage通风口
+ecoaeext.block.estorage_tail.name=EStorage尾部
+
+# EStorage 物品
+ecoaeext.item.storage_cell_16m.name=16M存储单元
+ecoaeext.item.storage_cell_64m.name=64M存储单元
+ecoaeext.item.storage_cell_256m.name=256M存储单元
+
+# EStorage GUI
+ecoaeext.gui.estorage.title=EStorage控制器
+ecoaeext.gui.estorage.capacity=存储容量
+ecoaeext.gui.estorage.cell_drives=单元驱动器
+ecoaeext.gui.estorage.energy_cells=能量单元
+ecoaeext.gui.estorage.ae2_status=AE2状态
+
+# ============================================================================
+# ECalculator - 计算子系统
+# ============================================================================
+
+# ECalculator 控制器
+ecoaeext.machine.ECOAE_ECalculator_L4.name=ECalculator控制器 L4
+ecoaeext.machine.ECOAE_ECalculator_L4.desc=AE2合成CPU多方块（HV等级）
+ecoaeext.machine.ECOAE_ECalculator_L6.name=ECalculator控制器 L6
+ecoaeext.machine.ECOAE_ECalculator_L6.desc=AE2合成CPU多方块（IV等级）
+ecoaeext.machine.ECOAE_ECalculator_L9.name=ECalculator控制器 L9
+ecoaeext.machine.ECOAE_ECalculator_L9.desc=AE2合成CPU多方块（LuV等级）
+
+# ECalculator 方块
+ecoaeext.block.ecalculator_casing.name=ECalculator外壳
+ecoaeext.block.ecalculator_thread_core.name=ECalculator线程核心
+ecoaeext.block.ecalculator_hyper_thread.name=ECalculator超线程核心
+ecoaeext.block.ecalculator_cell_drive.name=ECalculator单元驱动器
+ecoaeext.block.ecalculator_me_channel.name=ECalculator ME通道
+ecoaeext.block.ecalculator_transmitter_bus.name=ECalculator发射总线
+ecoaeext.block.ecalculator_tail.name=ECalculator尾部
+
+# ECalculator 物品
+ecoaeext.item.calculator_cell_64m.name=64M计算器单元
+ecoaeext.item.calculator_cell_1024m.name=1024M计算器单元
+ecoaeext.item.calculator_cell_16384m.name=16384M计算器单元
+
+# ECalculator GUI
+ecoaeext.gui.ecalculator.title=ECalculator控制器
+ecoaeext.gui.ecalculator.threads=线程核心
+ecoaeext.gui.ecalculator.hyper_threads=超线程核心
+ecoaeext.gui.ecalculator.storage=合成存储
+ecoaeext.gui.ecalculator.vcpu_status=vCPU状态
+
+# ============================================================================
+# EFabricator - 合成子系统
+# ============================================================================
+
+# EFabricator 控制器
+ecoaeext.machine.ECOAE_EFabricator_L4.name=EFabricator控制器 L4
+ecoaeext.machine.ECOAE_EFabricator_L4.desc=AE2自动合成多方块（HV等级）
+ecoaeext.machine.ECOAE_EFabricator_L6.name=EFabricator控制器 L6
+ecoaeext.machine.ECOAE_EFabricator_L6.desc=AE2自动合成多方块（IV等级）
+ecoaeext.machine.ECOAE_EFabricator_L9.name=EFabricator控制器 L9
+ecoaeext.machine.ECOAE_EFabricator_L9.desc=AE2自动合成多方块（LuV等级）
+
+# EFabricator 方块
+ecoaeext.block.efabricator_casing.name=EFabricator外壳
+ecoaeext.block.efabricator_worker.name=EFabricator工作核心
+ecoaeext.block.efabricator_pattern_bus.name=EFabricator样板总线
+ecoaeext.block.efabricator_me_channel.name=EFabricator ME通道
+ecoaeext.block.efabricator_vent.name=EFabricator通风口
+ecoaeext.block.efabricator_tail.name=EFabricator尾部
+
+# EFabricator GUI
+ecoaeext.gui.efabricator.title=EFabricator控制器
+ecoaeext.gui.efabricator.patterns=样板槽位
+ecoaeext.gui.efabricator.workers=工作核心
+ecoaeext.gui.efabricator.overclock=超频模式
+ecoaeext.gui.efabricator.cooling=主动冷却
+ecoaeext.gui.efabricator.queue=队列深度
+
+# ============================================================================
+# 超频模式
+# ============================================================================
+
+ecoaeext.overclock.normal=正常
+ecoaeext.overclock.mode1=超频I（2倍速度，1.5倍能耗）
+ecoaeext.overclock.mode2=超频II（4倍速度，2.5倍能耗）
+ecoaeext.overclock.mode3=超频III（8倍速度，4倍能耗）
+
+# ============================================================================
+# 等级名称
+# ============================================================================
+
+ecoaeext.tier.l4=L4（HV - 512 EU/t）
+ecoaeext.tier.l6=L6（IV - 2048 EU/t）
+ecoaeext.tier.l9=L9（LuV - 8192 EU/t）
+
+# ============================================================================
+# 配置
+# ============================================================================
+
+ecoaeext.config.debug_mode=启用调试模式
+ecoaeext.config.estorage_capacity=存储容量
+ecoaeext.config.estorage_cell_drives=最大单元驱动器
+ecoaeext.config.ecalculator_threads=线程核心
+ecoaeext.config.ecalculator_hyper_multiplier=超线程成本倍率
+ecoaeext.config.efabricator_patterns=样板总线槽位
+ecoaeext.config.efabricator_queue=工作队列深度
+
+# ============================================================================
+# 状态消息
+# ============================================================================
+
+ecoaeext.status.connected=已连接
+ecoaeext.status.disconnected=未连接
+ecoaeext.status.active=活跃
+ecoaeext.status.inactive=不活跃
+ecoaeext.status.formed=结构已形成
+ecoaeext.status.invalid=结构无效
+
+# ============================================================================
+# 提示信息
+# ============================================================================
+
+ecoaeext.tooltip.tier_scales=等级随能量仓电压提升
+ecoaeext.tooltip.ae2_integrates=集成应用能源2
+ecoaeext.tooltip.storage_cells=支持物品、流体和气体存储单元
+ecoaeext.tooltip.pattern_crafting=支持基于样板的自动合成
+ecoaeext.tooltip.virtual_cpus=为AE2合成提供虚拟CPU
