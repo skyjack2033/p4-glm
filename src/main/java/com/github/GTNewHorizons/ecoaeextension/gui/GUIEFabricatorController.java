@@ -6,10 +6,10 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.ResourceLocation;
 
+import org.lwjgl.opengl.GL11;
+
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.efabricator.EFabricatorController;
-
-import org.lwjgl.opengl.GL11;
 
 public class GUIEFabricatorController extends GuiContainer {
 
@@ -71,10 +71,18 @@ public class GUIEFabricatorController extends GuiContainer {
         int ocMode = controller.getOverclockMode();
         int ocColor;
         switch (ocMode) {
-            case 1:  ocColor = 0xFFFF55; break; // Yellow - OC I
-            case 2:  ocColor = 0xFFAA00; break; // Orange - OC II
-            case 3:  ocColor = 0xFF5555; break; // Red - OC III
-            default: ocColor = 0x55FF55; break; // Green - Normal
+            case 1:
+                ocColor = 0xFFFF55;
+                break; // Yellow - OC I
+            case 2:
+                ocColor = 0xFFAA00;
+                break; // Orange - OC II
+            case 3:
+                ocColor = 0xFF5555;
+                break; // Red - OC III
+            default:
+                ocColor = 0x55FF55;
+                break; // Green - Normal
         }
         String overclock = "Mode: " + controller.getOverclockModeName();
         fontRendererObj.drawString(overclock, 8, 66, ocColor);
@@ -90,8 +98,11 @@ public class GUIEFabricatorController extends GuiContainer {
         String cooling = "Cooling: " + (coolingActive ? "ON" : "OFF");
         fontRendererObj.drawString(cooling, 8, 82, coolingColor);
         // Draw cooling indicator dot
-        drawRect(8 + fontRendererObj.getStringWidth(cooling) + 3, 83,
-            8 + fontRendererObj.getStringWidth(cooling) + 9, 89,
+        drawRect(
+            8 + fontRendererObj.getStringWidth(cooling) + 3,
+            83,
+            8 + fontRendererObj.getStringWidth(cooling) + 9,
+            89,
             0xFF000000 | (coolingActive ? 0x00FF00 : 0xFF0000));
 
         String playerInv = I18n.format("container.inventory");
@@ -101,7 +112,8 @@ public class GUIEFabricatorController extends GuiContainer {
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        mc.getTextureManager().bindTexture(BACKGROUND);
+        mc.getTextureManager()
+            .bindTexture(BACKGROUND);
         int k = (width - xSize) / 2;
         int l = (height - ySize) / 2;
         drawTexturedModalRect(k, l, 0, 0, xSize, ySize);

@@ -11,7 +11,8 @@ import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 /**
  * Automated tests for ECOAE Extension structure validation logic.
  *
- * <p>These tests verify constants, tier mapping, metadata values, config defaults,
+ * <p>
+ * These tests verify constants, tier mapping, metadata values, config defaults,
  * and machine ID allocation without requiring a running Minecraft client. The actual
  * multiblock structure validation (checkMachine) depends on a Minecraft world and
  * cannot be tested in a pure JUnit environment, but the logic underpinning it
@@ -238,8 +239,8 @@ public class StructureValidationTest {
     public void testECalculatorSegmentLayout_CenterPosition() {
         // From ECalculatorController.checkSegment():
         // Center position (dx=0, dz=0):
-        //   dy=0: thread core (meta=1) or hyper-thread (meta=2)
-        //   dy!=0 (dy=-1, dy=+1): parallel processor (meta=3)
+        // dy=0: thread core (meta=1) or hyper-thread (meta=2)
+        // dy!=0 (dy=-1, dy=+1): parallel processor (meta=3)
 
         assertEquals("Thread core meta", 1, BlockLoader.ECALC_META_THREAD_CORE);
         assertEquals("Hyper-thread meta", 2, BlockLoader.ECALC_META_HYPER_THREAD);
@@ -250,8 +251,8 @@ public class StructureValidationTest {
     public void testECalculatorSegmentLayout_DepthOffset() {
         // From ECalculatorController.checkSegment():
         // Depth-offset positions (dz=+/-1, dx=0):
-        //   dy!=0: cell drive (meta=4)
-        //   dy=0: transmitter bus (meta=6)
+        // dy!=0: cell drive (meta=4)
+        // dy=0: transmitter bus (meta=6)
 
         assertEquals("Cell drive meta", 4, BlockLoader.ECALC_META_CELL_DRIVE);
         assertEquals("Transmitter bus meta", 6, BlockLoader.ECALC_META_TRANSMITTER_BUS);
@@ -268,11 +269,11 @@ public class StructureValidationTest {
     public void testECalculatorSegmentPatternCounts() {
         // Each 3x3x3 segment contains:
         // Center column (dx=0, dz=0):
-        //   1 thread core/hyper-thread (dy=0)
-        //   2 parallel processors (dy=-1, dy=+1)
+        // 1 thread core/hyper-thread (dy=0)
+        // 2 parallel processors (dy=-1, dy=+1)
         // Depth-offset column (dx=0, dz=+/-1) x2:
-        //   2 cell drives per column (dy=-1, dy=+1) = 4 total
-        //   1 transmitter bus per column (dy=0) = 2 total
+        // 2 cell drives per column (dy=-1, dy=+1) = 4 total
+        // 1 transmitter bus per column (dy=0) = 2 total
         // Corners (dx!=0) x8 positions: 8 casings
         // Plus the remaining casing positions in the 3x3x3 volume
 
@@ -281,7 +282,7 @@ public class StructureValidationTest {
         // Depth-offset columns: 2 * (2 cell drives + 1 tx bus) = 6
         // Corners + remaining: 27 - 3 - 6 = 18 casings
         int totalPositions = 27;
-        int centerPositions = 3;     // thread/hyper at dy=0, parallel at dy=-1,+1
+        int centerPositions = 3; // thread/hyper at dy=0, parallel at dy=-1,+1
         int depthOffsetPositions = 6; // 2 columns * 3 positions each
         int casingPositions = totalPositions - centerPositions - depthOffsetPositions;
 
@@ -357,20 +358,16 @@ public class StructureValidationTest {
     @Test
     public void testEFabricatorMetadataAllDifferent() {
         // All metadata values must be unique within a block type
-        int[] efabMetas = {
-            BlockLoader.EFAB_META_CASING,
-            BlockLoader.EFAB_META_WORKER,
-            BlockLoader.EFAB_META_PATTERN_BUS,
-            BlockLoader.EFAB_META_PARALLEL_PROC,
-            BlockLoader.EFAB_META_ME_CHANNEL,
-            BlockLoader.EFAB_META_VENT
-        };
+        int[] efabMetas = { BlockLoader.EFAB_META_CASING, BlockLoader.EFAB_META_WORKER,
+            BlockLoader.EFAB_META_PATTERN_BUS, BlockLoader.EFAB_META_PARALLEL_PROC, BlockLoader.EFAB_META_ME_CHANNEL,
+            BlockLoader.EFAB_META_VENT };
 
         for (int i = 0; i < efabMetas.length; i++) {
             for (int j = i + 1; j < efabMetas.length; j++) {
                 assertNotEquals(
                     "EFabricator metadata values must be unique: index " + i + " vs " + j,
-                    efabMetas[i], efabMetas[j]);
+                    efabMetas[i],
+                    efabMetas[j]);
             }
         }
     }
@@ -380,9 +377,9 @@ public class StructureValidationTest {
         // From EFabricatorController source:
         // FIXED_DEPTH = 3, SEGMENT_DEPTH = 2, END_CAP_DEPTH = 1, MAX_SEGMENTS = 16
         // Each segment layer:
-        //   sy=0: pattern bus (sz=0) + worker (sz=1)
-        //   sy=1: pattern bus (sz=0) + processor (sz=1)
-        //   sy=2: vent (sz=0) + processor (sz=1)
+        // sy=0: pattern bus (sz=0) + worker (sz=1)
+        // sy=1: pattern bus (sz=0) + processor (sz=1)
+        // sy=2: vent (sz=0) + processor (sz=1)
         // Side positions (sx=0,2): always casings
 
         int fixedDepth = 3;
@@ -405,10 +402,10 @@ public class StructureValidationTest {
         // sy=0: 1 pattern bus (sz=0) + 1 worker (sz=1)
         // sy=1: 1 pattern bus (sz=0) + 1 processor (sz=1)
         // sy=2: 1 vent (sz=0) + 1 processor (sz=1)
-        int patternBusesPerSegment = 2;  // sy=0 sz=0, sy=1 sz=0
-        int workersPerSegment = 1;       // sy=0 sz=1
-        int processorsPerSegment = 2;    // sy=1 sz=1, sy=2 sz=1
-        int ventsPerSegment = 1;         // sy=2 sz=0
+        int patternBusesPerSegment = 2; // sy=0 sz=0, sy=1 sz=0
+        int workersPerSegment = 1; // sy=0 sz=1
+        int processorsPerSegment = 2; // sy=1 sz=1, sy=2 sz=1
+        int ventsPerSegment = 1; // sy=2 sz=0
 
         assertEquals(2, patternBusesPerSegment);
         assertEquals(1, workersPerSegment);
@@ -513,25 +510,19 @@ public class StructureValidationTest {
     @Test
     public void testMachineIDNoOverlap() {
         // Collect all IDs and verify no duplicates
-        int[] ids = {
-            MachineLoader.ID_ESTORAGE_CONTROLLER_L4,
-            MachineLoader.ID_ESTORAGE_CONTROLLER_L6,
-            MachineLoader.ID_ESTORAGE_CONTROLLER_L9,
-            MachineLoader.ID_ECALCULATOR_CONTROLLER_L4,
-            MachineLoader.ID_ECALCULATOR_CONTROLLER_L6,
-            MachineLoader.ID_ECALCULATOR_CONTROLLER_L9,
-            MachineLoader.ID_EFABRICATOR_CONTROLLER_L4,
-            MachineLoader.ID_EFABRICATOR_CONTROLLER_L6,
-            MachineLoader.ID_EFABRICATOR_CONTROLLER_L9,
-            MachineLoader.ID_HATCH_AE_STORAGE_BUS,
-            MachineLoader.ID_HATCH_AE_PATTERN_PROVIDER
-        };
+        int[] ids = { MachineLoader.ID_ESTORAGE_CONTROLLER_L4, MachineLoader.ID_ESTORAGE_CONTROLLER_L6,
+            MachineLoader.ID_ESTORAGE_CONTROLLER_L9, MachineLoader.ID_ECALCULATOR_CONTROLLER_L4,
+            MachineLoader.ID_ECALCULATOR_CONTROLLER_L6, MachineLoader.ID_ECALCULATOR_CONTROLLER_L9,
+            MachineLoader.ID_EFABRICATOR_CONTROLLER_L4, MachineLoader.ID_EFABRICATOR_CONTROLLER_L6,
+            MachineLoader.ID_EFABRICATOR_CONTROLLER_L9, MachineLoader.ID_HATCH_AE_STORAGE_BUS,
+            MachineLoader.ID_HATCH_AE_PATTERN_PROVIDER };
 
         for (int i = 0; i < ids.length; i++) {
             for (int j = i + 1; j < ids.length; j++) {
                 assertNotEquals(
                     "Machine IDs must be unique: " + ids[i] + " at index " + i + " vs " + ids[j] + " at index " + j,
-                    ids[i], ids[j]);
+                    ids[i],
+                    ids[j]);
             }
         }
     }
@@ -539,19 +530,12 @@ public class StructureValidationTest {
     @Test
     public void testMachineIDReservedRange() {
         // All IDs should be in the 19500-19599 range
-        int[] ids = {
-            MachineLoader.ID_ESTORAGE_CONTROLLER_L4,
-            MachineLoader.ID_ESTORAGE_CONTROLLER_L6,
-            MachineLoader.ID_ESTORAGE_CONTROLLER_L9,
-            MachineLoader.ID_ECALCULATOR_CONTROLLER_L4,
-            MachineLoader.ID_ECALCULATOR_CONTROLLER_L6,
-            MachineLoader.ID_ECALCULATOR_CONTROLLER_L9,
-            MachineLoader.ID_EFABRICATOR_CONTROLLER_L4,
-            MachineLoader.ID_EFABRICATOR_CONTROLLER_L6,
-            MachineLoader.ID_EFABRICATOR_CONTROLLER_L9,
-            MachineLoader.ID_HATCH_AE_STORAGE_BUS,
-            MachineLoader.ID_HATCH_AE_PATTERN_PROVIDER
-        };
+        int[] ids = { MachineLoader.ID_ESTORAGE_CONTROLLER_L4, MachineLoader.ID_ESTORAGE_CONTROLLER_L6,
+            MachineLoader.ID_ESTORAGE_CONTROLLER_L9, MachineLoader.ID_ECALCULATOR_CONTROLLER_L4,
+            MachineLoader.ID_ECALCULATOR_CONTROLLER_L6, MachineLoader.ID_ECALCULATOR_CONTROLLER_L9,
+            MachineLoader.ID_EFABRICATOR_CONTROLLER_L4, MachineLoader.ID_EFABRICATOR_CONTROLLER_L6,
+            MachineLoader.ID_EFABRICATOR_CONTROLLER_L9, MachineLoader.ID_HATCH_AE_STORAGE_BUS,
+            MachineLoader.ID_HATCH_AE_PATTERN_PROVIDER };
 
         for (int id : ids) {
             assertTrue("ID " + id + " must be >= 19500", id >= 19500);
@@ -574,13 +558,9 @@ public class StructureValidationTest {
 
     @Test
     public void testEStorageMetadataAllDifferent() {
-        int[] metas = {
-            BlockLoader.ESTORAGE_META_CASING,
-            BlockLoader.ESTORAGE_META_CELL_DRIVE,
-            BlockLoader.ESTORAGE_META_ENERGY_CELL,
-            BlockLoader.ESTORAGE_META_ME_CHANNEL,
-            BlockLoader.ESTORAGE_META_VENT
-        };
+        int[] metas = { BlockLoader.ESTORAGE_META_CASING, BlockLoader.ESTORAGE_META_CELL_DRIVE,
+            BlockLoader.ESTORAGE_META_ENERGY_CELL, BlockLoader.ESTORAGE_META_ME_CHANNEL,
+            BlockLoader.ESTORAGE_META_VENT };
 
         for (int i = 0; i < metas.length; i++) {
             for (int j = i + 1; j < metas.length; j++) {
@@ -603,16 +583,10 @@ public class StructureValidationTest {
 
     @Test
     public void testECalculatorMetadataAllDifferent() {
-        int[] metas = {
-            BlockLoader.ECALC_META_CASING,
-            BlockLoader.ECALC_META_THREAD_CORE,
-            BlockLoader.ECALC_META_HYPER_THREAD,
-            BlockLoader.ECALC_META_PARALLEL_PROC,
-            BlockLoader.ECALC_META_CELL_DRIVE,
-            BlockLoader.ECALC_META_ME_CHANNEL,
-            BlockLoader.ECALC_META_TRANSMITTER_BUS,
-            BlockLoader.ECALC_META_TAIL
-        };
+        int[] metas = { BlockLoader.ECALC_META_CASING, BlockLoader.ECALC_META_THREAD_CORE,
+            BlockLoader.ECALC_META_HYPER_THREAD, BlockLoader.ECALC_META_PARALLEL_PROC,
+            BlockLoader.ECALC_META_CELL_DRIVE, BlockLoader.ECALC_META_ME_CHANNEL,
+            BlockLoader.ECALC_META_TRANSMITTER_BUS, BlockLoader.ECALC_META_TAIL };
 
         for (int i = 0; i < metas.length; i++) {
             for (int j = i + 1; j < metas.length; j++) {
@@ -633,14 +607,8 @@ public class StructureValidationTest {
 
     @Test
     public void testEFabricatorMetadataConstantsUniqueness() {
-        int[] metas = {
-            BlockLoader.EFAB_META_CASING,
-            BlockLoader.EFAB_META_WORKER,
-            BlockLoader.EFAB_META_PATTERN_BUS,
-            BlockLoader.EFAB_META_PARALLEL_PROC,
-            BlockLoader.EFAB_META_ME_CHANNEL,
-            BlockLoader.EFAB_META_VENT
-        };
+        int[] metas = { BlockLoader.EFAB_META_CASING, BlockLoader.EFAB_META_WORKER, BlockLoader.EFAB_META_PATTERN_BUS,
+            BlockLoader.EFAB_META_PARALLEL_PROC, BlockLoader.EFAB_META_ME_CHANNEL, BlockLoader.EFAB_META_VENT };
 
         for (int i = 0; i < metas.length; i++) {
             for (int j = i + 1; j < metas.length; j++) {
@@ -782,8 +750,8 @@ public class StructureValidationTest {
         int wz = cz + (sx - 1) * rightZ + (depthBase + sz) * fwdZ;
 
         // sx=0 -> (0-1)*rightX = -1 offset in right direction
-        assertEquals(99, wx);  // cx - 1
-        assertEquals(63, wy);  // cy - 1
+        assertEquals(99, wx); // cx - 1
+        assertEquals(63, wy); // cy - 1
         assertEquals(200, wz); // cz + 0
     }
 
@@ -802,7 +770,7 @@ public class StructureValidationTest {
         int wz = cz + (sx - 1) * rightZ + (depthBase + sz) * fwdZ;
 
         assertEquals(100, wx); // cx + 0 (centered)
-        assertEquals(64, wy);  // cy + 0 (centered)
+        assertEquals(64, wy); // cy + 0 (centered)
         assertEquals(196, wz); // cz + (3+1)*(-1) = cz - 4
     }
 
@@ -902,12 +870,10 @@ public class StructureValidationTest {
 
         // Zero cell drives: invalid
         int installedCellDrives = 0;
-        assertFalse("Structure with zero cell drives must fail validation",
-            installedCellDrives > 0);
+        assertFalse("Structure with zero cell drives must fail validation", installedCellDrives > 0);
 
         // One cell drive: valid
         installedCellDrives = 1;
-        assertTrue("Structure with one cell drive must pass validation",
-            installedCellDrives > 0);
+        assertTrue("Structure with one cell drive must pass validation", installedCellDrives > 0);
     }
 }

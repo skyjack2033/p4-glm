@@ -31,8 +31,8 @@ public enum ECOAETier {
      * @return The corresponding ECOAETier, defaults to L4 if below HV
      */
     public static ECOAETier fromVoltageTier(int maxVoltageTier) {
-        if (maxVoltageTier >= 6) return L9;  // LuV = tier 6
-        if (maxVoltageTier >= 5) return L6;  // IV = tier 5
+        if (maxVoltageTier >= 6) return L9; // LuV = tier 6
+        if (maxVoltageTier >= 5) return L6; // IV = tier 5
         return L4;
     }
 
@@ -55,9 +55,12 @@ public enum ECOAETier {
      */
     public int getMaxCellDrives() {
         switch (this) {
-            case L9: return Config.eStorageMaxCellDrivesL9;
-            case L6: return Config.eStorageMaxCellDrivesL6;
-            default: return Config.eStorageMaxCellDrivesL4;
+            case L9:
+                return Config.eStorageMaxCellDrivesL9;
+            case L6:
+                return Config.eStorageMaxCellDrivesL6;
+            default:
+                return Config.eStorageMaxCellDrivesL4;
         }
     }
 
@@ -68,9 +71,12 @@ public enum ECOAETier {
      */
     public int getBaseThreadCores() {
         switch (this) {
-            case L9: return Config.eCalculatorBaseThreadCoresL9;
-            case L6: return Config.eCalculatorBaseThreadCoresL6;
-            default: return Config.eCalculatorBaseThreadCoresL4;
+            case L9:
+                return Config.eCalculatorBaseThreadCoresL9;
+            case L6:
+                return Config.eCalculatorBaseThreadCoresL6;
+            default:
+                return Config.eCalculatorBaseThreadCoresL4;
         }
     }
 
@@ -81,9 +87,12 @@ public enum ECOAETier {
      */
     public int getPatternBusSlots() {
         switch (this) {
-            case L9: return Config.eFabricatorPatternBusSlotsL9;
-            case L6: return Config.eFabricatorPatternBusSlotsL6;
-            default: return Config.eFabricatorPatternBusSlotsL4;
+            case L9:
+                return Config.eFabricatorPatternBusSlotsL9;
+            case L6:
+                return Config.eFabricatorPatternBusSlotsL6;
+            default:
+                return Config.eFabricatorPatternBusSlotsL4;
         }
     }
 

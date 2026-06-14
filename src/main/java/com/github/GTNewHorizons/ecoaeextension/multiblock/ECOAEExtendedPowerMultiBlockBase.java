@@ -3,7 +3,6 @@ package com.github.GTNewHorizons.ecoaeextension.multiblock;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
@@ -18,8 +17,8 @@ import appeng.api.util.DimensionalCoord;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
-import gregtech.api.metatileentity.implementations.MTEHatchEnergy;
 import gregtech.api.metatileentity.implementations.MTEExtendedPowerMultiBlockBase;
+import gregtech.api.metatileentity.implementations.MTEHatchEnergy;
 import gregtech.api.util.MultiblockTooltipBuilder;
 
 /**
@@ -34,8 +33,7 @@ import gregtech.api.util.MultiblockTooltipBuilder;
  * @param <T> The concrete multiblock class (CRTP pattern)
  */
 public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPowerMultiBlockBase<T>>
-    extends MTEExtendedPowerMultiBlockBase<T>
-    implements IGridProxyable, IActionHost {
+    extends MTEExtendedPowerMultiBlockBase<T> implements IGridProxyable, IActionHost {
 
     // =========================================================================
     // Constants
@@ -77,10 +75,10 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
      */
     private void initializeAEProxy() {
         aeProxy = new AENetworkProxy(
-            this,               // host: the IGridProxyable implementing class
-            "ecoaeproxy",       // unique sub-network key for this machine type
-            null,               // output stack for security terminal display (null = no security)
-            true                // world node (dense cable connection)
+            this, // host: the IGridProxyable implementing class
+            "ecoaeproxy", // unique sub-network key for this machine type
+            null, // output stack for security terminal display (null = no security)
+            true // world node (dense cable connection)
         );
     }
 
@@ -446,8 +444,8 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     }
 
     @Override
-    public gregtech.api.interfaces.ITexture[] getTexture(IGregTechTileEntity aBaseMetaTileEntity,
-            ForgeDirection side, ForgeDirection facing, int aColorIndex, boolean aActive, boolean aRedstone) {
+    public gregtech.api.interfaces.ITexture[] getTexture(IGregTechTileEntity aBaseMetaTileEntity, ForgeDirection side,
+        ForgeDirection facing, int aColorIndex, boolean aActive, boolean aRedstone) {
         // Return empty array - subclasses should provide proper textures
         return new gregtech.api.interfaces.ITexture[0];
     }

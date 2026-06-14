@@ -30,12 +30,15 @@ import appeng.api.storage.data.IItemList;
 /**
  * NBT-backed cell inventory for ECOAE storage cells.
  *
- * <p>Implements {@link ICellInventory} (which extends {@code IMEInventory<IAEItemStack>}) to
+ * <p>
+ * Implements {@link ICellInventory} (which extends {@code IMEInventory<IAEItemStack>}) to
  * provide AE2 cell storage backed by a flat NBT tag list on the cell ItemStack. Each distinct
  * item+damage+nbt combination counts as one "type", consuming {@link #BYTES_PER_TYPE} bytes of
  * overhead per type.
  *
- * <p>NBT format:
+ * <p>
+ * NBT format:
+ * 
  * <pre>
  *   ecoae_items: TAG_List of TAG_Compound
  *     - id: TAG_String (item registry name)
@@ -243,10 +246,10 @@ public class EStorageCellInventory implements ICellInventory {
     @Override
     public int getStatusForCell() {
         ensureLoaded();
-        if (storedItemCount == 0) return 0;         // empty
-        if (usedBytes >= totalBytes) return 3;       // full
+        if (storedItemCount == 0) return 0; // empty
+        if (usedBytes >= totalBytes) return 3; // full
         if (usedBytes > totalBytes * 0.75) return 2; // nearly full
-        return 1;                                     // has items
+        return 1; // has items
     }
 
     @Override
@@ -389,7 +392,8 @@ public class EStorageCellInventory implements ICellInventory {
         ensureLoaded();
 
         for (Map.Entry<IAEItemStack, Long> entry : storedItems.entrySet()) {
-            IAEItemStack stack = entry.getKey().copy();
+            IAEItemStack stack = entry.getKey()
+                .copy();
             stack.setStackSize(entry.getValue());
             out.add(stack);
         }
@@ -435,8 +439,7 @@ public class EStorageCellInventory implements ICellInventory {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public Collection getSortedFuzzyItems(Collection out, IAEStack filter,
-            FuzzyMode fuzzyMode, int maxResults) {
+    public Collection getSortedFuzzyItems(Collection out, IAEStack filter, FuzzyMode fuzzyMode, int maxResults) {
         ensureLoaded();
 
         int count = 0;
@@ -528,7 +531,9 @@ public class EStorageCellInventory implements ICellInventory {
             vanillaStack.setTagCompound(tag.getCompoundTag(NBT_ITEM_NBT));
         }
 
-        IAEItemStack aeStack = AEApi.instance().storage().createItemStack(vanillaStack);
+        IAEItemStack aeStack = AEApi.instance()
+            .storage()
+            .createItemStack(vanillaStack);
         if (aeStack == null) return;
 
         aeStack.setStackSize(1); // Use stackSize=1 as map key
@@ -559,7 +564,10 @@ public class EStorageCellInventory implements ICellInventory {
             itemTag.setLong(NBT_ITEM_COUNT, count);
 
             if (vanillaStack.getTagCompound() != null) {
-                itemTag.setTag(NBT_ITEM_NBT, vanillaStack.getTagCompound().copy());
+                itemTag.setTag(
+                    NBT_ITEM_NBT,
+                    vanillaStack.getTagCompound()
+                        .copy());
             }
 
             itemList.appendTag(itemTag);
@@ -713,7 +721,7 @@ public class EStorageCellInventory implements ICellInventory {
 
         @Override
         public Collection<IAEItemStack> getSortedFuzzyItems(Collection<IAEItemStack> out, IAEItemStack filter,
-                FuzzyMode fuzzyMode, int maxResults) {
+            FuzzyMode fuzzyMode, int maxResults) {
             return cellInventory.getSortedFuzzyItems(out, filter, fuzzyMode, maxResults);
         }
 

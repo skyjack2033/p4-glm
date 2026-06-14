@@ -5,10 +5,10 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.ResourceLocation;
 
+import org.lwjgl.opengl.GL11;
+
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.estorage.EStorageController;
-
-import org.lwjgl.opengl.GL11;
 
 public class GUIEStorageController extends GuiContainer {
 
@@ -37,8 +37,7 @@ public class GUIEStorageController extends GuiContainer {
         fontRendererObj.drawString(segments, 8, 30, 4210752);
 
         // Cell drives with max allowed display
-        String cellDrives = "Drives: " + controller.getInstalledCellDrives()
-            + "/" + controller.getMaxCellDrives();
+        String cellDrives = "Drives: " + controller.getInstalledCellDrives() + "/" + controller.getMaxCellDrives();
         fontRendererObj.drawString(cellDrives, 8, 42, 4210752);
 
         // Total storage capacity
@@ -88,7 +87,8 @@ public class GUIEStorageController extends GuiContainer {
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        mc.getTextureManager().bindTexture(BACKGROUND);
+        mc.getTextureManager()
+            .bindTexture(BACKGROUND);
         int k = (width - xSize) / 2;
         int l = (height - ySize) / 2;
         drawTexturedModalRect(k, l, 0, 0, xSize, ySize);

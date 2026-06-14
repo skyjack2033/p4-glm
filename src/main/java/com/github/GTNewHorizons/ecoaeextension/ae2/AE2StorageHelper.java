@@ -35,7 +35,8 @@ public class AE2StorageHelper {
             // In GTNH AE2 (rv1), IGridNode is obtained from IGridProxyable.getProxy().getNode()
             if (tileEntity instanceof IGridProxyable) {
                 IGridProxyable proxyable = (IGridProxyable) tileEntity;
-                IGridNode node = proxyable.getProxy().getNode();
+                IGridNode node = proxyable.getProxy()
+                    .getNode();
                 if (node != null) {
                     return node.getGrid();
                 }
@@ -68,7 +69,7 @@ public class AE2StorageHelper {
     /**
      * Register a cell provider with the AE2 storage grid.
      *
-     * @param grid The storage grid to register with
+     * @param grid     The storage grid to register with
      * @param provider The cell provider to register
      */
     public static void registerCellProvider(IStorageGrid grid, ICellProvider provider) {
@@ -84,7 +85,7 @@ public class AE2StorageHelper {
     /**
      * Unregister a cell provider from the AE2 storage grid.
      *
-     * @param grid The storage grid to unregister from
+     * @param grid     The storage grid to unregister from
      * @param provider The cell provider to unregister
      */
     public static void unregisterCellProvider(IStorageGrid grid, ICellProvider provider) {

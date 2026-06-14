@@ -1,27 +1,27 @@
 package com.github.GTNewHorizons.ecoaeextension.multiblock.efabricator;
 
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
+
 import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.ae2.EFabricatorPatternHandler;
-
-import appeng.me.helpers.AENetworkProxy;
 import com.github.GTNewHorizons.ecoaeextension.loader.BlockLoader;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMultiBlockBase;
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.StructureDefinition;
-import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
 
+import appeng.me.helpers.AENetworkProxy;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEHatchInput;
@@ -29,21 +29,24 @@ import gregtech.api.metatileentity.implementations.MTEHatchInput;
 /**
  * EFabricator Controller - An extendable AE2 auto-crafting multiblock.
  *
- * <p>Features:
+ * <p>
+ * Features:
  * <ul>
- *   <li>Pattern buses for storing AE2 crafting patterns (up to 72 slots at L9)</li>
- *   <li>Worker cores for processing crafting jobs</li>
- *   <li>Parallel processors for scaling throughput</li>
- *   <li>Overclock modes (Normal, Overclock I, Overclock II, Overclock III)</li>
- *   <li>Active cooling with coolant fluids</li>
- *   <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV)</li>
+ * <li>Pattern buses for storing AE2 crafting patterns (up to 72 slots at L9)</li>
+ * <li>Worker cores for processing crafting jobs</li>
+ * <li>Parallel processors for scaling throughput</li>
+ * <li>Overclock modes (Normal, Overclock I, Overclock II, Overclock III)</li>
+ * <li>Active cooling with coolant fluids</li>
+ * <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV)</li>
  * </ul>
  *
- * <p>Structure: Linear multiblock extending from the controller. Composed of a fixed 3x3x3
+ * <p>
+ * Structure: Linear multiblock extending from the controller. Composed of a fixed 3x3x3
  * section (controller, ME channel, fluid I/O, vent), zero or more repeating segments
  * (pattern buses, worker cores, parallel processors, vents), and an end cap of casings.
  *
- * <p>Structure extends opposite to the controller's front face. Segments are added linearly
+ * <p>
+ * Structure extends opposite to the controller's front face. Segments are added linearly
  * until an end cap of solid casings is found.
  */
 public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFabricatorController> {
@@ -188,28 +191,40 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     public String getOverclockModeName() {
         switch (overclockMode) {
-            case 1:  return "Overclock I";
-            case 2:  return "Overclock II";
-            case 3:  return "Overclock III";
-            default: return "Normal";
+            case 1:
+                return "Overclock I";
+            case 2:
+                return "Overclock II";
+            case 3:
+                return "Overclock III";
+            default:
+                return "Normal";
         }
     }
 
     public double getOverclockSpeedMultiplier() {
         switch (overclockMode) {
-            case 1:  return 2.0;
-            case 2:  return 4.0;
-            case 3:  return 8.0;
-            default: return 1.0;
+            case 1:
+                return 2.0;
+            case 2:
+                return 4.0;
+            case 3:
+                return 8.0;
+            default:
+                return 1.0;
         }
     }
 
     public double getOverclockEnergyMultiplier() {
         switch (overclockMode) {
-            case 1:  return 1.5;
-            case 2:  return 2.5;
-            case 3:  return 4.0;
-            default: return 1.0;
+            case 1:
+                return 1.5;
+            case 2:
+                return 2.5;
+            case 3:
+                return 4.0;
+            default:
+                return 1.0;
         }
     }
 
@@ -317,11 +332,9 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         // middle layer), so the structure still validates correctly after manual correction.
         if (structureDefinition == null) {
             structureDefinition = StructureDefinition.<EFabricatorController>builder()
-                .addShape("main", new String[][] {
-                    { "CCC", "CMC", "CCC" },
-                    { "CCC", "EKC", "CCC" },
-                    { "CCC", "CFC", "CCC" }
-                })
+                .addShape(
+                    "main",
+                    new String[][] { { "CCC", "CMC", "CCC" }, { "CCC", "EKC", "CCC" }, { "CCC", "CFC", "CCC" } })
                 .addElement('C', ofBlock(CASING_BLOCK, CASING_META))
                 .addElement('M', ofBlock(ME_CHANNEL_BLOCK, ME_CHANNEL_META))
                 .addElement('K', ofBlock(VENT_BLOCK, VENT_META))
@@ -334,11 +347,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     @Override
     public String[][] getStructurePattern() {
-        return new String[][] {
-            { "CCC", "CMC", "CCC" },
-            { "CCC", "EKC", "CCC" },
-            { "CCC", "CFC", "CCC" }
-        };
+        return new String[][] { { "CCC", "CMC", "CCC" }, { "CCC", "EKC", "CCC" }, { "CCC", "CFC", "CCC" } };
     }
 
     // =========================================================================
@@ -354,22 +363,38 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         installedProcessors = 0;
 
         // Bail early if block references are not populated
-        if (CASING_BLOCK == null || ME_CHANNEL_BLOCK == null || VENT_BLOCK == null
-            || PATTERN_BUS_BLOCK == null || WORKER_BLOCK == null || PROCESSOR_BLOCK == null) {
+        if (CASING_BLOCK == null || ME_CHANNEL_BLOCK == null
+            || VENT_BLOCK == null
+            || PATTERN_BUS_BLOCK == null
+            || WORKER_BLOCK == null
+            || PROCESSOR_BLOCK == null) {
             return false;
         }
 
         // Compute facing-dependent direction vectors.
         // forward = direction the structure extends (opposite of front face)
-        // right   = perpendicular "right" direction (clockwise from forward, top-down view)
+        // right = perpendicular "right" direction (clockwise from forward, top-down view)
         ForgeDirection facing = aBaseMetaTileEntity.getFrontFacing();
         int fwdX, fwdZ;
         switch (facing) {
-            case NORTH: fwdX = 0;  fwdZ = 1;  break; // front faces north -> extends south (+Z)
-            case SOUTH: fwdX = 0;  fwdZ = -1; break; // front faces south -> extends north (-Z)
-            case WEST:  fwdX = 1;  fwdZ = 0;  break; // front faces west  -> extends east  (+X)
-            case EAST:  fwdX = -1; fwdZ = 0;  break; // front faces east  -> extends west  (-X)
-            default: return false;
+            case NORTH:
+                fwdX = 0;
+                fwdZ = 1;
+                break; // front faces north -> extends south (+Z)
+            case SOUTH:
+                fwdX = 0;
+                fwdZ = -1;
+                break; // front faces south -> extends north (-Z)
+            case WEST:
+                fwdX = 1;
+                fwdZ = 0;
+                break; // front faces west -> extends east (+X)
+            case EAST:
+                fwdX = -1;
+                fwdZ = 0;
+                break; // front faces east -> extends west (-X)
+            default:
+                return false;
         }
         int rightX = -fwdZ;
         int rightZ = fwdX;
@@ -418,7 +443,8 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         if (installedPatternBuses < 1 || installedWorkers < 1) {
             ECOAEExtension.LOG.debug(
                 "EFabricator: insufficient components (buses={}, workers={})",
-                installedPatternBuses, installedWorkers);
+                installedPatternBuses,
+                installedWorkers);
             invalidateStructure();
             return false;
         }
@@ -440,28 +466,25 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     /**
      * Compute the world position corresponding to a shape-local coordinate at a given depth.
      *
-     * <p>Shape convention: sx (0..2) = width, sy (0..2) = height, sz = depth offset within the piece.
+     * <p>
+     * Shape convention: sx (0..2) = width, sy (0..2) = height, sz = depth offset within the piece.
      * The controller occupies shape position (1, 1, 0) of the fixed section.
      *
-     * @param cx,cy,cz controller world position
-     * @param fwdX,fwdZ forward direction (structure growth)
+     * @param cx,cy,cz      controller world position
+     * @param fwdX,fwdZ     forward direction (structure growth)
      * @param rightX,rightZ right-hand perpendicular direction
-     * @param depthBase starting depth of this piece (0 = controller position)
-     * @param sx,sy,sz shape-local coordinates
+     * @param depthBase     starting depth of this piece (0 = controller position)
+     * @param sx,sy,sz      shape-local coordinates
      * @return world coordinates [x, y, z]
      */
-    private int[] shapeToWorld(int cx, int cy, int cz,
-                               int fwdX, int fwdZ, int rightX, int rightZ,
-                               int depthBase, int sx, int sy, int sz) {
+    private int[] shapeToWorld(int cx, int cy, int cz, int fwdX, int fwdZ, int rightX, int rightZ, int depthBase,
+        int sx, int sy, int sz) {
         // Controller is at shape (1, 1, 0). Transform:
-        //   wx = cx + (sx-1)*rightX + (depthBase + sz)*fwdX
-        //   wy = cy + (sy - 1)
-        //   wz = cz + (sx-1)*rightZ + (depthBase + sz)*fwdZ
-        return new int[] {
-            cx + (sx - 1) * rightX + (depthBase + sz) * fwdX,
-            cy + (sy - 1),
-            cz + (sx - 1) * rightZ + (depthBase + sz) * fwdZ
-        };
+        // wx = cx + (sx-1)*rightX + (depthBase + sz)*fwdX
+        // wy = cy + (sy - 1)
+        // wz = cz + (sx-1)*rightZ + (depthBase + sz)*fwdZ
+        return new int[] { cx + (sx - 1) * rightX + (depthBase + sz) * fwdX, cy + (sy - 1),
+            cz + (sx - 1) * rightZ + (depthBase + sz) * fwdZ };
     }
 
     /**
@@ -477,32 +500,37 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         if (y < 0 || y >= 256) return null;
         IGregTechTileEntity base = getBaseMetaTileEntity();
         if (base == null || base.getWorld() == null) return null;
-        return base.getWorld().getBlock(x, y, z);
+        return base.getWorld()
+            .getBlock(x, y, z);
     }
 
     private int getBlockMetaAt(int x, int y, int z) {
         if (y < 0 || y >= 256) return 0;
         IGregTechTileEntity base = getBaseMetaTileEntity();
         if (base == null || base.getWorld() == null) return 0;
-        return base.getWorld().getBlockMetadata(x, y, z);
+        return base.getWorld()
+            .getBlockMetadata(x, y, z);
     }
 
     private TileEntity getTileAt(int x, int y, int z) {
         if (y < 0 || y >= 256) return null;
         IGregTechTileEntity base = getBaseMetaTileEntity();
         if (base == null || base.getWorld() == null) return null;
-        return base.getWorld().getTileEntity(x, y, z);
+        return base.getWorld()
+            .getTileEntity(x, y, z);
     }
 
     /**
      * Validate the fixed 3x3x3 controller section.
      *
-     * <p>Layer 0 (bottom): CCC / CMC / CCC  (M = ME channel at center)
-     * <p>Layer 1 (middle): CCC / EKC / CCC  (E = controller pos, K = vent)
-     * <p>Layer 2 (top):    CCC / CFC / CCC  (F = fluid I/O hatch)
+     * <p>
+     * Layer 0 (bottom): CCC / CMC / CCC (M = ME channel at center)
+     * <p>
+     * Layer 1 (middle): CCC / EKC / CCC (E = controller pos, K = vent)
+     * <p>
+     * Layer 2 (top): CCC / CFC / CCC (F = fluid I/O hatch)
      */
-    private boolean validateFixedSection(int cx, int cy, int cz,
-                                         int fwdX, int fwdZ, int rightX, int rightZ) {
+    private boolean validateFixedSection(int cx, int cy, int cz, int fwdX, int fwdZ, int rightX, int rightZ) {
         // Layer 0 (bottom, sy=0): all casings except center (1,0,1) = ME channel
         for (int sx = 0; sx < 3; sx++) {
             for (int sz = 0; sz < 3; sz++) {
@@ -555,15 +583,18 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
      * Validate all segments between the fixed section and the end cap.
      * Each segment has three layers:
      *
-     * <p>Layer 0: pattern bus (sz=0) + worker core (sz=1)
-     * <p>Layer 1: pattern bus (sz=0) + parallel processor (sz=1)
-     * <p>Layer 2: vent (sz=0) + parallel processor (sz=1)
+     * <p>
+     * Layer 0: pattern bus (sz=0) + worker core (sz=1)
+     * <p>
+     * Layer 1: pattern bus (sz=0) + parallel processor (sz=1)
+     * <p>
+     * Layer 2: vent (sz=0) + parallel processor (sz=1)
      *
-     * <p>Surrounding positions (sx=0,2) are always casings.
+     * <p>
+     * Surrounding positions (sx=0,2) are always casings.
      */
-    private boolean validateSegments(int cx, int cy, int cz,
-                                     int fwdX, int fwdZ, int rightX, int rightZ,
-                                     int numSegments) {
+    private boolean validateSegments(int cx, int cy, int cz, int fwdX, int fwdZ, int rightX, int rightZ,
+        int numSegments) {
         for (int seg = 0; seg < numSegments; seg++) {
             int depthBase = FIXED_DEPTH + seg * SEGMENT_DEPTH;
             for (int sy = 0; sy < 3; sy++) {
@@ -576,9 +607,9 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
                     // Check center column (sx=1) based on layer and depth
                     // Original JSON segment layout (3 high x 2 deep x 1 wide):
-                    //   y=0, z=0: parallel processor   y=0, z=1: pattern bus
-                    //   y=1, z=0: worker               y=1, z=1: vent
-                    //   y=2, z=0: parallel processor   y=2, z=1: pattern bus
+                    // y=0, z=0: parallel processor y=0, z=1: pattern bus
+                    // y=1, z=0: worker y=1, z=1: vent
+                    // y=2, z=0: parallel processor y=2, z=1: pattern bus
                     int[] wc = shapeToWorld(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, depthBase, 1, sy, sz);
                     Block expectedBlock;
                     int expectedMeta;
@@ -605,9 +636,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     /**
      * Validate the end cap: a 3x3x1 wall of solid casings.
      */
-    private boolean validateEndCap(int cx, int cy, int cz,
-                                   int fwdX, int fwdZ, int rightX, int rightZ,
-                                   int depthBase) {
+    private boolean validateEndCap(int cx, int cy, int cz, int fwdX, int fwdZ, int rightX, int rightZ, int depthBase) {
         for (int sy = 0; sy < 3; sy++) {
             for (int sz = 0; sz < END_CAP_DEPTH; sz++) {
                 for (int sx = 0; sx < 3; sx++) {
@@ -624,9 +653,8 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
      * Increments installedPatternBuses, installedWorkers, installedProcessors and
      * calls addToMachineList() for any MetaTileEntities found.
      */
-    private boolean registerSegmentComponents(int cx, int cy, int cz,
-                                              int fwdX, int fwdZ, int rightX, int rightZ,
-                                              int depthBase) {
+    private boolean registerSegmentComponents(int cx, int cy, int cz, int fwdX, int fwdZ, int rightX, int rightZ,
+        int depthBase) {
         for (int sy = 0; sy < 3; sy++) {
             for (int sz = 0; sz < SEGMENT_DEPTH; sz++) {
                 int[] wc = shapeToWorld(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, depthBase, 1, sy, sz);
@@ -661,9 +689,8 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     /**
      * Register a fluid hatch at the fixed section's fluid I/O position.
      */
-    private void registerFluidHatchAt(int cx, int cy, int cz,
-                                      int fwdX, int fwdZ, int rightX, int rightZ,
-                                      int sx, int sy, int sz) {
+    private void registerFluidHatchAt(int cx, int cy, int cz, int fwdX, int fwdZ, int rightX, int rightZ, int sx,
+        int sy, int sz) {
         int[] w = shapeToWorld(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, 0, sx, sy, sz);
         TileEntity te = getTileAt(w[0], w[1], w[2]);
         if (te instanceof IGregTechTileEntity) {
@@ -743,7 +770,9 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
             ECOAEExtension.LOG.info(
                 "EFabricator connected to AE2: workers={}, processors={}, patterns={}",
-                installedWorkers, installedProcessors, getTotalPatternSlots());
+                installedWorkers,
+                installedProcessors,
+                getTotalPatternSlots());
 
         } catch (Exception e) {
             ECOAEExtension.LOG.error("Failed to connect EFabricator to AE2 network", e);
@@ -858,8 +887,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
             aBaseMetaTileEntity.getWorld(),
             aBaseMetaTileEntity.getXCoord(),
             aBaseMetaTileEntity.getYCoord(),
-            aBaseMetaTileEntity.getZCoord()
-        );
+            aBaseMetaTileEntity.getZCoord());
         return true;
     }
 
@@ -879,27 +907,57 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         tooltip.add(EnumChatFormatting.GRAY + "Structure: controller + repeating segments + end cap");
         tooltip.add("");
         tooltip.add(EnumChatFormatting.YELLOW + "Tier Pattern Slots (per bus):");
-        tooltip.add(EnumChatFormatting.GRAY + "  L4 (HV):  "
-            + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL4);
-        tooltip.add(EnumChatFormatting.GRAY + "  L6 (IV):  "
-            + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL6);
-        tooltip.add(EnumChatFormatting.GRAY + "  L9 (LuV): "
-            + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL9);
-        tooltip.add(EnumChatFormatting.GRAY + "Worker Queue Depth: "
-            + EnumChatFormatting.GREEN + Config.eFabricatorWorkerQueueDepth);
+        tooltip.add(
+            EnumChatFormatting.GRAY + "  L4 (HV):  " + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL4);
+        tooltip.add(
+            EnumChatFormatting.GRAY + "  L6 (IV):  " + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL6);
+        tooltip.add(
+            EnumChatFormatting.GRAY + "  L9 (LuV): " + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL9);
+        tooltip.add(
+            EnumChatFormatting.GRAY + "Worker Queue Depth: "
+                + EnumChatFormatting.GREEN
+                + Config.eFabricatorWorkerQueueDepth);
         tooltip.add("");
         tooltip.add(EnumChatFormatting.YELLOW + "Overclock Modes:");
-        tooltip.add(EnumChatFormatting.GRAY + "  Normal: "
-            + EnumChatFormatting.GREEN + "1x" + EnumChatFormatting.GRAY + " speed, "
-            + EnumChatFormatting.GREEN + "1x" + EnumChatFormatting.GRAY + " EU");
-        tooltip.add(EnumChatFormatting.GRAY + "  OC I:   "
-            + EnumChatFormatting.GREEN + "2x" + EnumChatFormatting.GRAY + " speed, "
-            + EnumChatFormatting.YELLOW + "1.5x" + EnumChatFormatting.GRAY + " EU");
-        tooltip.add(EnumChatFormatting.GRAY + "  OC II:  "
-            + EnumChatFormatting.GREEN + "4x" + EnumChatFormatting.GRAY + " speed, "
-            + EnumChatFormatting.YELLOW + "2.5x" + EnumChatFormatting.GRAY + " EU");
-        tooltip.add(EnumChatFormatting.GRAY + "  OC III: "
-            + EnumChatFormatting.GREEN + "8x" + EnumChatFormatting.GRAY + " speed, "
-            + EnumChatFormatting.RED + "4x" + EnumChatFormatting.GRAY + " EU");
+        tooltip.add(
+            EnumChatFormatting.GRAY + "  Normal: "
+                + EnumChatFormatting.GREEN
+                + "1x"
+                + EnumChatFormatting.GRAY
+                + " speed, "
+                + EnumChatFormatting.GREEN
+                + "1x"
+                + EnumChatFormatting.GRAY
+                + " EU");
+        tooltip.add(
+            EnumChatFormatting.GRAY + "  OC I:   "
+                + EnumChatFormatting.GREEN
+                + "2x"
+                + EnumChatFormatting.GRAY
+                + " speed, "
+                + EnumChatFormatting.YELLOW
+                + "1.5x"
+                + EnumChatFormatting.GRAY
+                + " EU");
+        tooltip.add(
+            EnumChatFormatting.GRAY + "  OC II:  "
+                + EnumChatFormatting.GREEN
+                + "4x"
+                + EnumChatFormatting.GRAY
+                + " speed, "
+                + EnumChatFormatting.YELLOW
+                + "2.5x"
+                + EnumChatFormatting.GRAY
+                + " EU");
+        tooltip.add(
+            EnumChatFormatting.GRAY + "  OC III: "
+                + EnumChatFormatting.GREEN
+                + "8x"
+                + EnumChatFormatting.GRAY
+                + " speed, "
+                + EnumChatFormatting.RED
+                + "4x"
+                + EnumChatFormatting.GRAY
+                + " EU");
     }
 }

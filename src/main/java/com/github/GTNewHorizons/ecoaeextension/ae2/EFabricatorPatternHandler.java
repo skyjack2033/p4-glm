@@ -29,21 +29,23 @@ import appeng.me.helpers.AENetworkProxy;
  * interface to register stored patterns with the AE2 crafting grid, and ICraftingMedium
  * to accept and execute pushed crafting jobs.
  *
- * <p>Crafting pipeline:
+ * <p>
+ * Crafting pipeline:
  * <ol>
- *   <li>AE2 discovers patterns via {@link #provideCrafting(ICraftingProviderHelper)}</li>
- *   <li>AE2 pushes matching jobs via {@link #pushPattern(ICraftingPatternDetails, InventoryCrafting)}</li>
- *   <li>Jobs are queued in {@code activeJobs} up to the worker queue depth</li>
- *   <li>Each tick, {@link #processCraftingTick()} advances jobs based on worker count and overclock</li>
- *   <li>Completed job outputs are inserted into the AE2 network via the crafting link</li>
+ * <li>AE2 discovers patterns via {@link #provideCrafting(ICraftingProviderHelper)}</li>
+ * <li>AE2 pushes matching jobs via {@link #pushPattern(ICraftingPatternDetails, InventoryCrafting)}</li>
+ * <li>Jobs are queued in {@code activeJobs} up to the worker queue depth</li>
+ * <li>Each tick, {@link #processCraftingTick()} advances jobs based on worker count and overclock</li>
+ * <li>Completed job outputs are inserted into the AE2 network via the crafting link</li>
  * </ol>
  *
- * <p>Overclock modes modify processing speed:
+ * <p>
+ * Overclock modes modify processing speed:
  * <ul>
- *   <li>Normal: 1x speed</li>
- *   <li>OC I: 2x speed (drains 1.5x energy per tick)</li>
- *   <li>OC II: 4x speed (drains 2.5x energy per tick)</li>
- *   <li>OC III: 8x speed (drains 4x energy per tick)</li>
+ * <li>Normal: 1x speed</li>
+ * <li>OC I: 2x speed (drains 1.5x energy per tick)</li>
+ * <li>OC II: 4x speed (drains 2.5x energy per tick)</li>
+ * <li>OC III: 8x speed (drains 4x energy per tick)</li>
  * </ul>
  */
 public class EFabricatorPatternHandler implements ICraftingProvider {
@@ -99,8 +101,8 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
                     // to call provideCrafting() on this handler
                     grid.postEvent(new MENetworkCraftingPatternChange(this, node));
                     registered = true;
-                    ECOAEExtension.LOG.info("EFabricator pattern handler activated with {} stored patterns",
-                        storedPatterns.size());
+                    ECOAEExtension.LOG
+                        .info("EFabricator pattern handler activated with {} stored patterns", storedPatterns.size());
                     return;
                 }
             }
@@ -188,8 +190,12 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
         ActiveJob job = new ActiveJob(patternDetails, table);
         activeJobs.add(job);
 
-        ECOAEExtension.LOG.debug("EFabricator accepted crafting job: {} (queue: {}/{})",
-            patternDetails.getPattern().getDisplayName(), activeJobs.size(), maxQueue);
+        ECOAEExtension.LOG.debug(
+            "EFabricator accepted crafting job: {} (queue: {}/{})",
+            patternDetails.getPattern()
+                .getDisplayName(),
+            activeJobs.size(),
+            maxQueue);
 
         return true;
     }
@@ -201,8 +207,8 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
 
     @Override
     public ItemStack getCrafterIcon() {
-        gregtech.api.interfaces.metatileentity.IMetaTileEntity mte =
-            controller.getBaseMetaTileEntity().getMetaTileEntity();
+        gregtech.api.interfaces.metatileentity.IMetaTileEntity mte = controller.getBaseMetaTileEntity()
+            .getMetaTileEntity();
         return mte != null ? mte.getStackForm(1) : null;
     }
 
@@ -256,7 +262,8 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
      * and overclock speed multiplier. Energy is drained by the controller before
      * this method is called.
      *
-     * <p>Steps per tick = workerCount * overclockSpeedMultiplier (minimum 1).
+     * <p>
+     * Steps per tick = workerCount * overclockSpeedMultiplier (minimum 1).
      * Each step advances a job by one processing unit. When all steps are complete,
      * the output is injected into the AE2 network via the crafting link.
      */
@@ -298,12 +305,15 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
         // Pattern details may be null for jobs restored from NBT without AE2 context.
         // In that case, we cannot produce outputs -- the job is silently discarded.
         if (job.patternDetails == null) {
-            ECOAEExtension.LOG.debug("EFabricator crafting job completed but pattern details unavailable (restored from save)");
+            ECOAEExtension.LOG
+                .debug("EFabricator crafting job completed but pattern details unavailable (restored from save)");
             return;
         }
 
-        ECOAEExtension.LOG.debug("EFabricator crafting job completed: {}",
-            job.patternDetails.getPattern().getDisplayName());
+        ECOAEExtension.LOG.debug(
+            "EFabricator crafting job completed: {}",
+            job.patternDetails.getPattern()
+                .getDisplayName());
 
         // Insert crafted outputs into the AE2 network
         IAEItemStack[] outputs = job.patternDetails.getCondensedOutputs();
@@ -318,8 +328,7 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
         // Notify the AE2 crafting link that the job is done
         if (job.craftingLink != null && !job.craftingLink.isDone()) {
             // The link tracks completion status; AE2 will handle final cleanup
-            ECOAEExtension.LOG.debug("EFabricator job link marked complete: {}",
-                job.craftingLink.getCraftingID());
+            ECOAEExtension.LOG.debug("EFabricator job link marked complete: {}", job.craftingLink.getCraftingID());
         }
     }
 
@@ -333,27 +342,26 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
 
         try {
             // Get the AE2 storage helper for powered item operations
-            appeng.api.storage.IStorageHelper storageHelper =
-                appeng.api.AEApi.instance().storage();
+            appeng.api.storage.IStorageHelper storageHelper = appeng.api.AEApi.instance()
+                .storage();
 
             IGrid grid = aeProxy.getGrid();
             if (grid == null) return;
 
-            appeng.api.networking.storage.IStorageGrid storageGrid =
-                grid.getCache(appeng.api.networking.storage.IStorageGrid.class);
+            appeng.api.networking.storage.IStorageGrid storageGrid = grid
+                .getCache(appeng.api.networking.storage.IStorageGrid.class);
             if (storageGrid == null) return;
 
-            appeng.api.storage.IMEMonitor<IAEItemStack> itemStorage =
-                storageGrid.getItemInventory();
+            appeng.api.storage.IMEMonitor<IAEItemStack> itemStorage = storageGrid.getItemInventory();
             if (itemStorage == null) return;
 
             // Inject items into the AE2 network using powered insertion.
             // poweredInsert handles energy extraction from the network automatically.
             storageHelper.poweredInsert(
-                aeProxy.getEnergy(),   // energy source (IEnergyGrid extends IEnergySource)
-                itemStorage,           // target inventory
-                output,                // items to insert
-                machineSource          // action source for AE2 security tracking
+                aeProxy.getEnergy(), // energy source (IEnergyGrid extends IEnergySource)
+                itemStorage, // target inventory
+                output, // items to insert
+                machineSource // action source for AE2 security tracking
             );
 
         } catch (Exception e) {

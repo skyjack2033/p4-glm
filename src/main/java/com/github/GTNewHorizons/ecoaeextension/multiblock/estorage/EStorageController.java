@@ -29,21 +29,22 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 /**
  * EStorage Controller - An extendable AE2-integrated storage multiblock.
  *
- * <p>Structure: Linear multiblock with a fixed 3x3x3 section containing the controller and ME
+ * <p>
+ * Structure: Linear multiblock with a fixed 3x3x3 section containing the controller and ME
  * channel, repeating segments with cell drives, energy cells, and vents extending from it, and an
  * end cap of casings.
  *
- * <p>Features:
+ * <p>
+ * Features:
  * <ul>
- *   <li>Custom storage cells for items, fluids, and gases (Mekanism)</li>
- *   <li>Energy cells for AE2 power management</li>
- *   <li>Cell drives for holding storage cells</li>
- *   <li>ME network connectivity via dedicated channel blocks</li>
- *   <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV) affecting capacity and cell count</li>
+ * <li>Custom storage cells for items, fluids, and gases (Mekanism)</li>
+ * <li>Energy cells for AE2 power management</li>
+ * <li>Cell drives for holding storage cells</li>
+ * <li>ME network connectivity via dedicated channel blocks</li>
+ * <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV) affecting capacity and cell count</li>
  * </ul>
  */
-public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorageController>
-    implements ICellProvider {
+public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorageController> implements ICellProvider {
 
     // =========================================================================
     // Constants
@@ -164,13 +165,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     public String[][] getStructurePattern() {
         // Fixed 3x3x3 section only (y, z, x convention for StructureLib)
         // Layer y=0 (bottom): CCC / CMC / CCC
-        // Layer y=1 (middle): CCC / CEC / CCC  (E = controller at center)
-        // Layer y=2 (top):    CCC / CCC / CCC
-        return new String[][] {
-            { "CCC", "CMC", "CCC" },
-            { "CCC", "CEC", "CCC" },
-            { "CCC", "CCC", "CCC" }
-        };
+        // Layer y=1 (middle): CCC / CEC / CCC (E = controller at center)
+        // Layer y=2 (top): CCC / CCC / CCC
+        return new String[][] { { "CCC", "CMC", "CCC" }, { "CCC", "CEC", "CCC" }, { "CCC", "CCC", "CCC" } };
     }
 
     // =========================================================================
@@ -258,7 +255,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
      * Validate the fixed 3x3x3 section at the given origin. The scan direction determines which
      * face is the "front" (where segments will extend from) and which corner gets the ME channel.
      *
-     * <p>Layout (relative to origin, with scanDir as "front"):
+     * <p>
+     * Layout (relative to origin, with scanDir as "front"):
+     * 
      * <pre>
      * Layer y=0 (bottom): CCC / ... / CMC   M = ME channel at front-right corner
      * Layer y=1 (middle): CCC / CEC / CCC   E = controller at center
@@ -267,8 +266,7 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
      *
      * @return true if the section is valid
      */
-    private boolean validateFixedSection(IGregTechTileEntity base, int ox, int oy, int oz,
-        ForgeDirection scanDir) {
+    private boolean validateFixedSection(IGregTechTileEntity base, int ox, int oy, int oz, ForgeDirection scanDir) {
 
         if (base.getWorld() == null) return false;
 
@@ -338,8 +336,10 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     /**
      * Scan outward from the segment edge for repeating segments.
      *
-     * <p>Each segment is 3 high x 2 deep x 1 wide, positioned at the center column of the
+     * <p>
+     * Each segment is 3 high x 2 deep x 1 wide, positioned at the center column of the
      * fixed section's cross-section:
+     * 
      * <pre>
      * Near depth: .E. / .D. / .E.   (energy cells at y=0,y=2; cell drive at y=1)
      * Far depth:  .D. / .V. / .D.   (cell drives at y=0,y=2; vent at y=1)
@@ -374,8 +374,7 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
      *
      * @return true if the segment is valid
      */
-    private boolean validateSegment(IGregTechTileEntity base, int ox, int oy, int oz,
-        ForgeDirection scanDir) {
+    private boolean validateSegment(IGregTechTileEntity base, int ox, int oy, int oz, ForgeDirection scanDir) {
 
         if (base.getWorld() == null) return false;
 
@@ -428,8 +427,7 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
      *
      * @return true if the end cap is valid
      */
-    private boolean validateEndCap(IGregTechTileEntity base, int ox, int oy, int oz,
-        ForgeDirection scanDir) {
+    private boolean validateEndCap(IGregTechTileEntity base, int ox, int oy, int oz, ForgeDirection scanDir) {
 
         if (base.getWorld() == null) return false;
 
@@ -455,32 +453,43 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     private boolean isControllerBlock(IGregTechTileEntity base, int x, int y, int z) {
         // The controller position is validated by the structure scan itself.
         // Just verify the block at that position is not air.
-        return base.getWorld().getBlock(x, y, z) != net.minecraft.init.Blocks.air;
+        return base.getWorld()
+            .getBlock(x, y, z) != net.minecraft.init.Blocks.air;
     }
 
     private boolean isCasingBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CASING;
+        return base.getWorld()
+            .getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld()
+                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CASING;
     }
 
     private boolean isCellDriveBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CELL_DRIVE;
+        return base.getWorld()
+            .getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld()
+                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CELL_DRIVE;
     }
 
     private boolean isEnergyCellBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ENERGY_CELL;
+        return base.getWorld()
+            .getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld()
+                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ENERGY_CELL;
     }
 
     private boolean isVentBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_VENT;
+        return base.getWorld()
+            .getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld()
+                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_VENT;
     }
 
     private boolean isMEChannelBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ME_CHANNEL;
+        return base.getWorld()
+            .getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld()
+                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ME_CHANNEL;
     }
 
     // =========================================================================
@@ -493,11 +502,16 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
      */
     private ForgeDirection getRightDirection(ForgeDirection front) {
         switch (front) {
-            case NORTH: return ForgeDirection.EAST;
-            case EAST:  return ForgeDirection.SOUTH;
-            case SOUTH: return ForgeDirection.WEST;
-            case WEST:  return ForgeDirection.NORTH;
-            default:    return ForgeDirection.EAST;
+            case NORTH:
+                return ForgeDirection.EAST;
+            case EAST:
+                return ForgeDirection.SOUTH;
+            case SOUTH:
+                return ForgeDirection.WEST;
+            case WEST:
+                return ForgeDirection.NORTH;
+            default:
+                return ForgeDirection.EAST;
         }
     }
 
@@ -721,8 +735,7 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             aBaseMetaTileEntity.getWorld(),
             aBaseMetaTileEntity.getXCoord(),
             aBaseMetaTileEntity.getYCoord(),
-            aBaseMetaTileEntity.getZCoord()
-        );
+            aBaseMetaTileEntity.getZCoord());
         return true;
     }
 
@@ -739,24 +752,35 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         tooltip.add(EnumChatFormatting.AQUA + "EStorage Controller");
         tooltip.add(EnumChatFormatting.GRAY + "Extendable AE2-integrated storage system");
         tooltip.add(EnumChatFormatting.GRAY + "Supports item, fluid, and gas storage cells");
-        tooltip.add(EnumChatFormatting.YELLOW + "L4 (HV): " + formatBytes(Config.eStorageBaseCapacityL4)
-            + EnumChatFormatting.GRAY + ", " + Config.eStorageMaxCellDrivesL4 + " drives");
-        tooltip.add(EnumChatFormatting.YELLOW + "L6 (IV): " + formatBytes(Config.eStorageBaseCapacityL6)
-            + EnumChatFormatting.GRAY + ", " + Config.eStorageMaxCellDrivesL6 + " drives");
-        tooltip.add(EnumChatFormatting.YELLOW + "L9 (LuV): " + formatBytes(Config.eStorageBaseCapacityL9)
-            + EnumChatFormatting.GRAY + ", " + Config.eStorageMaxCellDrivesL9 + " drives");
+        tooltip.add(
+            EnumChatFormatting.YELLOW + "L4 (HV): "
+                + formatBytes(Config.eStorageBaseCapacityL4)
+                + EnumChatFormatting.GRAY
+                + ", "
+                + Config.eStorageMaxCellDrivesL4
+                + " drives");
+        tooltip.add(
+            EnumChatFormatting.YELLOW + "L6 (IV): "
+                + formatBytes(Config.eStorageBaseCapacityL6)
+                + EnumChatFormatting.GRAY
+                + ", "
+                + Config.eStorageMaxCellDrivesL6
+                + " drives");
+        tooltip.add(
+            EnumChatFormatting.YELLOW + "L9 (LuV): "
+                + formatBytes(Config.eStorageBaseCapacityL9)
+                + EnumChatFormatting.GRAY
+                + ", "
+                + Config.eStorageMaxCellDrivesL9
+                + " drives");
     }
 
     @Override
     public String[] getStructureDescription(ItemStack stackSize) {
-        return new String[] {
-            "EStorage Multiblock Structure:",
-            "- 3x3x3 fixed section with controller and ME channel",
+        return new String[] { "EStorage Multiblock Structure:", "- 3x3x3 fixed section with controller and ME channel",
             "- Repeating segments (min " + MIN_SEGMENTS + ", max " + MAX_SEGMENTS + "):",
-            "  Each segment: cell drives, energy cells, and vents",
-            "- End cap of casings at the far end",
-            "- Tier determined by energy hatch voltage (L4/L6/L9)"
-        };
+            "  Each segment: cell drives, energy cells, and vents", "- End cap of casings at the far end",
+            "- Tier determined by energy hatch voltage (L4/L6/L9)" };
     }
 
     /**

@@ -59,7 +59,8 @@ public class MachineLoader {
 
         // Custom AE2 hatches - TODO: implement after base multiblocks are working
         // new HatchAEStorageBus(ID_HATCH_AE_STORAGE_BUS, "ECOAE_AE_Storage_Bus", "AE Storage Bus Hatch");
-        // new HatchAEPatternProvider(ID_HATCH_AE_PATTERN_PROVIDER, "ECOAE_AE_Pattern_Provider", "AE Pattern Provider Hatch");
+        // new HatchAEPatternProvider(ID_HATCH_AE_PATTERN_PROVIDER, "ECOAE_AE_Pattern_Provider", "AE Pattern Provider
+        // Hatch");
 
         ECOAEExtension.LOG.info("ECOAE Extension machines registered.");
     }

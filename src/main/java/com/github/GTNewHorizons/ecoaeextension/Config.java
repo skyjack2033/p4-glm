@@ -33,59 +33,111 @@ public class Config {
         Configuration configuration = new Configuration(configFile);
 
         // General
-        debugMode = configuration.getBoolean(
-            "debugMode",
-            Configuration.CATEGORY_GENERAL,
-            debugMode,
-            "Enable debug logging");
+        debugMode = configuration
+            .getBoolean("debugMode", Configuration.CATEGORY_GENERAL, debugMode, "Enable debug logging");
 
         // EStorage
-        eStorageBaseCapacityL4 = configuration.get(
-            "EStorage", "eStorageBaseCapacityL4", (int) eStorageBaseCapacityL4,
-            "Base storage capacity for L4 tier (bytes)").getInt();
-        eStorageBaseCapacityL6 = configuration.get(
-            "EStorage", "eStorageBaseCapacityL6", (int) eStorageBaseCapacityL6,
-            "Base storage capacity for L6 tier (bytes)").getInt();
-        eStorageBaseCapacityL9 = configuration.get(
-            "EStorage", "eStorageBaseCapacityL9", (int) eStorageBaseCapacityL9,
-            "Base storage capacity for L9 tier (bytes)").getInt();
+        eStorageBaseCapacityL4 = configuration
+            .get(
+                "EStorage",
+                "eStorageBaseCapacityL4",
+                (int) eStorageBaseCapacityL4,
+                "Base storage capacity for L4 tier (bytes)")
+            .getInt();
+        eStorageBaseCapacityL6 = configuration
+            .get(
+                "EStorage",
+                "eStorageBaseCapacityL6",
+                (int) eStorageBaseCapacityL6,
+                "Base storage capacity for L6 tier (bytes)")
+            .getInt();
+        eStorageBaseCapacityL9 = configuration
+            .get(
+                "EStorage",
+                "eStorageBaseCapacityL9",
+                (int) eStorageBaseCapacityL9,
+                "Base storage capacity for L9 tier (bytes)")
+            .getInt();
         eStorageMaxCellDrivesL4 = configuration.getInt(
-            "eStorageMaxCellDrivesL4", "EStorage", eStorageMaxCellDrivesL4, 1, 64,
+            "eStorageMaxCellDrivesL4",
+            "EStorage",
+            eStorageMaxCellDrivesL4,
+            1,
+            64,
             "Max cell drives for L4 tier");
         eStorageMaxCellDrivesL6 = configuration.getInt(
-            "eStorageMaxCellDrivesL6", "EStorage", eStorageMaxCellDrivesL6, 1, 64,
+            "eStorageMaxCellDrivesL6",
+            "EStorage",
+            eStorageMaxCellDrivesL6,
+            1,
+            64,
             "Max cell drives for L6 tier");
         eStorageMaxCellDrivesL9 = configuration.getInt(
-            "eStorageMaxCellDrivesL9", "EStorage", eStorageMaxCellDrivesL9, 1, 64,
+            "eStorageMaxCellDrivesL9",
+            "EStorage",
+            eStorageMaxCellDrivesL9,
+            1,
+            64,
             "Max cell drives for L9 tier");
 
         // ECalculator
         eCalculatorBaseThreadCoresL4 = configuration.getInt(
-            "eCalculatorBaseThreadCoresL4", "ECalculator", eCalculatorBaseThreadCoresL4, 1, 256,
+            "eCalculatorBaseThreadCoresL4",
+            "ECalculator",
+            eCalculatorBaseThreadCoresL4,
+            1,
+            256,
             "Base thread cores for L4 tier");
         eCalculatorBaseThreadCoresL6 = configuration.getInt(
-            "eCalculatorBaseThreadCoresL6", "ECalculator", eCalculatorBaseThreadCoresL6, 1, 256,
+            "eCalculatorBaseThreadCoresL6",
+            "ECalculator",
+            eCalculatorBaseThreadCoresL6,
+            1,
+            256,
             "Base thread cores for L6 tier");
         eCalculatorBaseThreadCoresL9 = configuration.getInt(
-            "eCalculatorBaseThreadCoresL9", "ECalculator", eCalculatorBaseThreadCoresL9, 1, 256,
+            "eCalculatorBaseThreadCoresL9",
+            "ECalculator",
+            eCalculatorBaseThreadCoresL9,
+            1,
+            256,
             "Base thread cores for L9 tier");
         eCalculatorHyperThreadCostMultiplier = configuration.getFloat(
-            "eCalculatorHyperThreadCostMultiplier", "ECalculator",
-            (float) eCalculatorHyperThreadCostMultiplier, 1.0f, 10.0f,
+            "eCalculatorHyperThreadCostMultiplier",
+            "ECalculator",
+            (float) eCalculatorHyperThreadCostMultiplier,
+            1.0f,
+            10.0f,
             "Cost multiplier for hyper-thread cores (1.1 = 10% more)");
 
         // EFabricator
         eFabricatorPatternBusSlotsL4 = configuration.getInt(
-            "eFabricatorPatternBusSlotsL4", "EFabricator", eFabricatorPatternBusSlotsL4, 1, 256,
+            "eFabricatorPatternBusSlotsL4",
+            "EFabricator",
+            eFabricatorPatternBusSlotsL4,
+            1,
+            256,
             "Pattern bus slots for L4 tier");
         eFabricatorPatternBusSlotsL6 = configuration.getInt(
-            "eFabricatorPatternBusSlotsL6", "EFabricator", eFabricatorPatternBusSlotsL6, 1, 256,
+            "eFabricatorPatternBusSlotsL6",
+            "EFabricator",
+            eFabricatorPatternBusSlotsL6,
+            1,
+            256,
             "Pattern bus slots for L6 tier");
         eFabricatorPatternBusSlotsL9 = configuration.getInt(
-            "eFabricatorPatternBusSlotsL9", "EFabricator", eFabricatorPatternBusSlotsL9, 1, 256,
+            "eFabricatorPatternBusSlotsL9",
+            "EFabricator",
+            eFabricatorPatternBusSlotsL9,
+            1,
+            256,
             "Pattern bus slots for L9 tier");
         eFabricatorWorkerQueueDepth = configuration.getInt(
-            "eFabricatorWorkerQueueDepth", "EFabricator", eFabricatorWorkerQueueDepth, 1, 1024,
+            "eFabricatorWorkerQueueDepth",
+            "EFabricator",
+            eFabricatorWorkerQueueDepth,
+            1,
+            1024,
             "Worker queue depth");
 
         if (configuration.hasChanged()) {

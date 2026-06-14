@@ -27,8 +27,9 @@ public class CommonProxy {
         MachineLoader.registerMachines();
 
         // Register GUI handler
-        cpw.mods.fml.common.network.NetworkRegistry.INSTANCE
-            .registerGuiHandler(ECOAEExtension.instance, new com.github.GTNewHorizons.ecoaeextension.gui.ECOAEGuiHandler());
+        cpw.mods.fml.common.network.NetworkRegistry.INSTANCE.registerGuiHandler(
+            ECOAEExtension.instance,
+            new com.github.GTNewHorizons.ecoaeextension.gui.ECOAEGuiHandler());
     }
 
     public void postInit(FMLPostInitializationEvent event) {

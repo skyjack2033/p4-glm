@@ -32,41 +32,45 @@ import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
-import appeng.api.storage.data.IAEItemStack;
-
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 /**
  * ECalculator Controller - An extendable AE2 crafting CPU multiblock.
  *
- * <p>Provides virtual CPUs to the AE2 crafting network, enabling massively parallel
+ * <p>
+ * Provides virtual CPUs to the AE2 crafting network, enabling massively parallel
  * autocrafting through thread cores, hyper-thread cores, parallel processors, and
- * flash memory cells.</p>
+ * flash memory cells.
+ * </p>
  *
  * <h3>Features</h3>
  * <ul>
- *   <li>Virtual CPUs (vCPUs) exposed to the AE2 network as crafting storage</li>
- *   <li>Thread cores for parallel crafting execution</li>
- *   <li>Hyper-thread cores for additional parallelism (with 10% byte cost increase)</li>
- *   <li>Parallel processors for scaling throughput</li>
- *   <li>Cell drives for flash memory cells (crafting storage bytes)</li>
- *   <li>Transmitter bus for connecting cell drives to the crafting cluster</li>
- *   <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV) affecting thread count and parallelism</li>
+ * <li>Virtual CPUs (vCPUs) exposed to the AE2 network as crafting storage</li>
+ * <li>Thread cores for parallel crafting execution</li>
+ * <li>Hyper-thread cores for additional parallelism (with 10% byte cost increase)</li>
+ * <li>Parallel processors for scaling throughput</li>
+ * <li>Cell drives for flash memory cells (crafting storage bytes)</li>
+ * <li>Transmitter bus for connecting cell drives to the crafting cluster</li>
+ * <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV) affecting thread count and parallelism</li>
  * </ul>
  *
  * <h3>Structure</h3>
- * <p>Linear multiblock extending from the controller block. Consists of:</p>
+ * <p>
+ * Linear multiblock extending from the controller block. Consists of:
+ * </p>
  * <ul>
- *   <li>Fixed 3x3x3 section with controller and ME channel</li>
- *   <li>Repeating segments with thread cores, parallel processors, cell drives, transmitter buses</li>
- *   <li>End cap with tail block</li>
+ * <li>Fixed 3x3x3 section with controller and ME channel</li>
+ * <li>Repeating segments with thread cores, parallel processors, cell drives, transmitter buses</li>
+ * <li>End cap with tail block</li>
  * </ul>
  *
  * <h3>AE2 Integration</h3>
- * <p>Implements {@link ICraftingProvider} and {@link ICraftingMedium} to participate in AE2's
+ * <p>
+ * Implements {@link ICraftingProvider} and {@link ICraftingMedium} to participate in AE2's
  * crafting system. Also implements {@link ICraftingCPU} to expose virtual CPU status to the
- * AE2 crafting grid.</p>
+ * AE2 crafting grid.
+ * </p>
  */
 public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECalculatorController>
     implements ICraftingProvider, ICraftingCPU {
@@ -263,8 +267,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             // y=1: controller at center-front (x=1, z=0)
             { "CEC", "CCC", "CCC" },
             // y=2: ME channel at center-middle (x=1, z=1)
-            { "CCC", "CMC", "CCC" }
-        };
+            { "CCC", "CMC", "CCC" } };
     }
 
     /**
@@ -279,11 +282,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * </pre>
      */
     private String[][] getThreadSegmentPattern() {
-        return new String[][] {
-            { "CDC", "CPC" },
-            { "CBC", "CTC" },
-            { "CDC", "CPC" }
-        };
+        return new String[][] { { "CDC", "CPC" }, { "CBC", "CTC" }, { "CDC", "CPC" } };
     }
 
     /**
@@ -297,11 +296,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * </pre>
      */
     private String[][] getHyperSegmentPattern() {
-        return new String[][] {
-            { "CDC", "CPC" },
-            { "CBC", "CHC" },
-            { "CDC", "CPC" }
-        };
+        return new String[][] { { "CDC", "CPC" }, { "CBC", "CHC" }, { "CDC", "CPC" } };
     }
 
     /**
@@ -315,11 +310,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * </pre>
      */
     private String[][] getEndCapPattern() {
-        return new String[][] {
-            { "CCC", "CCC", "CCC" },
-            { "CCC", "CLC", "CCC" },
-            { "CCC", "CCC", "CCC" }
-        };
+        return new String[][] { { "CCC", "CCC", "CCC" }, { "CCC", "CLC", "CCC" }, { "CCC", "CCC", "CCC" } };
     }
 
     // =========================================================================
@@ -388,8 +379,10 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                     // Skip the controller block itself
                     if (dx == 0 && dy == 0 && dz == 0) continue;
 
-                    net.minecraft.block.Block block = base.getWorld().getBlock(wx, wy, wz);
-                    int meta = base.getWorld().getBlockMetadata(wx, wy, wz);
+                    net.minecraft.block.Block block = base.getWorld()
+                        .getBlock(wx, wy, wz);
+                    int meta = base.getWorld()
+                        .getBlockMetadata(wx, wy, wz);
 
                     // ME channel at position (0, +1, 0) relative to controller
                     if (dx == 0 && dy == 1 && dz == 0) {
@@ -423,11 +416,24 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         ForgeDirection facing = base.getFrontFacing();
         int fwdX, fwdZ;
         switch (facing) {
-            case NORTH: fwdX = 0;  fwdZ = 1;  break; // front faces north -> extends south (+Z)
-            case SOUTH: fwdX = 0;  fwdZ = -1; break; // front faces south -> extends north (-Z)
-            case WEST:  fwdX = 1;  fwdZ = 0;  break; // front faces west  -> extends east  (+X)
-            case EAST:  fwdX = -1; fwdZ = 0;  break; // front faces east  -> extends west  (-X)
-            default: return false;
+            case NORTH:
+                fwdX = 0;
+                fwdZ = 1;
+                break; // front faces north -> extends south (+Z)
+            case SOUTH:
+                fwdX = 0;
+                fwdZ = -1;
+                break; // front faces south -> extends north (-Z)
+            case WEST:
+                fwdX = 1;
+                fwdZ = 0;
+                break; // front faces west -> extends east (+X)
+            case EAST:
+                fwdX = -1;
+                fwdZ = 0;
+                break; // front faces east -> extends west (-X)
+            default:
+                return false;
         }
 
         int cx = base.getXCoord();
@@ -507,13 +513,16 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * Check and count components in a segment at the given position.
      * Each segment is 3 high x 2 deep x 3 wide (with side casings).
      *
-     * <p>Original JSON segment layout (center column, 3 high x 2 deep x 1 wide):
+     * <p>
+     * Original JSON segment layout (center column, 3 high x 2 deep x 1 wide):
+     * 
      * <pre>
      * z=0: cell drive (y=0), transmitter bus (y=1), cell drive (y=2)
      * z=1: parallel proc (y=0), thread/hyper (y=1), parallel proc (y=2)
      * </pre>
      *
-     * <p>The position (cx, cy, cz) is the near-depth, bottom-left corner of the segment.
+     * <p>
+     * The position (cx, cy, cz) is the near-depth, bottom-left corner of the segment.
      * Side columns (dx=0 and dx=2) are casings; center column (dx=1) has components.
      *
      * @return true if the segment is valid
@@ -610,8 +619,11 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         ActiveCraftingJob job = new ActiveCraftingJob(patternDetails, table);
         activeJobs.add(job);
 
-        ECOAEExtension.LOG.debug("ECalculator accepted crafting job: {} ({} bytes)",
-            patternDetails.getPattern().getDisplayName(), requiredBytes);
+        ECOAEExtension.LOG.debug(
+            "ECalculator accepted crafting job: {} ({} bytes)",
+            patternDetails.getPattern()
+                .getDisplayName(),
+            requiredBytes);
 
         return true;
     }
@@ -712,7 +724,10 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
             ECOAEExtension.LOG.info(
                 "ECalculator connected to AE2 network: threads={}, hyper={}, storage={} bytes, parallel={}",
-                installedThreadCores, installedHyperThreads, totalStorageBytes, getParallelCount());
+                installedThreadCores,
+                installedHyperThreads,
+                totalStorageBytes,
+                getParallelCount());
 
         } catch (Exception e) {
             ECOAEExtension.LOG.error("Failed to connect ECalculator to AE2 network", e);
@@ -758,9 +773,9 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         //
         // Each cell drive can hold one calculator cell.
         // Default cell size depends on tier:
-        //   L4: 64M bytes per cell
-        //   L6: 1024M bytes per cell
-        //   L9: 16384M bytes per cell
+        // L4: 64M bytes per cell
+        // L6: 1024M bytes per cell
+        // L9: 16384M bytes per cell
         long bytesPerCell;
         switch (currentTier) {
             case L9:
@@ -841,8 +856,11 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * Notify listeners that a crafting job has completed.
      */
     private void notifyJobComplete(ActiveCraftingJob job) {
-        ECOAEExtension.LOG.debug("ECalculator crafting job completed: {}",
-            job.getPattern().getPattern().getDisplayName());
+        ECOAEExtension.LOG.debug(
+            "ECalculator crafting job completed: {}",
+            job.getPattern()
+                .getPattern()
+                .getDisplayName());
 
         // Notify AE2 crafting monitors
         @SuppressWarnings("rawtypes")
@@ -1060,8 +1078,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             aBaseMetaTileEntity.getWorld(),
             aBaseMetaTileEntity.getXCoord(),
             aBaseMetaTileEntity.getYCoord(),
-            aBaseMetaTileEntity.getZCoord()
-        );
+            aBaseMetaTileEntity.getZCoord());
         return true;
     }
 
@@ -1079,15 +1096,35 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         tooltip.add(EnumChatFormatting.GRAY + "Extendable AE2 crafting CPU system");
         tooltip.add(EnumChatFormatting.GRAY + "Provides virtual CPUs for AE2 autocrafting");
         tooltip.add(EnumChatFormatting.GRAY + "Thread cores enable parallel crafting execution");
-        tooltip.add(EnumChatFormatting.GRAY + "Hyper-threads add parallelism at "
-            + (int) ((Config.eCalculatorHyperThreadCostMultiplier - 1.0) * 100) + "% byte cost");
+        tooltip.add(
+            EnumChatFormatting.GRAY + "Hyper-threads add parallelism at "
+                + (int) ((Config.eCalculatorHyperThreadCostMultiplier - 1.0) * 100)
+                + "% byte cost");
         tooltip.add("");
-        tooltip.add(EnumChatFormatting.YELLOW + "L4 (HV): " + Config.eCalculatorBaseThreadCoresL4
-            + " base threads, " + EnumChatFormatting.GREEN + "1x" + EnumChatFormatting.GRAY + " parallel");
-        tooltip.add(EnumChatFormatting.YELLOW + "L6 (IV): " + Config.eCalculatorBaseThreadCoresL6
-            + " base threads, " + EnumChatFormatting.GREEN + "4x" + EnumChatFormatting.GRAY + " parallel");
-        tooltip.add(EnumChatFormatting.YELLOW + "L9 (LuV): " + Config.eCalculatorBaseThreadCoresL9
-            + " base threads, " + EnumChatFormatting.GREEN + "16x" + EnumChatFormatting.GRAY + " parallel");
+        tooltip.add(
+            EnumChatFormatting.YELLOW + "L4 (HV): "
+                + Config.eCalculatorBaseThreadCoresL4
+                + " base threads, "
+                + EnumChatFormatting.GREEN
+                + "1x"
+                + EnumChatFormatting.GRAY
+                + " parallel");
+        tooltip.add(
+            EnumChatFormatting.YELLOW + "L6 (IV): "
+                + Config.eCalculatorBaseThreadCoresL6
+                + " base threads, "
+                + EnumChatFormatting.GREEN
+                + "4x"
+                + EnumChatFormatting.GRAY
+                + " parallel");
+        tooltip.add(
+            EnumChatFormatting.YELLOW + "L9 (LuV): "
+                + Config.eCalculatorBaseThreadCoresL9
+                + " base threads, "
+                + EnumChatFormatting.GREEN
+                + "16x"
+                + EnumChatFormatting.GRAY
+                + " parallel");
     }
 
     /**

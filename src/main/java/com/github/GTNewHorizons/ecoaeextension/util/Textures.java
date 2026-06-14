@@ -23,8 +23,7 @@ public class Textures {
         TEXTURE_PREFIX + "blocks/estorage/energy_cell");
     public static final ResourceLocation ESTORAGE_ME_CHANNEL = new ResourceLocation(
         TEXTURE_PREFIX + "blocks/estorage/me_channel");
-    public static final ResourceLocation ESTORAGE_VENT = new ResourceLocation(
-        TEXTURE_PREFIX + "blocks/estorage/vent");
+    public static final ResourceLocation ESTORAGE_VENT = new ResourceLocation(TEXTURE_PREFIX + "blocks/estorage/vent");
 
     // Block textures - ECalculator
     public static final ResourceLocation ECALCULATOR_CASING = new ResourceLocation(
