@@ -575,21 +575,25 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
                     if (!checkBlockAt(w2[0], w2[1], w2[2], CASING_BLOCK, CASING_META)) return false;
 
                     // Check center column (sx=1) based on layer and depth
+                    // Original JSON segment layout (3 high x 2 deep x 1 wide):
+                    //   y=0, z=0: parallel processor   y=0, z=1: pattern bus
+                    //   y=1, z=0: worker               y=1, z=1: vent
+                    //   y=2, z=0: parallel processor   y=2, z=1: pattern bus
                     int[] wc = shapeToWorld(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, depthBase, 1, sy, sz);
                     Block expectedBlock;
                     int expectedMeta;
                     if (sy == 0) {
-                        // Layer 0: pattern bus (sz=0), worker (sz=1)
-                        expectedBlock = (sz == 0) ? PATTERN_BUS_BLOCK : WORKER_BLOCK;
-                        expectedMeta = (sz == 0) ? PATTERN_BUS_META : WORKER_META;
+                        // y=0: parallel processor (sz=0), pattern bus (sz=1)
+                        expectedBlock = (sz == 0) ? PROCESSOR_BLOCK : PATTERN_BUS_BLOCK;
+                        expectedMeta = (sz == 0) ? PROCESSOR_META : PATTERN_BUS_META;
                     } else if (sy == 1) {
-                        // Layer 1: pattern bus (sz=0), processor (sz=1)
-                        expectedBlock = (sz == 0) ? PATTERN_BUS_BLOCK : PROCESSOR_BLOCK;
-                        expectedMeta = (sz == 0) ? PATTERN_BUS_META : PROCESSOR_META;
+                        // y=1: worker (sz=0), vent (sz=1)
+                        expectedBlock = (sz == 0) ? WORKER_BLOCK : VENT_BLOCK;
+                        expectedMeta = (sz == 0) ? WORKER_META : VENT_META;
                     } else {
-                        // Layer 2: vent (sz=0), processor (sz=1)
-                        expectedBlock = (sz == 0) ? VENT_BLOCK : PROCESSOR_BLOCK;
-                        expectedMeta = (sz == 0) ? VENT_META : PROCESSOR_META;
+                        // y=2: parallel processor (sz=0), pattern bus (sz=1)
+                        expectedBlock = (sz == 0) ? PROCESSOR_BLOCK : PATTERN_BUS_BLOCK;
+                        expectedMeta = (sz == 0) ? PROCESSOR_META : PATTERN_BUS_META;
                     }
                     if (!checkBlockAt(wc[0], wc[1], wc[2], expectedBlock, expectedMeta)) return false;
                 }
@@ -863,30 +867,9 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     // Display and Tooltip
     // =========================================================================
 
-    @Override
-    public String[] getDescription() {
-        return new String[] {
-            EnumChatFormatting.AQUA + "EFabricator Controller",
-            EnumChatFormatting.GRAY + "AE2 Auto-Crafting Multiblock",
-            EnumChatFormatting.GRAY + "Tier: " + EnumChatFormatting.YELLOW + currentTier.name,
-            EnumChatFormatting.GRAY + "Patterns: " + EnumChatFormatting.GREEN + getTotalPatternSlots()
-                + EnumChatFormatting.GRAY + " (" + EnumChatFormatting.YELLOW + installedPatternBuses
-                + EnumChatFormatting.GRAY + " buses x " + EnumChatFormatting.YELLOW + patternBusSlots
-                + EnumChatFormatting.GRAY + " each)",
-            EnumChatFormatting.GRAY + "Workers: " + EnumChatFormatting.GREEN + installedWorkers
-                + EnumChatFormatting.GRAY + " (queue: " + EnumChatFormatting.YELLOW + workerQueueDepth + EnumChatFormatting.GRAY + ")",
-            EnumChatFormatting.GRAY + "Processors: " + EnumChatFormatting.GREEN + installedProcessors,
-            EnumChatFormatting.GRAY + "Parallel: " + EnumChatFormatting.GREEN + getParallelCount() + "x",
-            EnumChatFormatting.GRAY + "Overclock: " + EnumChatFormatting.YELLOW + getOverclockModeName()
-                + EnumChatFormatting.GRAY + " (" + EnumChatFormatting.GREEN + getOverclockSpeedMultiplier() + "x"
-                + EnumChatFormatting.GRAY + " speed, " + EnumChatFormatting.RED + getOverclockEnergyMultiplier()
-                + "x" + EnumChatFormatting.GRAY + " EU)",
-            EnumChatFormatting.GRAY + "Cooling: "
-                + (coolingEnabled ? EnumChatFormatting.GREEN + "Active" : EnumChatFormatting.RED + "Inactive"),
-            EnumChatFormatting.GRAY + "AE2: "
-                + (ae2Connected ? EnumChatFormatting.GREEN + "Connected" : EnumChatFormatting.RED + "Disconnected")
-        };
-    }
+    // getDescription() is final in MTETooltipMultiBlockBase and cannot be overridden.
+    // Static tooltip information is provided via createTooltip() in the base class,
+    // and dynamic runtime information is provided via addAdditionalTooltipInformation().
 
     @Override
     public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {

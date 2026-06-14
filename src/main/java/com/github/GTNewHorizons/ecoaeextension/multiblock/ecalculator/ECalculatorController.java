@@ -162,7 +162,8 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     private MachineSource machineSource;
 
     /** Listeners for crafting monitor updates */
-    private final List<IMEMonitorHandlerReceiver<IAEItemStack>> listeners = new ArrayList<>();
+    @SuppressWarnings("rawtypes")
+    private final List<IMEMonitorHandlerReceiver> listeners = new ArrayList<>();
 
     // =========================================================================
     // Constructors
@@ -267,39 +268,39 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     }
 
     /**
-     * Repeating thread core segment (3x3x3).
-     * Thread core at center, surrounded by casings, with parallel processors
-     * and cell drives in adjacent positions.
+     * Repeating thread core segment (3 wide x 3 high x 2 deep).
+     * Thread core at center of far-depth layer, with parallel processors,
+     * cell drives, and transmitter buses in near-depth layer.
      *
      * <pre>
-     * y=0: CPC / CDC / CPC   (P=parallel proc, D=cell drive)
-     * y=1: CBC / CTC / CBC   (T=thread core, B=transmitter bus)
-     * y=2: CPC / CDC / CPC
+     * y=0: z=0 "CDC", z=1 "CPC"   (D=cell drive, P=parallel proc)
+     * y=1: z=0 "CBC", z=1 "CTC"   (B=transmitter bus, T=thread core)
+     * y=2: z=0 "CDC", z=1 "CPC"
      * </pre>
      */
     private String[][] getThreadSegmentPattern() {
         return new String[][] {
-            { "CPC", "CDC", "CPC" },
-            { "CBC", "CTC", "CBC" },
-            { "CPC", "CDC", "CPC" }
+            { "CDC", "CPC" },
+            { "CBC", "CTC" },
+            { "CDC", "CPC" }
         };
     }
 
     /**
-     * Repeating hyper-thread segment (3x3x3).
+     * Repeating hyper-thread segment (3 wide x 3 high x 2 deep).
      * Same layout as thread segment but with hyper-thread core (H) instead of thread core (T).
      *
      * <pre>
-     * y=0: CPC / CDC / CPC
-     * y=1: CBC / CHC / CBC   (H=hyper-thread core)
-     * y=2: CPC / CDC / CPC
+     * y=0: z=0 "CDC", z=1 "CPC"
+     * y=1: z=0 "CBC", z=1 "CHC"   (H=hyper-thread core)
+     * y=2: z=0 "CDC", z=1 "CPC"
      * </pre>
      */
     private String[][] getHyperSegmentPattern() {
         return new String[][] {
-            { "CPC", "CDC", "CPC" },
-            { "CBC", "CHC", "CBC" },
-            { "CPC", "CDC", "CPC" }
+            { "CDC", "CPC" },
+            { "CBC", "CHC" },
+            { "CDC", "CPC" }
         };
     }
 
@@ -411,7 +412,8 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     /**
      * Scan for repeating segments extending from the fixed section along the structure axis.
-     * Each segment is 3x3x3 and must be followed by another segment or the end cap.
+     * Each segment is 3 high x 2 deep x 3 wide (with side casings).
+     * Segments are followed by a 3x3x3 end cap with a tail block at center.
      *
      * @return true if the structure terminates correctly with an end cap
      */
@@ -434,8 +436,8 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
         // The fixed section is 3x3x3 centered on the controller, spanning
         // from (cx-1,cy-1,cz-1) to (cx+1,cy+1,cz+1). The first segment
-        // center is 3 blocks forward from the controller (past the front face).
-        int offset = 3;
+        // starts 2 blocks forward from the controller (one past the front face).
+        int segmentStart = 2;
         int segmentCount = 0;
         boolean foundEndCap = false;
 
@@ -443,28 +445,33 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             if (segmentCount >= MAX_SEGMENTS) {
                 return false;
             }
-            int checkX = cx + fwdX * offset;
-            int checkY = cy;
-            int checkZ = cz + fwdZ * offset;
 
-            // Check if this 3x3x3 block is an end cap
-            if (isEndCap(base.getWorld(), checkX, checkY, checkZ)) {
+            // Try to validate as a 2-deep segment starting at this position
+            int segX = cx + fwdX * segmentStart;
+            int segY = cy;
+            int segZ = cz + fwdZ * segmentStart;
+
+            if (checkSegment(base.getWorld(), segX, segY, segZ)) {
+                // Valid segment - advance by 2 (segment depth)
+                segmentStart += 2;
+                segmentCount++;
+                continue;
+            }
+
+            // Not a valid segment - check if this is an end cap.
+            // The end cap is a 3x3x3 volume centered 1 block forward from segmentStart.
+            int endCapX = cx + fwdX * (segmentStart + 1);
+            int endCapZ = cz + fwdZ * (segmentStart + 1);
+            if (isEndCap(base.getWorld(), endCapX, segY, endCapZ)) {
                 foundEndCap = true;
                 break;
             }
 
-            // Check if this 3x3x3 block is a valid segment
-            if (!checkSegment(base.getWorld(), checkX, checkY, checkZ)) {
-                // Not a valid segment and not an end cap - structure is invalid
-                return false;
-            }
-
-            // Move to the next segment center (3 blocks in the scan direction)
-            offset += 3;
-            segmentCount++;
+            // Neither a valid segment nor an end cap - structure is invalid
+            return false;
         }
 
-        return foundEndCap;
+        return foundEndCap && segmentCount > 0;
     }
 
     /**
@@ -497,21 +504,25 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     }
 
     /**
-     * Check and count components in a 3x3x3 segment at the given position.
-     * Identifies thread cores, hyper-threads, parallel processors, cell drives,
-     * and transmitter buses.
+     * Check and count components in a segment at the given position.
+     * Each segment is 3 high x 2 deep x 3 wide (with side casings).
+     *
+     * <p>Original JSON segment layout (center column, 3 high x 2 deep x 1 wide):
+     * <pre>
+     * z=0: cell drive (y=0), transmitter bus (y=1), cell drive (y=2)
+     * z=1: parallel proc (y=0), thread/hyper (y=1), parallel proc (y=2)
+     * </pre>
+     *
+     * <p>The position (cx, cy, cz) is the near-depth, bottom-left corner of the segment.
+     * Side columns (dx=0 and dx=2) are casings; center column (dx=1) has components.
      *
      * @return true if the segment is valid
      */
     private boolean checkSegment(net.minecraft.world.World world, int cx, int cy, int cz) {
-        // Expected layout per 3x3x3 segment:
-        // y=-1: C P C / C D C / C P C   (P=parallel proc, D=cell drive)
-        // y= 0: C B C / C T/H C / C B C  (B=transmitter bus, T/H=thread/hyper)
-        // y=+1: C P C / C D C / C P C
-
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
+        // Iterate over 3 wide x 3 high x 2 deep
+        for (int dy = 0; dy < 3; dy++) {
+            for (int dz = 0; dz < 2; dz++) {
+                for (int dx = 0; dx < 3; dx++) {
                     int wx = cx + dx;
                     int wy = cy + dy;
                     int wz = cz + dz;
@@ -521,10 +532,28 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
                     if (block != BlockLoader.ecalculatorBlocks) return false;
 
-                    // Center position (dx=0, dz=0)
-                    if (dx == 0 && dz == 0) {
-                        if (dy == 0) {
-                            // Thread core or hyper-thread at center
+                    // Side casings (dx=0 and dx=2)
+                    if (dx != 1) {
+                        if (meta != BlockLoader.ECALC_META_CASING) return false;
+                        continue;
+                    }
+
+                    // Center column (dx=1)
+                    if (dz == 0) {
+                        // Near depth (z=0): cell drive, transmitter bus, cell drive
+                        if (dy == 1) {
+                            // Transmitter bus at y=1
+                            if (meta != BlockLoader.ECALC_META_TRANSMITTER_BUS) return false;
+                            installedTransmitterBuses++;
+                        } else {
+                            // Cell drives at y=0 and y=2
+                            if (meta != BlockLoader.ECALC_META_CELL_DRIVE) return false;
+                            installedCellDrives++;
+                        }
+                    } else {
+                        // Far depth (z=1): parallel proc, thread/hyper, parallel proc
+                        if (dy == 1) {
+                            // Thread core or hyper-thread at y=1
                             if (meta == BlockLoader.ECALC_META_THREAD_CORE) {
                                 installedThreadCores++;
                             } else if (meta == BlockLoader.ECALC_META_HYPER_THREAD) {
@@ -533,26 +562,10 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                                 return false;
                             }
                         } else {
-                            // Parallel processors at y=-1 and y=+1
+                            // Parallel processors at y=0 and y=2
                             if (meta != BlockLoader.ECALC_META_PARALLEL_PROC) return false;
                             installedParallelProcessors++;
                         }
-                    }
-                    // Depth-offset positions (dz=+/-1, dx=0)
-                    else if (dx == 0 && dz != 0) {
-                        if (dy != 0) {
-                            // Cell drives at y=-1 and y=+1
-                            if (meta != BlockLoader.ECALC_META_CELL_DRIVE) return false;
-                            installedCellDrives++;
-                        } else {
-                            // Transmitter buses at y=0
-                            if (meta != BlockLoader.ECALC_META_TRANSMITTER_BUS) return false;
-                            installedTransmitterBuses++;
-                        }
-                    }
-                    // Corner positions: casings
-                    else {
-                        if (meta != BlockLoader.ECALC_META_CASING) return false;
                     }
                 }
             }
@@ -655,13 +668,13 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         return "ECalculator " + currentTier.name;
     }
 
-    @Override
-    public void addListener(IMEMonitorHandlerReceiver<IAEItemStack> l, Object verificationToken) {
+    @SuppressWarnings("rawtypes")
+    public void addListener(IMEMonitorHandlerReceiver l, Object verificationToken) {
         listeners.add(l);
     }
 
-    @Override
-    public void removeListener(IMEMonitorHandlerReceiver<IAEItemStack> l) {
+    @SuppressWarnings("rawtypes")
+    public void removeListener(IMEMonitorHandlerReceiver l) {
         listeners.remove(l);
     }
 
@@ -832,7 +845,9 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             job.getPattern().getPattern().getDisplayName());
 
         // Notify AE2 crafting monitors
-        for (IMEMonitorHandlerReceiver listener : listeners) {
+        @SuppressWarnings("rawtypes")
+        List<IMEMonitorHandlerReceiver> snapshot = listeners;
+        for (IMEMonitorHandlerReceiver listener : snapshot) {
             try {
                 // The listener interface uses postChange for updates
                 // TODO: Call the appropriate notification method on the listener
@@ -1054,25 +1069,9 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     // Display and UI
     // =========================================================================
 
-    @Override
-    public String[] getDescription() {
-        return new String[] {
-            EnumChatFormatting.AQUA + "ECalculator Controller",
-            EnumChatFormatting.GRAY + "AE2 Crafting CPU Multiblock",
-            EnumChatFormatting.GRAY + "Tier: " + EnumChatFormatting.YELLOW + currentTier.name,
-            EnumChatFormatting.GRAY + "Threads: " + EnumChatFormatting.GREEN + getTotalThreads()
-                + EnumChatFormatting.GRAY + " (Hyper: " + EnumChatFormatting.YELLOW + installedHyperThreads
-                + EnumChatFormatting.GRAY + ")",
-            EnumChatFormatting.GRAY + "Storage: " + EnumChatFormatting.GREEN + formatBytes(totalStorageBytes),
-            EnumChatFormatting.GRAY + "Parallel: " + EnumChatFormatting.GREEN + getParallelCount() + "x",
-            EnumChatFormatting.GRAY + "Co-Processors: " + EnumChatFormatting.GREEN + getCoProcessors(),
-            EnumChatFormatting.GRAY + "Cell Drives: " + EnumChatFormatting.YELLOW + installedCellDrives,
-            EnumChatFormatting.GRAY + "vCPU: " + (vCPUActive ? EnumChatFormatting.GREEN + "Active"
-                : EnumChatFormatting.RED + "Inactive"),
-            EnumChatFormatting.GRAY + "AE2: " + (ae2Connected ? EnumChatFormatting.GREEN + "Connected"
-                : EnumChatFormatting.RED + "Disconnected")
-        };
-    }
+    // getDescription() is final in MTETooltipMultiBlockBase and cannot be overridden.
+    // Static tooltip information is provided via createTooltip() in the base class,
+    // and dynamic runtime information is provided via addAdditionalTooltipInformation().
 
     @Override
     public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {

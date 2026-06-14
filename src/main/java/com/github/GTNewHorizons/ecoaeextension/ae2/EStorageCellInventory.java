@@ -24,6 +24,7 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 
 /**
@@ -214,11 +215,12 @@ public class EStorageCellInventory implements ICellInventory {
     }
 
     @Override
-    public long getRemainingItemsCountDist(IAEItemStack stack) {
+    public long getRemainingItemsCountDist(IAEStack stack) {
         ensureLoaded();
         if (stack == null) return getRemainingItemCount();
 
-        IAEItemStack existingKey = findMatchingKey(stack);
+        @SuppressWarnings("unchecked")
+        IAEItemStack existingKey = findMatchingKey((IAEItemStack) stack);
         if (existingKey != null) {
             long remainingBytes = totalBytes - usedBytes;
             if (remainingBytes < BYTES_PER_ITEM) return 0;
@@ -256,16 +258,18 @@ public class EStorageCellInventory implements ICellInventory {
     // IMEInventory<IAEItemStack> - injectItems
     // =========================================================================
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public IAEItemStack injectItems(IAEItemStack input, Actionable actionable, BaseActionSource source) {
-        if (input == null || input.getStackSize() <= 0) return null;
+    public IAEItemStack injectItems(IAEStack input, Actionable actionable, BaseActionSource source) {
+        IAEItemStack inputStack = (IAEItemStack) input;
+        if (inputStack == null || inputStack.getStackSize() <= 0) return null;
 
         ensureLoaded();
 
-        long requestedAmount = input.getStackSize();
+        long requestedAmount = inputStack.getStackSize();
 
         // Find existing entry for this item
-        IAEItemStack existingKey = findMatchingKey(input);
+        IAEItemStack existingKey = findMatchingKey(inputStack);
 
         if (existingKey != null) {
             // Item type already exists in cell
@@ -277,7 +281,7 @@ public class EStorageCellInventory implements ICellInventory {
             long toInsert = Math.min(requestedAmount, maxCanAdd);
 
             if (toInsert <= 0) {
-                return input.copy();
+                return inputStack.copy();
             }
 
             if (actionable == Actionable.MODULATE) {
@@ -288,7 +292,7 @@ public class EStorageCellInventory implements ICellInventory {
             }
 
             if (toInsert < requestedAmount) {
-                IAEItemStack remainder = input.copy();
+                IAEItemStack remainder = inputStack.copy();
                 remainder.setStackSize(requestedAmount - toInsert);
                 return remainder;
             }
@@ -297,25 +301,25 @@ public class EStorageCellInventory implements ICellInventory {
         } else {
             // New item type
             if (storedItemTypes >= MAX_ITEM_TYPES) {
-                return input.copy();
+                return inputStack.copy();
             }
 
             long availableBytes = totalBytes - usedBytes;
             long bytesForItems = availableBytes - BYTES_PER_TYPE;
 
             if (bytesForItems < BYTES_PER_ITEM) {
-                return input.copy();
+                return inputStack.copy();
             }
 
             long maxCanAdd = bytesForItems / BYTES_PER_ITEM;
             long toInsert = Math.min(requestedAmount, maxCanAdd);
 
             if (toInsert <= 0) {
-                return input.copy();
+                return inputStack.copy();
             }
 
             if (actionable == Actionable.MODULATE) {
-                IAEItemStack key = input.copy();
+                IAEItemStack key = inputStack.copy();
                 key.setStackSize(1); // Key stored with stackSize=1
                 storedItems.put(key, toInsert);
                 storedItemTypes++;
@@ -325,7 +329,7 @@ public class EStorageCellInventory implements ICellInventory {
             }
 
             if (toInsert < requestedAmount) {
-                IAEItemStack remainder = input.copy();
+                IAEItemStack remainder = inputStack.copy();
                 remainder.setStackSize(requestedAmount - toInsert);
                 return remainder;
             }
@@ -338,17 +342,19 @@ public class EStorageCellInventory implements ICellInventory {
     // IMEInventory<IAEItemStack> - extractItems
     // =========================================================================
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public IAEItemStack extractItems(IAEItemStack request, Actionable actionable, BaseActionSource source) {
-        if (request == null || request.getStackSize() <= 0) return null;
+    public IAEItemStack extractItems(IAEStack request, Actionable actionable, BaseActionSource source) {
+        IAEItemStack requestStack = (IAEItemStack) request;
+        if (requestStack == null || requestStack.getStackSize() <= 0) return null;
 
         ensureLoaded();
 
-        IAEItemStack existingKey = findMatchingKey(request);
+        IAEItemStack existingKey = findMatchingKey(requestStack);
         if (existingKey == null) return null;
 
         long currentAmount = storedItems.get(existingKey);
-        long toExtract = Math.min(request.getStackSize(), currentAmount);
+        long toExtract = Math.min(requestStack.getStackSize(), currentAmount);
 
         if (toExtract <= 0) return null;
 
@@ -377,8 +383,9 @@ public class EStorageCellInventory implements ICellInventory {
     // IMEInventory<IAEItemStack> - getAvailableItems
     // =========================================================================
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out) {
+    public IItemList getAvailableItems(IItemList out) {
         ensureLoaded();
 
         for (Map.Entry<IAEItemStack, Long> entry : storedItems.entrySet()) {
@@ -390,8 +397,9 @@ public class EStorageCellInventory implements ICellInventory {
         return out;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out, int partitionIndex) {
+    public IItemList getAvailableItems(IItemList out, int partitionIndex) {
         return getAvailableItems(out);
     }
 
@@ -399,18 +407,20 @@ public class EStorageCellInventory implements ICellInventory {
     // IMEInventory<IAEItemStack> - getAvailableItem
     // =========================================================================
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public IAEItemStack getAvailableItem(IAEItemStack request) {
+    public IAEItemStack getAvailableItem(IAEStack request) {
         return getAvailableItem(request, 0);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public IAEItemStack getAvailableItem(IAEItemStack request, int partitionIndex) {
+    public IAEItemStack getAvailableItem(IAEStack request, int partitionIndex) {
         if (request == null) return null;
 
         ensureLoaded();
 
-        IAEItemStack existingKey = findMatchingKey(request);
+        IAEItemStack existingKey = findMatchingKey((IAEItemStack) request);
         if (existingKey == null) return null;
 
         long amount = storedItems.get(existingKey);
@@ -423,8 +433,9 @@ public class EStorageCellInventory implements ICellInventory {
     // IMEInventory<IAEItemStack> - getSortedFuzzyItems
     // =========================================================================
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public Collection<IAEItemStack> getSortedFuzzyItems(Collection<IAEItemStack> out, IAEItemStack filter,
+    public Collection getSortedFuzzyItems(Collection out, IAEStack filter,
             FuzzyMode fuzzyMode, int maxResults) {
         ensureLoaded();
 
@@ -432,7 +443,7 @@ public class EStorageCellInventory implements ICellInventory {
         for (Map.Entry<IAEItemStack, Long> entry : storedItems.entrySet()) {
             if (maxResults > 0 && count >= maxResults) break;
             IAEItemStack key = entry.getKey();
-            if (filter == null || key.isSameType(filter)) {
+            if (filter == null || key.isSameType((IAEItemStack) filter)) {
                 IAEItemStack stack = key.copy();
                 stack.setStackSize(entry.getValue());
                 out.add(stack);

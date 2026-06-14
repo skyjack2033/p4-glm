@@ -272,19 +272,19 @@ public class RecipeLoader {
         return stack;
     }
 
-    /** HV circuit - GTNH uses OrePrefixes for tiered circuits */
+    /** HV circuit */
     private static ItemStack getHVChip() {
-        return (ItemStack) OrePrefixes.circuit.get(Materials.Advanced);
+        return ItemList.Circuit_Advanced.get(1);
     }
 
     /** IV circuit */
     private static ItemStack getIVChip() {
-        return (ItemStack) OrePrefixes.circuit.get(Materials.Elite);
+        return ItemList.Circuit_Elite.get(1);
     }
 
     /** LuV circuit */
     private static ItemStack getLuVChip() {
-        return (ItemStack) OrePrefixes.circuit.get(Materials.Master);
+        return ItemList.Circuit_Master.get(1);
     }
 
     private static ItemStack getAE2StorageComponent() {

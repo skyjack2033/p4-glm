@@ -389,31 +389,31 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         int farY = oy + scanDir.offsetY;
         int farZ = oz + scanDir.offsetZ;
 
-        // Validate near depth column (3 high)
-        // y=0: energy cell
-        if (!isEnergyCellBlock(base, nearX, nearY, nearZ)) return false;
-        installedEnergyCells++;
+        // Validate near depth column (z=0, 3 high)
+        // y=0: cell drive
+        if (!isCellDriveBlock(base, nearX, nearY, nearZ)) return false;
+        installedCellDrives++;
 
         // y=1: cell drive
         if (!isCellDriveBlock(base, nearX, nearY + 1, nearZ)) return false;
         installedCellDrives++;
 
-        // y=2: energy cell
-        if (!isEnergyCellBlock(base, nearX, nearY + 2, nearZ)) return false;
-        installedEnergyCells++;
-
-        // Validate far depth column (3 high)
-        // y=0: cell drive
-        if (!isCellDriveBlock(base, farX, farY, farZ)) return false;
+        // y=2: cell drive
+        if (!isCellDriveBlock(base, nearX, nearY + 2, nearZ)) return false;
         installedCellDrives++;
+
+        // Validate far depth column (z=1, 3 high)
+        // y=0: energy cell
+        if (!isEnergyCellBlock(base, farX, farY, farZ)) return false;
+        installedEnergyCells++;
 
         // y=1: vent
         if (!isVentBlock(base, farX, farY + 1, farZ)) return false;
         installedVents++;
 
-        // y=2: cell drive
-        if (!isCellDriveBlock(base, farX, farY + 2, farZ)) return false;
-        installedCellDrives++;
+        // y=2: energy cell
+        if (!isEnergyCellBlock(base, farX, farY + 2, farZ)) return false;
+        installedEnergyCells++;
 
         return true;
     }
@@ -730,22 +730,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     // Display
     // =========================================================================
 
-    @Override
-    public String[] getDescription() {
-        return new String[] {
-            EnumChatFormatting.AQUA + "EStorage Controller",
-            EnumChatFormatting.GRAY + "Extendable AE2 Storage System",
-            EnumChatFormatting.GRAY + "Tier: " + EnumChatFormatting.YELLOW + currentTier.name,
-            EnumChatFormatting.GRAY + "Capacity: " + EnumChatFormatting.GREEN + formatBytes(getStorageCapacity()),
-            EnumChatFormatting.GRAY + "Segments: " + EnumChatFormatting.GREEN + segmentCount,
-            EnumChatFormatting.GRAY + "Cell Drives: " + EnumChatFormatting.YELLOW + installedCellDrives
-                + EnumChatFormatting.GRAY + "/" + EnumChatFormatting.YELLOW + maxCellDrives,
-            EnumChatFormatting.GRAY + "Energy Cells: " + EnumChatFormatting.YELLOW + installedEnergyCells,
-            EnumChatFormatting.GRAY + "Vents: " + EnumChatFormatting.YELLOW + installedVents,
-            EnumChatFormatting.GRAY + "AE2: " + (ae2Connected ? EnumChatFormatting.GREEN + "Connected"
-                : EnumChatFormatting.RED + "Disconnected")
-        };
-    }
+    // getDescription() is final in MTETooltipMultiBlockBase and cannot be overridden.
+    // Static tooltip information is provided via createTooltip() in the base class,
+    // and dynamic runtime information is provided via addAdditionalTooltipInformation().
 
     @Override
     public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {
