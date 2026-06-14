@@ -13,6 +13,8 @@ import net.minecraft.util.EnumChatFormatting;
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.ae2.EFabricatorPatternHandler;
+
+import appeng.me.helpers.AENetworkProxy;
 import com.github.GTNewHorizons.ecoaeextension.loader.BlockLoader;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMultiBlockBase;
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
@@ -279,6 +281,14 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     public boolean isStructureFormed() {
         return structureFormed;
+    }
+
+    /**
+     * Get the AE2 network proxy for grid access. Used by the pattern handler
+     * to post grid events and access storage.
+     */
+    public AENetworkProxy getAEProxy() {
+        return aeProxy;
     }
 
     public int getInstalledPatternBuses() {
@@ -684,9 +694,13 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     @Override
     protected void onStructureInvalidated() {
         structureFormed = false;
+
+        // Deactivate pattern handler before clearing component counts,
+        // so it can properly cancel any active jobs
         if (patternHandler != null) {
             patternHandler.deactivate();
         }
+
         installedPatternBuses = 0;
         installedWorkers = 0;
         installedProcessors = 0;
@@ -700,16 +714,34 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     @Override
     protected void connectToAE2Network() {
         super.connectToAE2Network();
-        if (patternHandler != null && ae2Connected) {
-            patternHandler.activate();
+
+        if (!ae2Connected) return;
+
+        try {
+            // Activate the pattern handler. This registers the handler as an
+            // ICraftingProvider with the AE2 grid and posts MENetworkCraftingPatternChange
+            // to trigger provideCrafting() discovery.
+            if (patternHandler != null) {
+                patternHandler.activate();
+            }
+
+            ECOAEExtension.LOG.info(
+                "EFabricator connected to AE2: workers={}, processors={}, patterns={}",
+                installedWorkers, installedProcessors, getTotalPatternSlots());
+
+        } catch (Exception e) {
+            ECOAEExtension.LOG.error("Failed to connect EFabricator to AE2 network", e);
         }
     }
 
     @Override
     protected void disconnectFromAE2Network() {
+        // Deactivate the pattern handler. This cancels active jobs, posts
+        // MENetworkCraftingPatternChange to notify AE2, and clears the registered state.
         if (patternHandler != null) {
             patternHandler.deactivate();
         }
+
         super.disconnectFromAE2Network();
     }
 
@@ -734,20 +766,18 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
             return;
         }
 
-        // Check energy sufficiency when overclocked
-        if (overclockMode > 0) {
-            long energyCost = (long) (currentTier.voltage * getOverclockEnergyMultiplier());
-            if (!drainEnergyInput(energyCost)) {
-                return;
-            }
+        // Check and drain energy: base voltage * overclock energy multiplier
+        long energyCost = (long) (currentTier.voltage * getOverclockEnergyMultiplier());
+        if (!drainEnergyInput(energyCost)) {
+            return;
         }
 
-        // Validate coolant availability
+        // Validate coolant availability (coolant is required when cooling is enabled)
         if (!hasCoolantAvailable()) {
             return;
         }
 
-        // Process one crafting tick
+        // Process one crafting tick: advances active jobs based on worker count and overclock speed
         patternHandler.processCraftingTick();
 
         // Consume coolant after processing
@@ -764,6 +794,13 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         try {
             aNBT.setInteger(NBT_OVERCLOCK_MODE, overclockMode);
             aNBT.setBoolean(NBT_COOLING_ENABLED, coolingEnabled);
+
+            // Save pattern handler state (active job progress)
+            if (patternHandler != null) {
+                NBTTagCompound handlerTag = new NBTTagCompound();
+                patternHandler.saveNBTData(handlerTag);
+                aNBT.setTag("EF_PatternHandler", handlerTag);
+            }
         } catch (Exception e) {
             ECOAEExtension.LOG.debug("Failed to save EFabricator state", e);
         }
@@ -778,6 +815,12 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
             }
             if (aNBT.hasKey(NBT_COOLING_ENABLED)) {
                 coolingEnabled = aNBT.getBoolean(NBT_COOLING_ENABLED);
+            }
+
+            // Load pattern handler state (active job progress)
+            if (patternHandler != null && aNBT.hasKey("EF_PatternHandler")) {
+                NBTTagCompound handlerTag = aNBT.getCompoundTag("EF_PatternHandler");
+                patternHandler.loadNBTData(handlerTag);
             }
         } catch (Exception e) {
             ECOAEExtension.LOG.debug("Failed to load EFabricator state", e);
