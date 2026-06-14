@@ -12,6 +12,7 @@ import net.minecraft.util.EnumChatFormatting;
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.ae2.EFabricatorPatternHandler;
+import com.github.GTNewHorizons.ecoaeextension.loader.BlockLoader;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMultiBlockBase;
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
@@ -47,32 +48,36 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     // =========================================================================
     // Block References - must be populated before structure checks can pass.
-    // Set these during mod init from the registered custom block instances.
+    // Block references from BlockLoader (initialized in static block below)
     // =========================================================================
 
-    /** Casing block used throughout the structure. */
     public static Block CASING_BLOCK;
     public static int CASING_META;
-
-    /** ME channel block providing AE2 network connectivity. */
     public static Block ME_CHANNEL_BLOCK;
     public static int ME_CHANNEL_META;
-
-    /** Vent block for heat management. */
     public static Block VENT_BLOCK;
     public static int VENT_META;
-
-    /** Pattern bus block that holds AE2 crafting patterns. */
     public static Block PATTERN_BUS_BLOCK;
     public static int PATTERN_BUS_META;
-
-    /** Worker core block that processes crafting jobs. */
     public static Block WORKER_BLOCK;
     public static int WORKER_META;
-
-    /** Parallel processor block that increases throughput. */
     public static Block PROCESSOR_BLOCK;
     public static int PROCESSOR_META;
+
+    static {
+        CASING_BLOCK = BlockLoader.efabricatorBlocks;
+        CASING_META = BlockLoader.EFAB_META_CASING;
+        ME_CHANNEL_BLOCK = BlockLoader.efabricatorBlocks;
+        ME_CHANNEL_META = BlockLoader.EFAB_META_ME_CHANNEL;
+        VENT_BLOCK = BlockLoader.efabricatorBlocks;
+        VENT_META = BlockLoader.EFAB_META_VENT;
+        PATTERN_BUS_BLOCK = BlockLoader.efabricatorBlocks;
+        PATTERN_BUS_META = BlockLoader.EFAB_META_PATTERN_BUS;
+        WORKER_BLOCK = BlockLoader.efabricatorBlocks;
+        WORKER_META = BlockLoader.EFAB_META_WORKER;
+        PROCESSOR_BLOCK = BlockLoader.efabricatorBlocks;
+        PROCESSOR_META = BlockLoader.EFAB_META_PARALLEL_PROC;
+    }
 
     // =========================================================================
     // Structure Constants

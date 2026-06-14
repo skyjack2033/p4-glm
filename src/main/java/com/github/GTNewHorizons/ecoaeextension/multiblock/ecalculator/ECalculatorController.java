@@ -13,6 +13,7 @@ import net.minecraft.util.EnumChatFormatting;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
+import com.github.GTNewHorizons.ecoaeextension.loader.BlockLoader;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMultiBlockBase;
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
@@ -377,24 +378,25 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                     // Skip the controller block itself
                     if (dx == 0 && dy == 0 && dz == 0) continue;
 
-                    IGregTechTileEntity tile = base.getWorld()
-                        .getTileEntity(wx, wy, wz) instanceof IGregTechTileEntity
-                            ? (IGregTechTileEntity) base.getWorld()
-                                .getTileEntity(wx, wy, wz)
-                            : null;
+                    net.minecraft.block.Block block = base.getWorld().getBlock(wx, wy, wz);
+                    int meta = base.getWorld().getBlockMetadata(wx, wy, wz);
 
-                    if (tile == null) return false;
+                    // ME channel at position (0, +1, 0) relative to controller
+                    if (dx == 0 && dy == 1 && dz == 0) {
+                        if (block != BlockLoader.ecalculatorBlocks || meta != BlockLoader.ECALC_META_ME_CHANNEL) {
+                            return false;
+                        }
+                        continue;
+                    }
 
-                    // Validate that each position has the expected block type.
-                    // TODO: Replace with actual block ID checks once MTEs are registered.
-                    // For now, check that a valid MetaTileEntity exists at each position.
-                    if (tile.getMetaTileEntity() == null) return false;
+                    // All other positions: casings
+                    if (block != BlockLoader.ecalculatorBlocks || meta != BlockLoader.ECALC_META_CASING) {
+                        return false;
+                    }
                 }
             }
         }
 
-        // Check for ME channel block at expected position (x=0, y=+1, z=0 relative to center)
-        // TODO: Validate ME channel block type once registered
         return true;
     }
 
@@ -438,26 +440,23 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      */
     private boolean isEndCap(net.minecraft.world.World world, int cx, int cy, int cz) {
         // Check for the tail block at the center of the 3x3x3 volume
-        IGregTechTileEntity centerTile = world.getTileEntity(cx, cy, cz) instanceof IGregTechTileEntity
-            ? (IGregTechTileEntity) world.getTileEntity(cx, cy, cz)
-            : null;
+        net.minecraft.block.Block centerBlock = world.getBlock(cx, cy, cz);
+        int centerMeta = world.getBlockMetadata(cx, cy, cz);
 
-        if (centerTile == null || centerTile.getMetaTileEntity() == null) return false;
+        if (centerBlock != BlockLoader.ecalculatorBlocks || centerMeta != BlockLoader.ECALC_META_TAIL) {
+            return false;
+        }
 
-        // TODO: Check if the center block is the tail block type once registered.
-        // For now, use a heuristic: the end cap is detected if all surrounding
-        // blocks are casings and the center is not a thread core or hyper-thread.
-
-        // Verify the 3x3x3 volume has valid blocks
+        // Verify the 3x3x3 volume has casings around the tail block
         for (int dy = -1; dy <= 1; dy++) {
             for (int dz = -1; dz <= 1; dz++) {
                 for (int dx = -1; dx <= 1; dx++) {
                     if (dx == 0 && dy == 0 && dz == 0) continue; // Skip center (tail block)
-                    IGregTechTileEntity tile = world.getTileEntity(cx + dx, cy + dy, cz + dz)
-                        instanceof IGregTechTileEntity
-                            ? (IGregTechTileEntity) world.getTileEntity(cx + dx, cy + dy, cz + dz)
-                            : null;
-                    if (tile == null || tile.getMetaTileEntity() == null) return false;
+                    net.minecraft.block.Block block = world.getBlock(cx + dx, cy + dy, cz + dz);
+                    int meta = world.getBlockMetadata(cx + dx, cy + dy, cz + dz);
+                    if (block != BlockLoader.ecalculatorBlocks || meta != BlockLoader.ECALC_META_CASING) {
+                        return false;
+                    }
                 }
             }
         }
@@ -473,6 +472,11 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * @return true if the segment is valid
      */
     private boolean checkSegment(net.minecraft.world.World world, int cx, int cy, int cz) {
+        // Expected layout per 3x3x3 segment:
+        // y=-1: C P C / C D C / C P C   (P=parallel proc, D=cell drive)
+        // y= 0: C B C / C T/H C / C B C  (B=transmitter bus, T/H=thread/hyper)
+        // y=+1: C P C / C D C / C P C
+
         for (int dy = -1; dy <= 1; dy++) {
             for (int dz = -1; dz <= 1; dz++) {
                 for (int dx = -1; dx <= 1; dx++) {
@@ -480,38 +484,50 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                     int wy = cy + dy;
                     int wz = cz + dz;
 
-                    IGregTechTileEntity tile = world.getTileEntity(wx, wy, wz)
-                        instanceof IGregTechTileEntity
-                            ? (IGregTechTileEntity) world.getTileEntity(wx, wy, wz)
-                            : null;
+                    net.minecraft.block.Block block = world.getBlock(wx, wy, wz);
+                    int meta = world.getBlockMetadata(wx, wy, wz);
 
-                    if (tile == null || tile.getMetaTileEntity() == null) return false;
+                    if (block != BlockLoader.ecalculatorBlocks) return false;
 
-                    // TODO: Replace with actual MTE type checks once blocks are registered.
-                    // For now, count components based on position heuristics.
-                    //
-                    // Expected layout per segment:
-                    // y=0: C P C / C D C / C P C
-                    // y=1: C B C / C T/H C / C B C
-                    // y=2: C P C / C D C / C P C
-                    //
-                    // Center block at y=1 (dx=0, dy=0, dz=0) is thread core or hyper-thread
-                    // Center blocks at y=0,y=2 (dx=0, dz=0) are parallel processors
-                    // Center blocks at y=0,y=2 (dx=0, dz=+/-1) are cell drives
-                    // Center blocks at y=1 (dx=0, dz=+/-1) are transmitter buses
+                    // Center position (dx=0, dz=0)
+                    if (dx == 0 && dz == 0) {
+                        if (dy == 0) {
+                            // Thread core or hyper-thread at center
+                            if (meta == BlockLoader.ECALC_META_THREAD_CORE) {
+                                installedThreadCores++;
+                            } else if (meta == BlockLoader.ECALC_META_HYPER_THREAD) {
+                                installedHyperThreads++;
+                            } else {
+                                return false;
+                            }
+                        } else {
+                            // Parallel processors at y=-1 and y=+1
+                            if (meta != BlockLoader.ECALC_META_PARALLEL_PROC) return false;
+                            installedParallelProcessors++;
+                        }
+                    }
+                    // Depth-offset positions (dz=+/-1, dx=0)
+                    else if (dx == 0 && dz != 0) {
+                        if (dy == 0) {
+                            // Cell drives at y=-1 and y=+1
+                            if (meta != BlockLoader.ECALC_META_CELL_DRIVE) return false;
+                            installedCellDrives++;
+                        } else {
+                            // Transmitter buses at y=0
+                            if (meta != BlockLoader.ECALC_META_TRANSMITTER_BUS) return false;
+                            installedTransmitterBuses++;
+                        }
+                    }
+                    // Corner positions: casings
+                    else {
+                        if (meta != BlockLoader.ECALC_META_CASING) return false;
+                    }
                 }
             }
         }
 
-        // Count components based on position heuristics
-        // Center y=1 block: thread core or hyper-thread
-        installedThreadCores++; // TODO: Distinguish thread vs hyper-thread based on MTE type
-
-        // y=0 and y=2 center blocks: parallel processors (2 per segment)
-        installedParallelProcessors += 2;
-
-        // y=0 and y=2 depth-offset blocks: cell drives (4 per segment)
-        installedCellDrives += 4;
+        return true;
+    }
 
         // y=1 depth-offset blocks: transmitter buses (2 per segment)
         installedTransmitterBuses += 2;

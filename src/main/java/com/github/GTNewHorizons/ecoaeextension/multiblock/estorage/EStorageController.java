@@ -12,6 +12,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.ae2.AE2StorageHelper;
+import com.github.GTNewHorizons.ecoaeextension.loader.BlockLoader;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMultiBlockBase;
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
@@ -448,73 +449,38 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     }
 
     // =========================================================================
-    // Block Type Checkers
+    // Block Type Checkers (using BlockLoader references)
     // =========================================================================
 
-    /**
-     * Check if the block at the given position is a controller block.
-     */
     private boolean isControllerBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z)
-            .getUnlocalizedName()
-            .toLowerCase()
-            .contains("estorage_controller");
+        // Controller is the MTE itself, already validated by position
+        return base.getWorld().getBlock(x, y, z) == base.getBlockType()
+            && base.getWorld().getBlockMetadata(x, y, z) == base.getMetaTileEntityID();
     }
 
-    /**
-     * Check if the block at the given position is a standard casing block.
-     */
     private boolean isCasingBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z)
-            .getUnlocalizedName()
-            .toLowerCase()
-            .contains("estorage_casing");
+        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CASING;
     }
 
-    /**
-     * Check if the block at the given position is a cell drive block.
-     */
     private boolean isCellDriveBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z)
-            .getUnlocalizedName()
-            .toLowerCase()
-            .contains("estorage_cell_drive");
+        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CELL_DRIVE;
     }
 
-    /**
-     * Check if the block at the given position is an energy cell block.
-     */
     private boolean isEnergyCellBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z)
-            .getUnlocalizedName()
-            .toLowerCase()
-            .contains("estorage_energy_cell");
+        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ENERGY_CELL;
     }
 
-    /**
-     * Check if the block at the given position is a vent block.
-     */
     private boolean isVentBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z)
-            .getUnlocalizedName()
-            .toLowerCase()
-            .contains("estorage_vent");
+        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_VENT;
     }
 
-    /**
-     * Check if the block at the given position is an ME channel block and matches the required tier.
-     */
     private boolean isMEChannelBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z)
-            .getUnlocalizedName()
-            .toLowerCase()
-            .contains("estorage_me_channel");
+        return base.getWorld().getBlock(x, y, z) == BlockLoader.estorageBlocks
+            && base.getWorld().getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ME_CHANNEL;
     }
 
     // =========================================================================
