@@ -20,6 +20,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
+import appeng.api.networking.security.MachineSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.me.helpers.AENetworkProxy;
 
@@ -63,6 +64,9 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
     /** Cached AE2 network proxy for grid access. */
     private AENetworkProxy aeProxy;
 
+    /** Machine action source for AE2 security tracking. */
+    private MachineSource machineSource;
+
     public EFabricatorPatternHandler(EFabricatorController controller) {
         this.controller = controller;
     }
@@ -83,6 +87,8 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
             ECOAEExtension.LOG.debug("EFabricator pattern handler: no AE2 proxy available");
             return;
         }
+
+        machineSource = new MachineSource(controller);
 
         try {
             IGridNode node = aeProxy.getNode();
@@ -131,6 +137,7 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
         }
 
         aeProxy = null;
+        machineSource = null;
         registered = false;
         ECOAEExtension.LOG.info("EFabricator pattern handler deactivated");
     }
@@ -346,7 +353,7 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
                 aeProxy.getEnergy(),   // energy source (IEnergyGrid extends IEnergySource)
                 itemStorage,           // target inventory
                 output,                // items to insert
-                null                   // action source (null = machine-originated)
+                machineSource          // action source for AE2 security tracking
             );
 
         } catch (Exception e) {

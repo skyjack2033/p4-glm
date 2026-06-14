@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
@@ -31,6 +32,7 @@ import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
+import appeng.api.storage.data.IAEItemStack;
 
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
@@ -153,7 +155,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     private MachineSource machineSource;
 
     /** Listeners for crafting monitor updates */
-    private final List<IMEMonitorHandlerReceiver> listeners = new ArrayList<>();
+    private final List<IMEMonitorHandlerReceiver<IAEItemStack>> listeners = new ArrayList<>();
 
     // =========================================================================
     // Constructors
@@ -407,29 +409,47 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * @return true if the structure terminates correctly with an end cap
      */
     private boolean checkRepeatingSegments(IGregTechTileEntity base) {
-        // Scan along the positive Z axis from the fixed section
-        int startX = base.getXCoord();
-        int startY = base.getYCoord();
-        int startZ = base.getZCoord() + 2; // Start after the fixed section
+        // Determine the scan direction from the controller's facing.
+        // The structure extends opposite to the front face.
+        ForgeDirection facing = base.getFrontFacing();
+        int fwdX, fwdZ;
+        switch (facing) {
+            case NORTH: fwdX = 0;  fwdZ = 1;  break; // front faces north -> extends south (+Z)
+            case SOUTH: fwdX = 0;  fwdZ = -1; break; // front faces south -> extends north (-Z)
+            case WEST:  fwdX = 1;  fwdZ = 0;  break; // front faces west  -> extends east  (+X)
+            case EAST:  fwdX = -1; fwdZ = 0;  break; // front faces east  -> extends west  (-X)
+            default: return false;
+        }
 
-        int z = startZ;
+        int cx = base.getXCoord();
+        int cy = base.getYCoord();
+        int cz = base.getZCoord();
+
+        // The fixed section is 3x3x3 centered on the controller, spanning
+        // from (cx-1,cy-1,cz-1) to (cx+1,cy+1,cz+1). The first segment
+        // center is 3 blocks forward from the controller (past the front face).
+        int offset = 3;
         boolean foundEndCap = false;
 
         while (!foundEndCap) {
+            int checkX = cx + fwdX * offset;
+            int checkY = cy;
+            int checkZ = cz + fwdZ * offset;
+
             // Check if this 3x3x3 block is an end cap
-            if (isEndCap(base.getWorld(), startX, startY, z)) {
+            if (isEndCap(base.getWorld(), checkX, checkY, checkZ)) {
                 foundEndCap = true;
                 break;
             }
 
             // Check if this 3x3x3 block is a valid segment
-            if (!checkSegment(base.getWorld(), startX, startY, z)) {
+            if (!checkSegment(base.getWorld(), checkX, checkY, checkZ)) {
                 // Not a valid segment and not an end cap - structure is invalid
                 return false;
             }
 
-            // Move to the next segment
-            z += 3;
+            // Move to the next segment center (3 blocks in the scan direction)
+            offset += 3;
         }
 
         return foundEndCap;
@@ -508,7 +528,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                     }
                     // Depth-offset positions (dz=+/-1, dx=0)
                     else if (dx == 0 && dz != 0) {
-                        if (dy == 0) {
+                        if (dy != 0) {
                             // Cell drives at y=-1 and y=+1
                             if (meta != BlockLoader.ECALC_META_CELL_DRIVE) return false;
                             installedCellDrives++;
@@ -624,12 +644,12 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     }
 
     @Override
-    public void addListener(IMEMonitorHandlerReceiver l, Object verificationToken) {
+    public void addListener(IMEMonitorHandlerReceiver<IAEItemStack> l, Object verificationToken) {
         listeners.add(l);
     }
 
     @Override
-    public void removeListener(IMEMonitorHandlerReceiver l) {
+    public void removeListener(IMEMonitorHandlerReceiver<IAEItemStack> l) {
         listeners.remove(l);
     }
 

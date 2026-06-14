@@ -203,12 +203,12 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         boolean foundFixedSection = false;
 
         for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
-            // Calculate the section origin such that the controller is at local (1,1,1).
-            // For positive scan direction: origin = controller - 2 in scan axis, -1 in others
-            // For negative scan direction: origin = controller + 0 in scan axis, -1 in others
-            int testX = controllerX + (dir.offsetX > 0 ? -2 : (dir.offsetX < 0 ? 0 : -1));
-            int testY = controllerY - 1; // Controller is at y=1 of the section
-            int testZ = controllerZ + (dir.offsetZ > 0 ? -2 : (dir.offsetZ < 0 ? 0 : -1));
+            // The controller is always at local (1,1,1) of the 3x3x3 section,
+            // so the origin is always controller - 1 in each axis.
+            // The scan direction only determines which face is "front" for segment placement.
+            int testX = controllerX - 1;
+            int testY = controllerY - 1;
+            int testZ = controllerZ - 1;
 
             if (validateFixedSection(aBaseMetaTileEntity, testX, testY, testZ, dir)) {
                 fixedX = testX;

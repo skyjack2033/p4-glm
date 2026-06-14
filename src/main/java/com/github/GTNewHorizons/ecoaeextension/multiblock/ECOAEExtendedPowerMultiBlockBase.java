@@ -13,9 +13,10 @@ import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.security.IActionHost;
+import appeng.api.util.AECableType;
+import appeng.api.util.DimensionalCoord;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
-import appeng.api.util.DimensionalCoord;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEHatchEnergy;
 import gregtech.api.metatileentity.implementations.MTEExtendedPowerMultiBlockBase;
@@ -129,6 +130,17 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     public IGridNode getGridNode(ForgeDirection dir) {
         if (aeProxy == null) return null;
         return aeProxy.getNode();
+    }
+
+    /**
+     * Returns the AE2 cable connection type for this multiblock.
+     * Must be DENSE to allow AE2 dense cables to connect to the controller,
+     * enabling the proxy's grid node to join the AE2 network.
+     * The parent MetaTileEntity returns NONE by default, which prevents connections.
+     */
+    @Override
+    public AECableType getCableConnectionType(ForgeDirection dir) {
+        return AECableType.DENSE;
     }
 
     // =========================================================================
@@ -314,6 +326,10 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     protected void connectToAE2Network() {
         if (aeProxy == null) return;
         try {
+            // Re-validate the proxy after potential invalidation from a previous
+            // structure teardown. This re-creates the grid node if it was destroyed.
+            aeProxy.validate();
+            aeProxy.onReady();
             IGrid grid = aeProxy.getGrid();
             ae2Connected = grid != null;
         } catch (Exception e) {

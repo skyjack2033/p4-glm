@@ -627,17 +627,20 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
                 if (mte == null) continue;
 
                 Block block = getBlockAt(wc[0], wc[1], wc[2]);
+                int meta = getBlockMetaAt(wc[0], wc[1], wc[2]);
 
-                if (block == PATTERN_BUS_BLOCK) {
+                // All EFabricator blocks share the same Block instance (efabricatorBlocks),
+                // so we must compare metadata to distinguish block types.
+                if (block == PATTERN_BUS_BLOCK && meta == PATTERN_BUS_META) {
                     installedPatternBuses++;
                     addToMachineList(igt, CASING_META);
-                } else if (block == WORKER_BLOCK) {
+                } else if (block == WORKER_BLOCK && meta == WORKER_META) {
                     installedWorkers++;
                     addToMachineList(igt, CASING_META);
-                } else if (block == PROCESSOR_BLOCK) {
+                } else if (block == PROCESSOR_BLOCK && meta == PROCESSOR_META) {
                     installedProcessors++;
                     addToMachineList(igt, CASING_META);
-                } else if (block == VENT_BLOCK) {
+                } else if (block == VENT_BLOCK && meta == VENT_META) {
                     addToMachineList(igt, CASING_META);
                 }
             }
