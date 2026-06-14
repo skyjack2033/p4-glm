@@ -34,5 +34,21 @@
  * For more details, see https://docs.gradle.org/8.0.1/userguide/java_library_plugin.html#sec:java_library_configurations_graph
  */
 dependencies {
-    //runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.7.69-GTNH:dev")
+    // GregTech 5 Unofficial - multiblock APIs, recipe system, materials
+    api("com.github.GTNewHorizons:GT5-Unofficial:latest:dev")
+
+    // Applied Energistics 2 GTNH fork - AE2 integration APIs
+    api("com.github.GTNewHorizons:Applied-Energistics-2-GTNH:latest:dev")
+
+    // StructureLib - multiblock structure definitions
+    api("com.github.GTNewHorizons:StructureLib:latest:dev")
+
+    // GTNHLib - shared utilities
+    implementation("com.github.GTNewHorizons:GTNHLib:latest:dev")
+
+    // Not Enough Items - optional NEI integration
+    compileOnly("com.github.GTNewHorizons:NotEnoughItems:2.7.69-GTNH:dev")
+
+    // Mixin support (compile-only, provided at runtime by UniMixins)
+    compileOnly("org.spongepowered:mixin:0.8.5-GTNH:dev")
 }

@@ -1,0 +1,1203 @@
+package com.github.GTNewHorizons.ecoaeextension.multiblock.ecalculator;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumChatFormatting;
+
+import com.github.GTNewHorizons.ecoaeextension.Config;
+import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
+import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMultiBlockBase;
+import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
+import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
+import com.gtnewhorizon.structurelib.structure.StructureDefinition;
+
+import appeng.api.networking.IGrid;
+import appeng.api.networking.crafting.ICraftingCPU;
+import appeng.api.networking.crafting.ICraftingGrid;
+import appeng.api.networking.crafting.ICraftingLink;
+import appeng.api.networking.crafting.ICraftingMedium;
+import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.networking.crafting.ICraftingProvider;
+import appeng.api.networking.crafting.ICraftingProviderHelper;
+import appeng.api.networking.events.MENetworkCraftingPatternChange;
+import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.storage.IMEMonitorHandlerReceiver;
+
+import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
+import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
+
+/**
+ * ECalculator Controller - An extendable AE2 crafting CPU multiblock.
+ *
+ * <p>Provides virtual CPUs to the AE2 crafting network, enabling massively parallel
+ * autocrafting through thread cores, hyper-thread cores, parallel processors, and
+ * flash memory cells.</p>
+ *
+ * <h3>Features</h3>
+ * <ul>
+ *   <li>Virtual CPUs (vCPUs) exposed to the AE2 network as crafting storage</li>
+ *   <li>Thread cores for parallel crafting execution</li>
+ *   <li>Hyper-thread cores for additional parallelism (with 10% byte cost increase)</li>
+ *   <li>Parallel processors for scaling throughput</li>
+ *   <li>Cell drives for flash memory cells (crafting storage bytes)</li>
+ *   <li>Transmitter bus for connecting cell drives to the crafting cluster</li>
+ *   <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV) affecting thread count and parallelism</li>
+ * </ul>
+ *
+ * <h3>Structure</h3>
+ * <p>Linear multiblock extending from the controller block. Consists of:</p>
+ * <ul>
+ *   <li>Fixed 3x3x3 section with controller and ME channel</li>
+ *   <li>Repeating segments with thread cores, parallel processors, cell drives, transmitter buses</li>
+ *   <li>End cap with tail block</li>
+ * </ul>
+ *
+ * <h3>AE2 Integration</h3>
+ * <p>Implements {@link ICraftingProvider} and {@link ICraftingMedium} to participate in AE2's
+ * crafting system. Also implements {@link ICraftingCPU} to expose virtual CPU status to the
+ * AE2 crafting grid.</p>
+ */
+public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECalculatorController>
+    implements ICraftingProvider, ICraftingCPU {
+
+    // =========================================================================
+    // NBT Constants
+    // =========================================================================
+
+    private static final String NBT_THREAD_CORES = "ECalcThreadCores";
+    private static final String NBT_HYPER_THREADS = "ECalcHyperThreads";
+    private static final String NBT_CELL_DRIVES = "ECalcCellDrives";
+    private static final String NBT_PARALLEL_PROCESSORS = "ECalcParallelProcs";
+    private static final String NBT_TRANSMITTER_BUSES = "ECalcTransmitterBuses";
+    private static final String NBT_TOTAL_STORAGE = "ECalcTotalStorage";
+    private static final String NBT_VCPU_ACTIVE = "ECalcVCPUActive";
+    private static final String NBT_CRAFTING_JOBS = "ECalcCraftingJobs";
+
+    // =========================================================================
+    // Structure Element Keys
+    // =========================================================================
+
+    /** Casing block - standard ECalculator casing */
+    private static final char CASING = 'C';
+    /** Controller block */
+    private static final char CONTROLLER = 'E';
+    /** ME channel block - connects to AE2 network */
+    private static final char ME_CHANNEL = 'M';
+    /** Thread core - provides parallel crafting threads */
+    private static final char THREAD_CORE = 'T';
+    /** Hyper-thread core - additional parallelism with byte cost increase */
+    private static final char HYPER_THREAD = 'H';
+    /** Parallel processor - scales crafting throughput */
+    private static final char PARALLEL_PROC = 'P';
+    /** Cell drive - holds flash memory cells for crafting storage */
+    private static final char CELL_DRIVE = 'D';
+    /** Transmitter bus - connects cell drives to the crafting cluster */
+    private static final char TRANSMITTER_BUS = 'B';
+    /** Tail block - end cap marker */
+    private static final char TAIL = 'L';
+
+    // =========================================================================
+    // Structure Shape Names
+    // =========================================================================
+
+    private static final String SHAPE_FIXED = "fixed";
+    private static final String SHAPE_SEGMENT_THREAD = "seg_thread";
+    private static final String SHAPE_SEGMENT_HYPER = "seg_hyper";
+    private static final String SHAPE_ENDCAP = "endcap";
+
+    // =========================================================================
+    // Configuration Fields
+    // =========================================================================
+
+    /** Base number of thread cores allowed by tier */
+    private int baseThreadCores;
+
+    // =========================================================================
+    // Runtime State
+    // =========================================================================
+
+    /** Number of thread cores found in the structure */
+    private int installedThreadCores = 0;
+
+    /** Number of hyper-thread cores found in the structure */
+    private int installedHyperThreads = 0;
+
+    /** Number of cell drives found in the structure */
+    private int installedCellDrives = 0;
+
+    /** Number of parallel processors found in the structure */
+    private int installedParallelProcessors = 0;
+
+    /** Number of transmitter buses found in the structure */
+    private int installedTransmitterBuses = 0;
+
+    /** Total crafting storage bytes from installed calculator cells */
+    private long totalStorageBytes = 0;
+
+    /** Whether the virtual CPU cluster is active and connected to AE2 */
+    private boolean vCPUActive = false;
+
+    /** Queue of active crafting jobs being processed */
+    private final List<ActiveCraftingJob> activeJobs = new ArrayList<>();
+
+    /** Machine action source for AE2 security */
+    private MachineSource machineSource;
+
+    /** Listeners for crafting monitor updates */
+    private final List<IMEMonitorHandlerReceiver> listeners = new ArrayList<>();
+
+    // =========================================================================
+    // Constructors
+    // =========================================================================
+
+    public ECalculatorController(int aID, String aName, String aNameRegional) {
+        super(aID, aName, aNameRegional);
+    }
+
+    public ECalculatorController(String aName) {
+        super(aName);
+    }
+
+    @Override
+    public IMetaTileEntity newMetaEntity(IGregTechTileEntity aTileEntity) {
+        return new ECalculatorController(this.mName);
+    }
+
+    // =========================================================================
+    // Tier Configuration
+    // =========================================================================
+
+    @Override
+    protected void onTierChanged(ECOAETier newTier) {
+        super.onTierChanged(newTier);
+        updateTierConfig();
+    }
+
+    private void updateTierConfig() {
+        switch (currentTier) {
+            case L9:
+                baseThreadCores = Config.eCalculatorBaseThreadCoresL9;
+                break;
+            case L6:
+                baseThreadCores = Config.eCalculatorBaseThreadCoresL6;
+                break;
+            case L4:
+            default:
+                baseThreadCores = Config.eCalculatorBaseThreadCoresL4;
+                break;
+        }
+    }
+
+    // =========================================================================
+    // Structure Definition
+    // =========================================================================
+
+    @Override
+    public IStructureDefinition<ECalculatorController> getStructureDefinition() {
+        // TODO: Register actual MTE blocks for casings, thread cores, etc. in MachineLoader
+        // then define proper .addElement() calls here with ofBlock() matching.
+        //
+        // Example (once blocks are registered):
+        // .addElement(CASING, ofBlock(ECalculatorBlocks.CASING, 0))
+        // .addElement(CONTROLLER, ofController())
+        // .addElement(ME_CHANNEL, ofBlock(ECalculatorBlocks.ME_CHANNEL, 0))
+        // .addElement(THREAD_CORE, ofBlock(ECalculatorBlocks.THREAD_CORE, 0))
+        // .addElement(HYPER_THREAD, ofBlock(ECalculatorBlocks.HYPER_THREAD, 0))
+        // .addElement(PARALLEL_PROC, ofBlock(ECalculatorBlocks.PARALLEL_PROC, 0))
+        // .addElement(CELL_DRIVE, ofBlock(ECalculatorBlocks.CELL_DRIVE, 0))
+        // .addElement(TRANSMITTER_BUS, ofBlock(ECalculatorBlocks.TRANSMITTER_BUS, 0))
+        // .addElement(TAIL, ofBlock(ECalculatorBlocks.TAIL, 0))
+        return StructureDefinition.<ECalculatorController>builder()
+            .addShape(SHAPE_FIXED, getFixedSectionPattern())
+            .addShape(SHAPE_SEGMENT_THREAD, getThreadSegmentPattern())
+            .addShape(SHAPE_SEGMENT_HYPER, getHyperSegmentPattern())
+            .addShape(SHAPE_ENDCAP, getEndCapPattern())
+            .build();
+    }
+
+    /**
+     * Fixed 3x3x3 section containing the controller block and ME channel.
+     *
+     * <pre>
+     * y=0 (bottom):  CCC / CCC / CCC
+     * y=1 (middle):  CEC / CCC / CCC   (E = controller at x=1,z=0)
+     * y=2 (top):     CCC / CMC / CCC   (M = ME channel at x=1,z=1)
+     * </pre>
+     *
+     * Each String[y] contains 3 rows separated by '/' for z=0..2.
+     * Each row has 3 characters for x=0..2.
+     */
+    @Override
+    public String[][] getStructurePattern() {
+        // Return the fixed section as the default pattern
+        return getFixedSectionPattern();
+    }
+
+    /**
+     * Fixed 3x3x3 section.
+     * Layer format: "row_z0 / row_z1 / row_z2" where each row has 3 x-positions.
+     */
+    private String[][] getFixedSectionPattern() {
+        return new String[][] {
+            // y=0: full casing layer
+            { "CCC", "CCC", "CCC" },
+            // y=1: controller at center-front (x=1, z=0)
+            { "CEC", "CCC", "CCC" },
+            // y=2: ME channel at center-middle (x=1, z=1)
+            { "CCC", "CMC", "CCC" }
+        };
+    }
+
+    /**
+     * Repeating thread core segment (3x3x3).
+     * Thread core at center, surrounded by casings, with parallel processors
+     * and cell drives in adjacent positions.
+     *
+     * <pre>
+     * y=0: CPC / CDC / CPC   (P=parallel proc, D=cell drive)
+     * y=1: CBC / CTC / CBC   (T=thread core, B=transmitter bus)
+     * y=2: CPC / CDC / CPC
+     * </pre>
+     */
+    private String[][] getThreadSegmentPattern() {
+        return new String[][] {
+            { "CPC", "CDC", "CPC" },
+            { "CBC", "CTC", "CBC" },
+            { "CPC", "CDC", "CPC" }
+        };
+    }
+
+    /**
+     * Repeating hyper-thread segment (3x3x3).
+     * Same layout as thread segment but with hyper-thread core (H) instead of thread core (T).
+     *
+     * <pre>
+     * y=0: CPC / CDC / CPC
+     * y=1: CBC / CHC / CBC   (H=hyper-thread core)
+     * y=2: CPC / CDC / CPC
+     * </pre>
+     */
+    private String[][] getHyperSegmentPattern() {
+        return new String[][] {
+            { "CPC", "CDC", "CPC" },
+            { "CBC", "CHC", "CBC" },
+            { "CPC", "CDC", "CPC" }
+        };
+    }
+
+    /**
+     * End cap segment (3x3x3).
+     * Contains the tail block (L) at center as a structure terminator.
+     *
+     * <pre>
+     * y=0: CCC / CCC / CCC
+     * y=1: CCC / CLC / CCC   (L=tail block)
+     * y=2: CCC / CCC / CCC
+     * </pre>
+     */
+    private String[][] getEndCapPattern() {
+        return new String[][] {
+            { "CCC", "CCC", "CCC" },
+            { "CCC", "CLC", "CCC" },
+            { "CCC", "CCC", "CCC" }
+        };
+    }
+
+    // =========================================================================
+    // Structure Validation
+    // =========================================================================
+
+    @Override
+    public boolean checkMachine(IGregTechTileEntity aBaseMetaTileEntity, ItemStack aStack) {
+        // Reset component counts before structure scan
+        installedThreadCores = 0;
+        installedHyperThreads = 0;
+        installedCellDrives = 0;
+        installedParallelProcessors = 0;
+        installedTransmitterBuses = 0;
+        totalStorageBytes = 0;
+
+        // Validate the fixed section (3x3x3 around the controller)
+        if (!checkFixedSection(aBaseMetaTileEntity)) {
+            return false;
+        }
+
+        // Scan outward from the fixed section for repeating segments and end cap
+        if (!checkRepeatingSegments(aBaseMetaTileEntity)) {
+            return false;
+        }
+
+        // Validate that we found at least one thread core or hyper-thread
+        if (installedThreadCores == 0 && installedHyperThreads == 0) {
+            return false;
+        }
+
+        // Validate that we found at least one cell drive
+        if (installedCellDrives == 0) {
+            return false;
+        }
+
+        // Validate thread core count against tier limit
+        if (installedThreadCores + installedHyperThreads > baseThreadCores * 2) {
+            return false;
+        }
+
+        // Structure is valid - notify AE2 and update tier
+        onStructureFormed();
+        return true;
+    }
+
+    /**
+     * Validate the fixed 3x3x3 section containing the controller and ME channel.
+     *
+     * @return true if the fixed section is valid
+     */
+    private boolean checkFixedSection(IGregTechTileEntity base) {
+        int cx = base.getXCoord();
+        int cy = base.getYCoord();
+        int cz = base.getZCoord();
+
+        // The controller is at the center of the fixed section.
+        // Scan the 3x3x3 volume centered on the controller position.
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    int wx = cx + dx;
+                    int wy = cy + dy;
+                    int wz = cz + dz;
+
+                    // Skip the controller block itself
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
+
+                    IGregTechTileEntity tile = base.getWorld()
+                        .getTileEntity(wx, wy, wz) instanceof IGregTechTileEntity
+                            ? (IGregTechTileEntity) base.getWorld()
+                                .getTileEntity(wx, wy, wz)
+                            : null;
+
+                    if (tile == null) return false;
+
+                    // Validate that each position has the expected block type.
+                    // TODO: Replace with actual block ID checks once MTEs are registered.
+                    // For now, check that a valid MetaTileEntity exists at each position.
+                    if (tile.getMetaTileEntity() == null) return false;
+                }
+            }
+        }
+
+        // Check for ME channel block at expected position (x=0, y=+1, z=0 relative to center)
+        // TODO: Validate ME channel block type once registered
+        return true;
+    }
+
+    /**
+     * Scan for repeating segments extending from the fixed section along the structure axis.
+     * Each segment is 3x3x3 and must be followed by another segment or the end cap.
+     *
+     * @return true if the structure terminates correctly with an end cap
+     */
+    private boolean checkRepeatingSegments(IGregTechTileEntity base) {
+        // Scan along the positive Z axis from the fixed section
+        int startX = base.getXCoord();
+        int startY = base.getYCoord();
+        int startZ = base.getZCoord() + 2; // Start after the fixed section
+
+        int z = startZ;
+        boolean foundEndCap = false;
+
+        while (!foundEndCap) {
+            // Check if this 3x3x3 block is an end cap
+            if (isEndCap(base.getWorld(), startX, startY, z)) {
+                foundEndCap = true;
+                break;
+            }
+
+            // Check if this 3x3x3 block is a valid segment
+            if (!checkSegment(base.getWorld(), startX, startY, z)) {
+                // Not a valid segment and not an end cap - structure is invalid
+                return false;
+            }
+
+            // Move to the next segment
+            z += 3;
+        }
+
+        return foundEndCap;
+    }
+
+    /**
+     * Check if a 3x3x3 volume at the given position is an end cap.
+     */
+    private boolean isEndCap(net.minecraft.world.World world, int cx, int cy, int cz) {
+        // Check for the tail block at the center of the 3x3x3 volume
+        IGregTechTileEntity centerTile = world.getTileEntity(cx, cy, cz) instanceof IGregTechTileEntity
+            ? (IGregTechTileEntity) world.getTileEntity(cx, cy, cz)
+            : null;
+
+        if (centerTile == null || centerTile.getMetaTileEntity() == null) return false;
+
+        // TODO: Check if the center block is the tail block type once registered.
+        // For now, use a heuristic: the end cap is detected if all surrounding
+        // blocks are casings and the center is not a thread core or hyper-thread.
+
+        // Verify the 3x3x3 volume has valid blocks
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    if (dx == 0 && dy == 0 && dz == 0) continue; // Skip center (tail block)
+                    IGregTechTileEntity tile = world.getTileEntity(cx + dx, cy + dy, cz + dz)
+                        instanceof IGregTechTileEntity
+                            ? (IGregTechTileEntity) world.getTileEntity(cx + dx, cy + dy, cz + dz)
+                            : null;
+                    if (tile == null || tile.getMetaTileEntity() == null) return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check and count components in a 3x3x3 segment at the given position.
+     * Identifies thread cores, hyper-threads, parallel processors, cell drives,
+     * and transmitter buses.
+     *
+     * @return true if the segment is valid
+     */
+    private boolean checkSegment(net.minecraft.world.World world, int cx, int cy, int cz) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    int wx = cx + dx;
+                    int wy = cy + dy;
+                    int wz = cz + dz;
+
+                    IGregTechTileEntity tile = world.getTileEntity(wx, wy, wz)
+                        instanceof IGregTechTileEntity
+                            ? (IGregTechTileEntity) world.getTileEntity(wx, wy, wz)
+                            : null;
+
+                    if (tile == null || tile.getMetaTileEntity() == null) return false;
+
+                    // TODO: Replace with actual MTE type checks once blocks are registered.
+                    // For now, count components based on position heuristics.
+                    //
+                    // Expected layout per segment:
+                    // y=0: C P C / C D C / C P C
+                    // y=1: C B C / C T/H C / C B C
+                    // y=2: C P C / C D C / C P C
+                    //
+                    // Center block at y=1 (dx=0, dy=0, dz=0) is thread core or hyper-thread
+                    // Center blocks at y=0,y=2 (dx=0, dz=0) are parallel processors
+                    // Center blocks at y=0,y=2 (dx=0, dz=+/-1) are cell drives
+                    // Center blocks at y=1 (dx=0, dz=+/-1) are transmitter buses
+                }
+            }
+        }
+
+        // Count components based on position heuristics
+        // Center y=1 block: thread core or hyper-thread
+        installedThreadCores++; // TODO: Distinguish thread vs hyper-thread based on MTE type
+
+        // y=0 and y=2 center blocks: parallel processors (2 per segment)
+        installedParallelProcessors += 2;
+
+        // y=0 and y=2 depth-offset blocks: cell drives (4 per segment)
+        installedCellDrives += 4;
+
+        // y=1 depth-offset blocks: transmitter buses (2 per segment)
+        installedTransmitterBuses += 2;
+
+        return true;
+    }
+
+    // =========================================================================
+    // AE2 Integration - Crafting Provider
+    // =========================================================================
+
+    /**
+     * Called by AE2 when the crafting grid rebuilds its pattern list.
+     * The ECalculator does not provide patterns itself (it accelerates others'),
+     * so this is a no-op. We implement ICraftingProvider to be discoverable by the grid.
+     */
+    @Override
+    public void provideCrafting(ICraftingProviderHelper craftingTracker) {
+        // The ECalculator does not provide crafting patterns.
+        // It acts as a crafting medium that accepts and accelerates patterns.
+    }
+
+    /**
+     * Called by AE2 when a crafting pattern is pushed to this medium for execution.
+     * Accepts the pattern if the ECalculator has available capacity.
+     *
+     * @return true if the pattern was accepted for processing
+     */
+    @Override
+    public boolean pushPattern(ICraftingPatternDetails patternDetails, InventoryCrafting table) {
+        // This is called when AE2 pushes a crafting pattern to us as a medium.
+        // Accept the pattern if we have capacity.
+        if (!vCPUActive) return false;
+        if (isBusy()) return false;
+
+        // Check if we have enough storage for this job
+        long requiredBytes = estimateStorageRequirement(patternDetails);
+        if (requiredBytes > getAvailableStorage()) return false;
+
+        // Accept the crafting job
+        ActiveCraftingJob job = new ActiveCraftingJob(patternDetails, table);
+        activeJobs.add(job);
+
+        ECOAEExtension.LOG.debug("ECalculator accepted crafting job: {} ({} bytes)",
+            patternDetails.getPattern().getDisplayName(), requiredBytes);
+
+        return true;
+    }
+
+    @Override
+    public boolean isBusy() {
+        return !activeJobs.isEmpty();
+    }
+
+    @Override
+    public ItemStack getCrafterIcon() {
+        // Return the controller's item stack form as the crafter icon
+        IMetaTileEntity mte = getBaseMetaTileEntity().getMetaTileEntity();
+        if (mte != null) {
+            return mte.getStackForm(1);
+        }
+        return null;
+    }
+
+    // =========================================================================
+    // AE2 Integration - Crafting CPU (Virtual CPU)
+    // =========================================================================
+
+    @Override
+    public BaseActionSource getActionSource() {
+        if (machineSource == null) {
+            machineSource = new MachineSource(getProxy().getNode().getMachine());
+        }
+        return machineSource;
+    }
+
+    @Override
+    public long getAvailableStorage() {
+        return totalStorageBytes;
+    }
+
+    @Override
+    public long getUsedStorage() {
+        long used = 0;
+        for (ActiveCraftingJob job : activeJobs) {
+            used += job.getStorageUsed();
+        }
+        return used;
+    }
+
+    @Override
+    public int getCoProcessors() {
+        // Co-processors = parallel processors (each adds one co-processor slot)
+        return installedParallelProcessors;
+    }
+
+    @Override
+    public String getName() {
+        return "ECalculator " + currentTier.name;
+    }
+
+    @Override
+    public void addListener(IMEMonitorHandlerReceiver l, Object verificationToken) {
+        listeners.add(l);
+    }
+
+    @Override
+    public void removeListener(IMEMonitorHandlerReceiver l) {
+        listeners.remove(l);
+    }
+
+    // =========================================================================
+    // AE2 Network Lifecycle
+    // =========================================================================
+
+    @Override
+    protected void connectToAE2Network() {
+        super.connectToAE2Network();
+
+        if (!ae2Connected) return;
+
+        try {
+            // Register as a crafting provider with the AE2 crafting grid
+            IGrid grid = getGrid();
+            if (grid != null) {
+                ICraftingGrid craftingGrid = grid.getCache(ICraftingGrid.class);
+                if (craftingGrid != null) {
+                    // The CraftingGridCache discovers CPUs through grid events.
+                    // Post a crafting pattern change event to notify the grid of our presence.
+                    if (aeProxy != null && aeProxy.getNode() != null) {
+                        grid.postEvent(new MENetworkCraftingPatternChange(this, aeProxy.getNode()));
+                    }
+                }
+            }
+
+            // Calculate total storage from installed calculator cells
+            recalculateStorage();
+
+            // Initialize machine source for AE2 security
+            machineSource = new MachineSource(getProxy().getNode().getMachine());
+
+            vCPUActive = true;
+
+            ECOAEExtension.LOG.info(
+                "ECalculator connected to AE2 network: threads={}, hyper={}, storage={} bytes, parallel={}",
+                installedThreadCores, installedHyperThreads, totalStorageBytes, getParallelCount());
+
+        } catch (Exception e) {
+            ECOAEExtension.LOG.error("Failed to connect ECalculator to AE2 network", e);
+            vCPUActive = false;
+        }
+    }
+
+    @Override
+    protected void disconnectFromAE2Network() {
+        // Cancel all active crafting jobs
+        cancelAllJobs();
+
+        vCPUActive = false;
+        machineSource = null;
+
+        // Notify the AE2 grid that we're leaving
+        try {
+            IGrid grid = getGrid();
+            if (grid != null && aeProxy != null && aeProxy.getNode() != null) {
+                grid.postEvent(new MENetworkCraftingPatternChange(this, aeProxy.getNode()));
+            }
+        } catch (Exception e) {
+            ECOAEExtension.LOG.debug("Failed to post pattern change on disconnect", e);
+        }
+
+        super.disconnectFromAE2Network();
+    }
+
+    // =========================================================================
+    // Storage Management
+    // =========================================================================
+
+    /**
+     * Recalculate total crafting storage from installed calculator cells.
+     * Called when the structure forms or cells are changed.
+     */
+    private void recalculateStorage() {
+        totalStorageBytes = 0;
+
+        // Sum storage from all installed calculator cells in cell drives.
+        // TODO: Iterate over cell drive inventories and sum ItemCalculatorCell bytes.
+        // For now, estimate based on installed cell drives with default cell size.
+        //
+        // Each cell drive can hold one calculator cell.
+        // Default cell size depends on tier:
+        //   L4: 64M bytes per cell
+        //   L6: 1024M bytes per cell
+        //   L9: 16384M bytes per cell
+        long bytesPerCell;
+        switch (currentTier) {
+            case L9:
+                bytesPerCell = 16_384_000_000L;
+                break;
+            case L6:
+                bytesPerCell = 1_024_000_000L;
+                break;
+            case L4:
+            default:
+                bytesPerCell = 64_000_000L;
+                break;
+        }
+
+        totalStorageBytes = (long) installedCellDrives * bytesPerCell;
+
+        // Apply hyper-thread cost multiplier to effective storage
+        // Hyper-threads consume 10% more storage per operation
+        if (installedHyperThreads > 0) {
+            double hyperCost = 1.0 + (installedHyperThreads * (Config.eCalculatorHyperThreadCostMultiplier - 1.0));
+            totalStorageBytes = (long) (totalStorageBytes / hyperCost);
+        }
+    }
+
+    /**
+     * Estimate the storage requirement for a crafting pattern.
+     */
+    private long estimateStorageRequirement(ICraftingPatternDetails pattern) {
+        // Estimate based on the number of inputs and outputs
+        int inputCount = 0;
+        int outputCount = 0;
+
+        if (pattern.getInputs() != null) {
+            for (Object input : pattern.getInputs()) {
+                if (input != null) inputCount++;
+            }
+        }
+        if (pattern.getOutputs() != null) {
+            for (Object output : pattern.getOutputs()) {
+                if (output != null) outputCount++;
+            }
+        }
+
+        // Rough estimate: 256 bytes per input/output slot used
+        return (long) (inputCount + outputCount) * 256L;
+    }
+
+    // =========================================================================
+    // Crafting Job Processing
+    // =========================================================================
+
+    /**
+     * Process active crafting jobs. Called every tick from onPostTick.
+     * Processes multiple steps per tick based on thread count and parallelism.
+     */
+    private void processCraftingJobs() {
+        if (!vCPUActive || activeJobs.isEmpty()) return;
+
+        int stepsPerTick = getTotalThreads() * currentTier.parallelMultiplier;
+
+        Iterator<ActiveCraftingJob> it = activeJobs.iterator();
+        while (it.hasNext()) {
+            ActiveCraftingJob job = it.next();
+
+            // Process multiple steps for this job
+            for (int i = 0; i < stepsPerTick; i++) {
+                if (job.processStep()) {
+                    // Job completed
+                    it.remove();
+                    notifyJobComplete(job);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Notify listeners that a crafting job has completed.
+     */
+    private void notifyJobComplete(ActiveCraftingJob job) {
+        ECOAEExtension.LOG.debug("ECalculator crafting job completed: {}",
+            job.getPattern().getPattern().getDisplayName());
+
+        // Notify AE2 crafting monitors
+        for (IMEMonitorHandlerReceiver listener : listeners) {
+            try {
+                // The listener interface uses postChange for updates
+                // TODO: Call the appropriate notification method on the listener
+            } catch (Exception e) {
+                ECOAEExtension.LOG.debug("Failed to notify crafting listener", e);
+            }
+        }
+    }
+
+    /**
+     * Cancel all active crafting jobs. Called when the structure is invalidated.
+     */
+    private void cancelAllJobs() {
+        for (ActiveCraftingJob job : activeJobs) {
+            job.cancel();
+        }
+        activeJobs.clear();
+    }
+
+    // =========================================================================
+    // Tick Processing
+    // =========================================================================
+
+    @Override
+    public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTick) {
+        super.onPostTick(aBaseMetaTileEntity, aTick);
+
+        if (aBaseMetaTileEntity.isServerSide() && mMachineEnabled) {
+            // Process crafting acceleration every tick
+            processCraftingJobs();
+
+            // Periodic storage recalculation (in case cells are swapped)
+            if (aTick % 200 == 0) {
+                recalculateStorage();
+            }
+        }
+    }
+
+    // =========================================================================
+    // Structure Lifecycle
+    // =========================================================================
+
+    @Override
+    protected void onStructureFormed() {
+        super.onStructureFormed();
+        updateTierConfig();
+    }
+
+    @Override
+    protected void onStructureInvalidated() {
+        cancelAllJobs();
+        installedThreadCores = 0;
+        installedHyperThreads = 0;
+        installedCellDrives = 0;
+        installedParallelProcessors = 0;
+        installedTransmitterBuses = 0;
+        totalStorageBytes = 0;
+        super.onStructureInvalidated();
+    }
+
+    // =========================================================================
+    // NBT Save/Load
+    // =========================================================================
+
+    @Override
+    public void saveNBTData(NBTTagCompound aNBT) {
+        super.saveNBTData(aNBT);
+
+        aNBT.setInteger(NBT_THREAD_CORES, installedThreadCores);
+        aNBT.setInteger(NBT_HYPER_THREADS, installedHyperThreads);
+        aNBT.setInteger(NBT_CELL_DRIVES, installedCellDrives);
+        aNBT.setInteger(NBT_PARALLEL_PROCESSORS, installedParallelProcessors);
+        aNBT.setInteger(NBT_TRANSMITTER_BUSES, installedTransmitterBuses);
+        aNBT.setLong(NBT_TOTAL_STORAGE, totalStorageBytes);
+        aNBT.setBoolean(NBT_VCPU_ACTIVE, vCPUActive);
+
+        // Save active crafting jobs
+        NBTTagList jobList = new NBTTagList();
+        for (ActiveCraftingJob job : activeJobs) {
+            NBTTagCompound jobTag = new NBTTagCompound();
+            job.writeToNBT(jobTag);
+            jobList.appendTag(jobTag);
+        }
+        aNBT.setTag(NBT_CRAFTING_JOBS, jobList);
+    }
+
+    @Override
+    public void loadNBTData(NBTTagCompound aNBT) {
+        super.loadNBTData(aNBT);
+
+        installedThreadCores = aNBT.getInteger(NBT_THREAD_CORES);
+        installedHyperThreads = aNBT.getInteger(NBT_HYPER_THREADS);
+        installedCellDrives = aNBT.getInteger(NBT_CELL_DRIVES);
+        installedParallelProcessors = aNBT.getInteger(NBT_PARALLEL_PROCESSORS);
+        installedTransmitterBuses = aNBT.getInteger(NBT_TRANSMITTER_BUSES);
+        totalStorageBytes = aNBT.getLong(NBT_TOTAL_STORAGE);
+        vCPUActive = aNBT.getBoolean(NBT_VCPU_ACTIVE);
+
+        // Load active crafting jobs
+        activeJobs.clear();
+        if (aNBT.hasKey(NBT_CRAFTING_JOBS)) {
+            NBTTagList jobList = aNBT.getTagList(NBT_CRAFTING_JOBS, 10); // 10 = NBTTagCompound
+            for (int i = 0; i < jobList.tagCount(); i++) {
+                NBTTagCompound jobTag = jobList.getCompoundTagAt(i);
+                ActiveCraftingJob job = ActiveCraftingJob.readFromNBT(jobTag);
+                if (job != null) {
+                    activeJobs.add(job);
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // Public Accessors
+    // =========================================================================
+
+    /**
+     * Get the total number of crafting threads available.
+     * Includes both regular and hyper threads.
+     */
+    public int getTotalThreads() {
+        return installedThreadCores + installedHyperThreads;
+    }
+
+    /**
+     * Get the effective parallel count, accounting for thread cores and tier.
+     */
+    @Override
+    public int getParallelCount() {
+        int baseParallel = super.getParallelCount();
+        int threadBonus = Math.max(1, getTotalThreads());
+        return baseParallel * threadBonus;
+    }
+
+    /**
+     * Get the byte cost multiplier for hyper-thread cores.
+     */
+    public double getHyperThreadCostMultiplier() {
+        return Config.eCalculatorHyperThreadCostMultiplier;
+    }
+
+    /**
+     * Get the total crafting storage bytes available.
+     */
+    public long getTotalStorageBytes() {
+        return totalStorageBytes;
+    }
+
+    /**
+     * Check if the virtual CPU cluster is active.
+     */
+    public boolean isVCPUActive() {
+        return vCPUActive;
+    }
+
+    /**
+     * Get the number of installed thread cores.
+     */
+    public int getInstalledThreadCores() {
+        return installedThreadCores;
+    }
+
+    /**
+     * Get the number of installed hyper-thread cores.
+     */
+    public int getInstalledHyperThreads() {
+        return installedHyperThreads;
+    }
+
+    /**
+     * Get the number of installed cell drives.
+     */
+    public int getInstalledCellDrives() {
+        return installedCellDrives;
+    }
+
+    /**
+     * Get the number of installed parallel processors.
+     */
+    public int getInstalledParallelProcessors() {
+        return installedParallelProcessors;
+    }
+
+    /**
+     * Get the number of installed transmitter buses.
+     */
+    public int getInstalledTransmitterBuses() {
+        return installedTransmitterBuses;
+    }
+
+    /**
+     * Get the number of active crafting jobs.
+     */
+    public int getActiveJobCount() {
+        return activeJobs.size();
+    }
+
+    // =========================================================================
+    // GUI
+    // =========================================================================
+
+    @Override
+    public boolean onRightclick(IGregTechTileEntity aBaseMetaTileEntity, EntityPlayer aPlayer) {
+        if (aBaseMetaTileEntity.isClientSide()) {
+            return true;
+        }
+        aPlayer.openGui(
+            ECOAEExtension.instance,
+            com.github.GTNewHorizons.ecoaeextension.gui.ECOAEGuiHandler.GUI_ID_ECALCULATOR,
+            aBaseMetaTileEntity.getWorld(),
+            aBaseMetaTileEntity.getXCoord(),
+            aBaseMetaTileEntity.getYCoord(),
+            aBaseMetaTileEntity.getZCoord()
+        );
+        return true;
+    }
+
+    // =========================================================================
+    // Display and UI
+    // =========================================================================
+
+    @Override
+    public String[] getDescription() {
+        return new String[] {
+            EnumChatFormatting.AQUA + "ECalculator Controller",
+            EnumChatFormatting.GRAY + "AE2 Crafting CPU Multiblock",
+            EnumChatFormatting.GRAY + "Tier: " + EnumChatFormatting.YELLOW + currentTier.name,
+            EnumChatFormatting.GRAY + "Threads: " + EnumChatFormatting.GREEN + getTotalThreads()
+                + EnumChatFormatting.GRAY + " (Hyper: " + EnumChatFormatting.YELLOW + installedHyperThreads
+                + EnumChatFormatting.GRAY + ")",
+            EnumChatFormatting.GRAY + "Storage: " + EnumChatFormatting.GREEN + formatBytes(totalStorageBytes),
+            EnumChatFormatting.GRAY + "Parallel: " + EnumChatFormatting.GREEN + getParallelCount() + "x",
+            EnumChatFormatting.GRAY + "Co-Processors: " + EnumChatFormatting.GREEN + getCoProcessors(),
+            EnumChatFormatting.GRAY + "Cell Drives: " + EnumChatFormatting.YELLOW + installedCellDrives,
+            EnumChatFormatting.GRAY + "vCPU: " + (vCPUActive ? EnumChatFormatting.GREEN + "Active"
+                : EnumChatFormatting.RED + "Inactive"),
+            EnumChatFormatting.GRAY + "AE2: " + (ae2Connected ? EnumChatFormatting.GREEN + "Connected"
+                : EnumChatFormatting.RED + "Disconnected")
+        };
+    }
+
+    @Override
+    public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {
+        tooltip.add(EnumChatFormatting.AQUA + "ECalculator Controller");
+        tooltip.add(EnumChatFormatting.GRAY + "Extendable AE2 crafting CPU system");
+        tooltip.add(EnumChatFormatting.GRAY + "Provides virtual CPUs for AE2 autocrafting");
+        tooltip.add(EnumChatFormatting.GRAY + "Thread cores enable parallel crafting execution");
+        tooltip.add(EnumChatFormatting.GRAY + "Hyper-threads add parallelism at "
+            + (int) ((Config.eCalculatorHyperThreadCostMultiplier - 1.0) * 100) + "% byte cost");
+        tooltip.add("");
+        tooltip.add(EnumChatFormatting.YELLOW + "L4 (HV): " + Config.eCalculatorBaseThreadCoresL4
+            + " base threads, " + EnumChatFormatting.GREEN + "1x" + EnumChatFormatting.GRAY + " parallel");
+        tooltip.add(EnumChatFormatting.YELLOW + "L6 (IV): " + Config.eCalculatorBaseThreadCoresL6
+            + " base threads, " + EnumChatFormatting.GREEN + "4x" + EnumChatFormatting.GRAY + " parallel");
+        tooltip.add(EnumChatFormatting.YELLOW + "L9 (LuV): " + Config.eCalculatorBaseThreadCoresL9
+            + " base threads, " + EnumChatFormatting.GREEN + "16x" + EnumChatFormatting.GRAY + " parallel");
+    }
+
+    /**
+     * Format byte count to human-readable string.
+     */
+    private String formatBytes(long bytes) {
+        if (bytes >= 1_000_000_000) return (bytes / 1_000_000_000) + "B";
+        if (bytes >= 1_000_000) return (bytes / 1_000_000) + "M";
+        if (bytes >= 1_000) return (bytes / 1_000) + "K";
+        return bytes + "B";
+    }
+
+    // =========================================================================
+    // Active Crafting Job (Inner Class)
+    // =========================================================================
+
+    /**
+     * Represents a crafting job currently being processed by the ECalculator.
+     * Tracks the pattern, progress, and storage usage.
+     */
+    private static class ActiveCraftingJob {
+
+        private final ICraftingPatternDetails pattern;
+        private final InventoryCrafting craftingTable;
+        private int totalSteps;
+        private int completedSteps;
+        private boolean canceled;
+        private ICraftingLink craftingLink;
+
+        ActiveCraftingJob(ICraftingPatternDetails pattern, InventoryCrafting table) {
+            this.pattern = pattern;
+            this.craftingTable = table;
+            this.totalSteps = calculateTotalSteps(pattern);
+            this.completedSteps = 0;
+            this.canceled = false;
+        }
+
+        /**
+         * Calculate the total number of processing steps for a pattern.
+         * Based on the number of inputs and outputs.
+         */
+        private int calculateTotalSteps(ICraftingPatternDetails pattern) {
+            int steps = 0;
+            if (pattern.getInputs() != null) {
+                for (Object input : pattern.getInputs()) {
+                    if (input != null) steps++;
+                }
+            }
+            if (pattern.getOutputs() != null) {
+                for (Object output : pattern.getOutputs()) {
+                    if (output != null) steps++;
+                }
+            }
+            return Math.max(1, steps);
+        }
+
+        /**
+         * Process one step of this crafting job.
+         *
+         * @return true if the job is now complete
+         */
+        boolean processStep() {
+            if (canceled) return true;
+
+            completedSteps++;
+            return completedSteps >= totalSteps;
+        }
+
+        /**
+         * Cancel this crafting job.
+         */
+        void cancel() {
+            canceled = true;
+            if (craftingLink != null) {
+                craftingLink.cancel();
+            }
+        }
+
+        /**
+         * Get the estimated storage used by this job in bytes.
+         */
+        long getStorageUsed() {
+            return (long) totalSteps * 256L;
+        }
+
+        /**
+         * Get the progress as a percentage (0-100).
+         */
+        int getProgress() {
+            if (totalSteps == 0) return 100;
+            return (int) ((completedSteps * 100L) / totalSteps);
+        }
+
+        /**
+         * Check if this job is complete.
+         */
+        boolean isComplete() {
+            return completedSteps >= totalSteps;
+        }
+
+        /**
+         * Check if this job was canceled.
+         */
+        boolean isCanceled() {
+            return canceled;
+        }
+
+        /**
+         * Get the pattern for this job.
+         */
+        ICraftingPatternDetails getPattern() {
+            return pattern;
+        }
+
+        /**
+         * Set the crafting link for this job.
+         */
+        void setCraftingLink(ICraftingLink link) {
+            this.craftingLink = link;
+        }
+
+        /**
+         * Write this job to NBT for persistence.
+         */
+        void writeToNBT(NBTTagCompound tag) {
+            tag.setInteger("totalSteps", totalSteps);
+            tag.setInteger("completedSteps", completedSteps);
+            tag.setBoolean("canceled", canceled);
+
+            if (craftingLink != null) {
+                NBTTagCompound linkTag = new NBTTagCompound();
+                craftingLink.writeToNBT(linkTag);
+                tag.setTag("craftingLink", linkTag);
+            }
+        }
+
+        /**
+         * Read a job from NBT. Returns null if the data is invalid.
+         * Note: The pattern and crafting table cannot be fully restored from NBT
+         * alone - they require the AE2 network context. This is a best-effort restore.
+         */
+        static ActiveCraftingJob readFromNBT(NBTTagCompound tag) {
+            if (!tag.hasKey("totalSteps") || !tag.hasKey("completedSteps")) return null;
+
+            // We cannot fully restore the pattern and crafting table from NBT
+            // without the AE2 network context. Return a placeholder that preserves progress.
+            ActiveCraftingJob job = new ActiveCraftingJob(null, null);
+            job.totalSteps = tag.getInteger("totalSteps");
+            job.completedSteps = tag.getInteger("completedSteps");
+            job.canceled = tag.getBoolean("canceled");
+            return job;
+        }
+    }
+}

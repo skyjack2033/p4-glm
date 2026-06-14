@@ -1,0 +1,148 @@
+# ECOAE Extension - Localization File
+
+# Mod Info
+ecoaeext.name=ECOAE Extension
+ecoaeext.description=Nova Engineering - ECO AE Extension: AE2-integrated multiblock subsystems for Storage, Crafting, and Computing.
+
+# ============================================================================
+# EStorage - Storage Subsystem
+# ============================================================================
+
+# EStorage Controller
+ecoaeext.machine.ECOAE_EStorage_L4.name=EStorage Controller L4
+ecoaeext.machine.ECOAE_EStorage_L4.desc=Extendable AE2 Storage System (HV Tier)
+ecoaeext.machine.ECOAE_EStorage_L6.name=EStorage Controller L6
+ecoaeext.machine.ECOAE_EStorage_L6.desc=Extendable AE2 Storage System (IV Tier)
+ecoaeext.machine.ECOAE_EStorage_L9.name=EStorage Controller L9
+ecoaeext.machine.ECOAE_EStorage_L9.desc=Extendable AE2 Storage System (LuV Tier)
+
+# EStorage Blocks
+ecoaeext.block.estorage_casing.name=EStorage Casing
+ecoaeext.block.estorage_cell_drive.name=EStorage Cell Drive
+ecoaeext.block.estorage_energy_cell.name=EStorage Energy Cell
+ecoaeext.block.estorage_me_channel.name=EStorage ME Channel
+ecoaeext.block.estorage_vent.name=EStorage Vent
+ecoaeext.block.estorage_tail.name=EStorage Tail
+
+# EStorage Items
+ecoaeext.item.storage_cell_16m.name=16M Storage Cell
+ecoaeext.item.storage_cell_64m.name=64M Storage Cell
+ecoaeext.item.storage_cell_256m.name=256M Storage Cell
+
+# EStorage GUI
+ecoaeext.gui.estorage.title=EStorage Controller
+ecoaeext.gui.estorage.capacity=Storage Capacity
+ecoaeext.gui.estorage.cell_drives=Cell Drives
+ecoaeext.gui.estorage.energy_cells=Energy Cells
+ecoaeext.gui.estorage.ae2_status=AE2 Status
+
+# ============================================================================
+# ECalculator - Computing Subsystem
+# ============================================================================
+
+# ECalculator Controller
+ecoaeext.machine.ECOAE_ECalculator_L4.name=ECalculator Controller L4
+ecoaeext.machine.ECOAE_ECalculator_L4.desc=AE2 Crafting CPU Multiblock (HV Tier)
+ecoaeext.machine.ECOAE_ECalculator_L6.name=ECalculator Controller L6
+ecoaeext.machine.ECOAE_ECalculator_L6.desc=AE2 Crafting CPU Multiblock (IV Tier)
+ecoaeext.machine.ECOAE_ECalculator_L9.name=ECalculator Controller L9
+ecoaeext.machine.ECOAE_ECalculator_L9.desc=AE2 Crafting CPU Multiblock (LuV Tier)
+
+# ECalculator Blocks
+ecoaeext.block.ecalculator_casing.name=ECalculator Casing
+ecoaeext.block.ecalculator_thread_core.name=ECalculator Thread Core
+ecoaeext.block.ecalculator_hyper_thread.name=ECalculator Hyper-Thread Core
+ecoaeext.block.ecalculator_cell_drive.name=ECalculator Cell Drive
+ecoaeext.block.ecalculator_me_channel.name=ECalculator ME Channel
+ecoaeext.block.ecalculator_transmitter_bus.name=ECalculator Transmitter Bus
+ecoaeext.block.ecalculator_tail.name=ECalculator Tail
+
+# ECalculator Items
+ecoaeext.item.calculator_cell_64m.name=64M Calculator Cell
+ecoaeext.item.calculator_cell_1024m.name=1024M Calculator Cell
+ecoaeext.item.calculator_cell_16384m.name=16384M Calculator Cell
+
+# ECalculator GUI
+ecoaeext.gui.ecalculator.title=ECalculator Controller
+ecoaeext.gui.ecalculator.threads=Thread Cores
+ecoaeext.gui.ecalculator.hyper_threads=Hyper-Thread Cores
+ecoaeext.gui.ecalculator.storage=Crafting Storage
+ecoaeext.gui.ecalculator.vcpu_status=vCPU Status
+
+# ============================================================================
+# EFabricator - Crafting Subsystem
+# ============================================================================
+
+# EFabricator Controller
+ecoaeext.machine.ECOAE_EFabricator_L4.name=EFabricator Controller L4
+ecoaeext.machine.ECOAE_EFabricator_L4.desc=AE2 Auto-Crafting Multiblock (HV Tier)
+ecoaeext.machine.ECOAE_EFabricator_L6.name=EFabricator Controller L6
+ecoaeext.machine.ECOAE_EFabricator_L6.desc=AE2 Auto-Crafting Multiblock (IV Tier)
+ecoaeext.machine.ECOAE_EFabricator_L9.name=EFabricator Controller L9
+ecoaeext.machine.ECOAE_EFabricator_L9.desc=AE2 Auto-Crafting Multiblock (LuV Tier)
+
+# EFabricator Blocks
+ecoaeext.block.efabricator_casing.name=EFabricator Casing
+ecoaeext.block.efabricator_worker.name=EFabricator Worker Core
+ecoaeext.block.efabricator_pattern_bus.name=EFabricator Pattern Bus
+ecoaeext.block.efabricator_me_channel.name=EFabricator ME Channel
+ecoaeext.block.efabricator_vent.name=EFabricator Vent
+ecoaeext.block.efabricator_tail.name=EFabricator Tail
+
+# EFabricator GUI
+ecoaeext.gui.efabricator.title=EFabricator Controller
+ecoaeext.gui.efabricator.patterns=Pattern Slots
+ecoaeext.gui.efabricator.workers=Worker Cores
+ecoaeext.gui.efabricator.overclock=Overclock Mode
+ecoaeext.gui.efabricator.cooling=Active Cooling
+ecoaeext.gui.efabricator.queue=Queue Depth
+
+# ============================================================================
+# Overclock Modes
+# ============================================================================
+
+ecoaeext.overclock.normal=Normal
+ecoaeext.overclock.mode1=Overclock I (2x Speed, 1.5x Energy)
+ecoaeext.overclock.mode2=Overclock II (4x Speed, 2.5x Energy)
+ecoaeext.overclock.mode3=Overclock III (8x Speed, 4x Energy)
+
+# ============================================================================
+# Tier Names
+# ============================================================================
+
+ecoaeext.tier.l4=L4 (HV - 512 EU/t)
+ecoaeext.tier.l6=L6 (IV - 2048 EU/t)
+ecoaeext.tier.l9=L9 (LuV - 8192 EU/t)
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+ecoaeext.config.debug_mode=Enable Debug Mode
+ecoaeext.config.estorage_capacity=Storage Capacity
+ecoaeext.config.estorage_cell_drives=Max Cell Drives
+ecoaeext.config.ecalculator_threads=Thread Cores
+ecoaeext.config.ecalculator_hyper_multiplier=Hyper-Thread Cost Multiplier
+ecoaeext.config.efabricator_patterns=Pattern Bus Slots
+ecoaeext.config.efabricator_queue=Worker Queue Depth
+
+# ============================================================================
+# Status Messages
+# ============================================================================
+
+ecoaeext.status.connected=Connected
+ecoaeext.status.disconnected=Disconnected
+ecoaeext.status.active=Active
+ecoaeext.status.inactive=Inactive
+ecoaeext.status.formed=Structure Formed
+ecoaeext.status.invalid=Structure Invalid
+
+# ============================================================================
+# Tooltip
+# ============================================================================
+
+ecoaeext.tooltip.tier_scales=Tier scales with energy hatch voltage
+ecoaeext.tooltip.ae2_integrates=Integrates with Applied Energistics 2
+ecoaeext.tooltip.storage_cells=Supports item, fluid, and gas storage cells
+ecoaeext.tooltip.pattern_crafting=Supports pattern-based auto-crafting
+ecoaeext.tooltip.virtual_cpus=Provides virtual CPUs for AE2 crafting
