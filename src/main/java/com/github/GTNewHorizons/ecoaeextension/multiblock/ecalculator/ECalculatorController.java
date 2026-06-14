@@ -529,12 +529,6 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         return true;
     }
 
-        // y=1 depth-offset blocks: transmitter buses (2 per segment)
-        installedTransmitterBuses += 2;
-
-        return true;
-    }
-
     // =========================================================================
     // AE2 Integration - Crafting Provider
     // =========================================================================
@@ -599,7 +593,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     @Override
     public BaseActionSource getActionSource() {
         if (machineSource == null) {
-            machineSource = new MachineSource(getProxy().getNode().getMachine());
+            machineSource = new MachineSource(this);
         }
         return machineSource;
     }
@@ -667,7 +661,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             recalculateStorage();
 
             // Initialize machine source for AE2 security
-            machineSource = new MachineSource(getProxy().getNode().getMachine());
+            machineSource = new MachineSource(this);
 
             vCPUActive = true;
 
@@ -834,7 +828,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     public void onPostTick(IGregTechTileEntity aBaseMetaTileEntity, long aTick) {
         super.onPostTick(aBaseMetaTileEntity, aTick);
 
-        if (aBaseMetaTileEntity.isServerSide() && mMachineEnabled) {
+        if (aBaseMetaTileEntity.isServerSide() && mMachine) {
             // Process crafting acceleration every tick
             processCraftingJobs();
 

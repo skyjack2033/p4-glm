@@ -1,24 +1,25 @@
 package com.github.GTNewHorizons.ecoaeextension.multiblock;
 
-import java.util.List;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 
 import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridProxyable;
-import appeng.api.networking.IGridStorage;
+import appeng.api.networking.IGridNode;
+import appeng.api.networking.security.IActionHost;
 import appeng.me.helpers.AENetworkProxy;
+import appeng.me.helpers.IGridProxyable;
+import appeng.api.util.DimensionalCoord;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
-import gregtech.api.metatileentity.implementations.MTEEnergyHatch;
+import gregtech.api.metatileentity.implementations.MTEHatchEnergy;
 import gregtech.api.metatileentity.implementations.MTEExtendedPowerMultiBlockBase;
+import gregtech.api.util.MultiblockTooltipBuilder;
 
 /**
  * Abstract base class for all ECOAE Extension multiblocks. Provides:
@@ -33,7 +34,7 @@ import gregtech.api.metatileentity.implementations.MTEExtendedPowerMultiBlockBas
  */
 public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPowerMultiBlockBase<T>>
     extends MTEExtendedPowerMultiBlockBase<T>
-    implements IGridProxyable {
+    implements IGridProxyable, IActionHost {
 
     // =========================================================================
     // Constants
@@ -77,9 +78,9 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
         aeProxy = new AENetworkProxy(
             this,               // host: the IGridProxyable implementing class
             "ecoaeproxy",       // unique sub-network key for this machine type
-            null                // output stack for security terminal display (null = no security)
+            null,               // output stack for security terminal display (null = no security)
+            true                // world node (dense cable connection)
         );
-        aeProxy.setFlags(); // no special flags (not world-accessible by default)
     }
 
     // =========================================================================
@@ -96,36 +97,38 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     }
 
     /**
-     * Returns the AE2 grid this machine is currently connected to, or null if not
-     * connected.
+     * Returns the location of this tile entity in the world as an AE2 DimensionalCoord.
      */
     @Override
-    public IGrid getGrid() {
+    public DimensionalCoord getLocation() {
+        IGregTechTileEntity base = getBaseMetaTileEntity();
+        if (base == null || base.getWorld() == null) return null;
+        return new DimensionalCoord(base.getWorld(), base.getXCoord(), base.getYCoord(), base.getZCoord());
+    }
+
+    /**
+     * Called by AE2 when the grid topology changes. Subclasses can override
+     * to react to grid changes.
+     */
+    @Override
+    public void gridChanged() {
+        // Default implementation does nothing; subclasses can override
+    }
+
+    /**
+     * Returns the grid node for this machine, used by AE2's security system
+     * to determine action permissions.
+     */
+    @Override
+    public IGridNode getActionableNode() {
         if (aeProxy == null) return null;
-        try {
-            return aeProxy.getGrid();
-        } catch (Exception e) {
-            return null;
-        }
+        return aeProxy.getNode();
     }
 
-    /**
-     * Called by AE2 when this machine's grid storage needs to be saved.
-     * We delegate to the proxy's built-in serialization.
-     */
     @Override
-    public IGridStorage getGridStorage(IGridStorage destination) {
-        return aeProxy != null ? aeProxy.getGridStorage(destination) : destination;
-    }
-
-    /**
-     * Called by AE2 when this machine's grid storage is being loaded.
-     */
-    @Override
-    public void setGridStorage(IGridStorage source) {
-        if (aeProxy != null) {
-            aeProxy.setGridStorage(source);
-        }
+    public IGridNode getGridNode(ForgeDirection dir) {
+        if (aeProxy == null) return null;
+        return aeProxy.getNode();
     }
 
     // =========================================================================
@@ -133,20 +136,18 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     // =========================================================================
 
     /**
-     * Called once when the tile entity first ticks. Sets the world on the AE2 proxy
-     * so it can properly register its grid node with AE2's spatial lookup.
+     * Called once when the tile entity first ticks. Notifies the AE2 proxy
+     * that the tile entity is ready, so it can register its grid node.
      */
     @Override
     public void onFirstTick(IGregTechTileEntity aBaseMetaTileEntity) {
         super.onFirstTick(aBaseMetaTileEntity);
         if (aeProxy != null) {
             try {
-                World world = aBaseMetaTileEntity.getWorld();
-                if (world != null) {
-                    aeProxy.setWorld(world);
-                }
+                aeProxy.validate();
+                aeProxy.onReady();
             } catch (Exception e) {
-                ECOAEExtension.LOG.debug("Failed to set AE2 proxy world on first tick", e);
+                ECOAEExtension.LOG.debug("Failed to initialize AE2 proxy on first tick", e);
             }
         }
     }
@@ -160,34 +161,16 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
         super.onPostTick(aBaseMetaTileEntity, aTick);
         if (aeProxy != null && aBaseMetaTileEntity.isServerSide()) {
             try {
-                // Ensure the proxy world is set (handles edge cases with chunk loading)
-                if (aeProxy.getWorld() == null) {
-                    World world = aBaseMetaTileEntity.getWorld();
-                    if (world != null) {
-                        aeProxy.setWorld(world);
-                    }
-                }
-                aeProxy.update();
                 ae2Connected = aeProxy.isPowered() && aeProxy.isActive();
             } catch (Exception e) {
+                ae2Connected = false;
                 ECOAEExtension.LOG.debug("AE2 proxy update failed on tick " + aTick, e);
             }
         }
     }
 
     /**
-     * Called when the multiblock controller block is removed from the world.
-     * Disconnects from the AE2 grid and invalidates the grid node.
-     */
-    @Override
-    public void onBlockRemoval() {
-        super.onBlockRemoval();
-        disconnectAEProxy();
-    }
-
-    /**
-     * Tear down the AE2 proxy connection. Called from onBlockRemoval and from
-     * disconnectFromAE2Network.
+     * Tear down the AE2 proxy connection. Called from disconnectFromAE2Network.
      */
     protected void disconnectAEProxy() {
         if (aeProxy != null) {
@@ -254,7 +237,7 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     protected int getMaxVoltageTier() {
         if (mEnergyHatches == null || mEnergyHatches.isEmpty()) return 0;
         int maxTier = 0;
-        for (MTEEnergyHatch hatch : mEnergyHatches) {
+        for (MTEHatchEnergy hatch : mEnergyHatches) {
             if (hatch != null) {
                 maxTier = Math.max(maxTier, hatch.mTier);
             }
@@ -326,18 +309,13 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     // =========================================================================
 
     /**
-     * Connect to the AE2 network via the proxy. Ensures the proxy has a valid world
-     * reference and marks the machine as connected.
+     * Connect to the AE2 network via the proxy.
      */
     protected void connectToAE2Network() {
         if (aeProxy == null) return;
         try {
-            IGregTechTileEntity base = getBaseMetaTileEntity();
-            if (base != null && base.getWorld() != null) {
-                aeProxy.setWorld(base.getWorld());
-            }
-            aeProxy.update();
-            ae2Connected = aeProxy.isActive();
+            IGrid grid = aeProxy.getGrid();
+            ae2Connected = grid != null;
         } catch (Exception e) {
             ECOAEExtension.LOG.debug("Failed to connect to AE2 network", e);
             ae2Connected = false;
@@ -356,6 +334,18 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
      */
     public boolean isAE2Connected() {
         return ae2Connected;
+    }
+
+    /**
+     * Get the AE2 grid this machine is currently connected to, or null if not connected.
+     */
+    public IGrid getGrid() {
+        if (aeProxy == null) return null;
+        try {
+            return aeProxy.getGrid();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // =========================================================================
@@ -394,21 +384,19 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     // =========================================================================
 
     @Override
-    public String[] getDescription() {
-        return new String[] {
-            "ECOAE Extension Multiblock",
-            "Tier: " + currentTier.name,
-            "Parallel: " + getParallelCount() + "x",
-            "AE2 Connected: " + (ae2Connected ? "Yes" : "No")
-        };
-    }
-
-    @Override
-    public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {
-        tooltip.add(EnumChatFormatting.AQUA + "ECOAE Extension Multiblock");
-        tooltip.add(EnumChatFormatting.GRAY + "Integrates with Applied Energistics 2");
-        tooltip.add(EnumChatFormatting.GRAY + "Tier scales with energy hatch voltage");
-        tooltip.add(EnumChatFormatting.YELLOW + "L4 (HV) | L6 (IV) | L9 (LuV)");
+    protected MultiblockTooltipBuilder createTooltip() {
+        MultiblockTooltipBuilder b = new MultiblockTooltipBuilder();
+        b.addMachineType("AE2 Multiblock")
+            .addInfo("ECOAE Extension Multiblock")
+            .addInfo("Tier: " + currentTier.name)
+            .addInfo("Parallel: " + getParallelCount() + "x")
+            .addInfo("AE2 Connected: " + (ae2Connected ? "Yes" : "No"))
+            .addSeparator()
+            .addInfo("Integrates with Applied Energistics 2")
+            .addInfo("Tier scales with energy hatch voltage")
+            .addInfo("L4 (HV) | L6 (IV) | L9 (LuV)")
+            .toolTipFinisher();
+        return b;
     }
 
     @Override
@@ -442,17 +430,21 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     }
 
     @Override
-    public boolean supportsVoidProtection() {
-        return false; // ECOAE machines don't output items/fluids in the traditional sense
+    public gregtech.api.interfaces.ITexture[] getTexture(IGregTechTileEntity aBaseMetaTileEntity,
+            ForgeDirection side, ForgeDirection facing, int aColorIndex, boolean aActive, boolean aRedstone) {
+        // Return empty array - subclasses should provide proper textures
+        return new gregtech.api.interfaces.ITexture[0];
     }
 
     @Override
-    public boolean supportsBatchMode() {
-        return false; // Batch mode doesn't apply to AE2 integration
+    public void construct(ItemStack stackSize, boolean hintsOnly) {
+        // Subclasses should use StructureLib to build the structure
+        // Default implementation does nothing
     }
 
     @Override
-    public boolean supportsSingleRecipeLocking() {
-        return false; // No recipe locking for AE2-integrated machines
+    public void securityBreak() {
+        // Called when the AE2 security system breaks this machine
+        // Default implementation does nothing
     }
 }

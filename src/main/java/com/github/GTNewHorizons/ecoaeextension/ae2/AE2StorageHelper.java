@@ -7,11 +7,11 @@ import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.IGridProxyable;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.ICellRegistry;
 import appeng.api.util.DimensionalCoord;
+import appeng.me.helpers.IGridProxyable;
 
 /**
  * Utility class for AE2 network integration. Provides methods for:

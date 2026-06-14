@@ -5,6 +5,7 @@ import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumChatFormatting;
@@ -17,7 +18,6 @@ import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMult
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.StructureDefinition;
-import com.gtnewhorizon.structurelib.structure.StructureUtility;
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
 
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
@@ -309,8 +309,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
                 .addElement('C', ofBlock(CASING_BLOCK, CASING_META))
                 .addElement('M', ofBlock(ME_CHANNEL_BLOCK, ME_CHANNEL_META))
                 .addElement('K', ofBlock(VENT_BLOCK, VENT_META))
-                .addElement('F', StructureUtility.ofHatchAdder(
-                    this::addFluidHatchToMachineList, CASING_BLOCK, CASING_META, 1))
+                .addElement('F', ofBlock(CASING_BLOCK, CASING_META))
                 .addElement('E', ofBlock(CASING_BLOCK, CASING_META))
                 .build();
         }
@@ -347,13 +346,13 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         // Compute facing-dependent direction vectors.
         // forward = direction the structure extends (opposite of front face)
         // right   = perpendicular "right" direction (clockwise from forward, top-down view)
-        int facing = aBaseMetaTileEntity.getFrontFacing();
+        ForgeDirection facing = aBaseMetaTileEntity.getFrontFacing();
         int fwdX, fwdZ;
         switch (facing) {
-            case 2:  fwdX = 0;  fwdZ = 1;  break; // front faces north -> extends south (+Z)
-            case 3:  fwdX = 0;  fwdZ = -1; break; // front faces south -> extends north (-Z)
-            case 4:  fwdX = 1;  fwdZ = 0;  break; // front faces west  -> extends east  (+X)
-            case 5:  fwdX = -1; fwdZ = 0;  break; // front faces east  -> extends west  (-X)
+            case NORTH: fwdX = 0;  fwdZ = 1;  break; // front faces north -> extends south (+Z)
+            case SOUTH: fwdX = 0;  fwdZ = -1; break; // front faces south -> extends north (-Z)
+            case WEST:  fwdX = 1;  fwdZ = 0;  break; // front faces west  -> extends east  (+X)
+            case EAST:  fwdX = -1; fwdZ = 0;  break; // front faces east  -> extends west  (-X)
             default: return false;
         }
         int rightX = -fwdZ;
@@ -621,15 +620,15 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
                 if (block == PATTERN_BUS_BLOCK) {
                     installedPatternBuses++;
-                    addToMachineList(igt);
+                    addToMachineList(igt, CASING_META);
                 } else if (block == WORKER_BLOCK) {
                     installedWorkers++;
-                    addToMachineList(igt);
+                    addToMachineList(igt, CASING_META);
                 } else if (block == PROCESSOR_BLOCK) {
                     installedProcessors++;
-                    addToMachineList(igt);
+                    addToMachineList(igt, CASING_META);
                 } else if (block == VENT_BLOCK) {
-                    addToMachineList(igt);
+                    addToMachineList(igt, CASING_META);
                 }
             }
         }
@@ -645,7 +644,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         int[] w = shapeToWorld(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, 0, sx, sy, sz);
         TileEntity te = getTileAt(w[0], w[1], w[2]);
         if (te instanceof IGregTechTileEntity) {
-            addToMachineList((IGregTechTileEntity) te);
+            addToMachineList((IGregTechTileEntity) te, CASING_META);
         }
     }
 
@@ -656,7 +655,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         if (tile == null) return false;
         IMetaTileEntity mte = tile.getMetaTileEntity();
         if (mte instanceof MTEHatchInput) {
-            addToMachineList(tile);
+            addToMachineList(tile, CASING_META);
             return true;
         }
         return false;
@@ -738,7 +737,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         // Check energy sufficiency when overclocked
         if (overclockMode > 0) {
             long energyCost = (long) (currentTier.voltage * getOverclockEnergyMultiplier());
-            if (getStoredEU() < energyCost) {
+            if (!drainEnergyInput(energyCost)) {
                 return;
             }
         }

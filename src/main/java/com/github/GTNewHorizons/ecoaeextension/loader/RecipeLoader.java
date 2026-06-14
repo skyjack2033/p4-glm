@@ -8,8 +8,9 @@ import gregtech.api.enums.GTValues;
 import gregtech.api.enums.ItemList;
 import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
-import gregtech.api.recipe.GT_Recipe;
+import gregtech.api.recipe.RecipeMaps;
 import gregtech.api.util.GTModHandler;
+import gregtech.api.util.GTRecipeBuilder;
 
 /**
  * Recipe registration for ECOAE Extension.
@@ -34,60 +35,62 @@ public class RecipeLoader {
     // =========================================================================
 
     private static void registerEStorageRecipes() {
-        // EStorage Casing: Steel plates (6) + HV Circuit + Emitter (HV) -> 1 Casing
+        ItemStack casing = BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CASING, 1);
+
+        // EStorage Casing: Steel plates (6) + HV Circuit + Emitter (HV)
         GTValues.RA.stdBuilder()
             .itemInputs(
                 getPlateStack(Materials.Steel, 6),
-                ItemList.Circuit_HV.get(1),
+                getHVChip(),
                 ItemList.Emitter_HV.get(1))
-            .itemOutputs(BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CASING, 1))
+            .itemOutputs(casing)
             .eut(480)
             .duration(200)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EStorage Cell Drive: Casing + HV Circuit + AE2 storage component -> 1 Cell Drive
+        // EStorage Cell Drive: Casing + HV Circuit + AE2 storage component
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CASING, 1),
-                ItemList.Circuit_HV.get(1),
+                casing.copy(),
+                getHVChip(),
                 getAE2StorageComponent())
             .itemOutputs(BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CELL_DRIVE, 1))
             .eut(480)
             .duration(300)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EStorage Energy Cell: Casing + Capacitor + Lapotron Crystal -> 1 Energy Cell
+        // EStorage Energy Cell: Casing + Solar Panel (HV) + Lapotronic Orb
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CASING, 1),
-                ItemList.Cover_Capacitor.get(1),
-                ItemList.Energy_LapotronCrystal.get(1))
+                casing.copy(),
+                ItemList.Cover_SolarPanel_HV.get(1),
+                ItemList.Energy_LapotronicOrb.get(1))
             .itemOutputs(BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_ENERGY_CELL, 1))
             .eut(480)
             .duration(250)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EStorage ME Channel: Casing + HV Circuit + AE2 ME Glass Cable -> 1 ME Channel
+        // EStorage ME Channel: Casing + HV Circuit + AE2 ME Glass Cable
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CASING, 1),
-                ItemList.Circuit_HV.get(1),
+                casing.copy(),
+                getHVChip(),
                 getAE2MEGlassCable())
             .itemOutputs(BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_ME_CHANNEL, 1))
             .eut(480)
             .duration(200)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EStorage Vent: Casing + Iron Bars + Motor (HV) -> 1 Vent
+        // EStorage Vent: Casing + Iron Bars + Motor (HV)
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CASING, 1),
+                casing.copy(),
                 new ItemStack(net.minecraft.init.Blocks.iron_bars),
                 ItemList.Electric_Motor_HV.get(1))
             .itemOutputs(BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_VENT, 1))
             .eut(120)
             .duration(100)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
     }
 
     // =========================================================================
@@ -95,92 +98,94 @@ public class RecipeLoader {
     // =========================================================================
 
     private static void registerECalculatorRecipes() {
-        // ECalculator Casing: Aluminium plates (6) + IV Circuit + Processor (IV) -> 1 Casing
+        ItemStack casing = BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1);
+
+        // ECalculator Casing: Aluminium plates (6) + IV Circuit + CPU Chip
         GTValues.RA.stdBuilder()
             .itemInputs(
                 getPlateStack(Materials.Aluminium, 6),
-                ItemList.Circuit_IV.get(1),
-                ItemList.Processor_IV.get(1))
-            .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1))
+                getIVChip(),
+                ItemList.Circuit_Chip_CPU.get(1))
+            .itemOutputs(casing)
             .eut(1920)
             .duration(300)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // ECalculator Thread Core: Casing + IV Circuit + RAM Chip -> 1 Thread Core
+        // ECalculator Thread Core: Casing + IV Circuit + RAM Chip
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1),
-                ItemList.Circuit_IV.get(1),
+                casing.copy(),
+                getIVChip(),
                 ItemList.Circuit_Chip_Ram.get(1))
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_THREAD_CORE, 1))
             .eut(1920)
             .duration(400)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // ECalculator Hyper-Thread Core: Thread Core + IV Circuit + Naquadah Alloy -> 1 Hyper-Thread
+        // ECalculator Hyper-Thread Core: Thread Core + IV Circuit + Naquadah Alloy
         GTValues.RA.stdBuilder()
             .itemInputs(
                 BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_THREAD_CORE, 1),
-                ItemList.Circuit_IV.get(1),
+                getIVChip(),
                 OrePrefixes.ingot.get(Materials.NaquadahAlloy))
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_HYPER_THREAD, 1))
             .eut(1920)
             .duration(500)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // ECalculator Parallel Processor: Casing + IV Circuit + CPU Chip -> 1 Processor
+        // ECalculator Parallel Processor: Casing + IV Circuit + CPU Chip
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1),
-                ItemList.Circuit_IV.get(1),
-                ItemList.Circuit_Chip_Cpu.get(1))
+                casing.copy(),
+                getIVChip(),
+                ItemList.Circuit_Chip_CPU.get(1))
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_PARALLEL_PROC, 1))
             .eut(1920)
             .duration(350)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // ECalculator Cell Drive: Casing + IV Circuit + AE2 storage -> 1 Cell Drive
+        // ECalculator Cell Drive: Casing + IV Circuit + AE2 storage
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1),
-                ItemList.Circuit_IV.get(1),
+                casing.copy(),
+                getIVChip(),
                 getAE2StorageComponent())
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CELL_DRIVE, 1))
             .eut(1920)
             .duration(300)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // ECalculator ME Channel: Casing + IV Circuit + AE2 cable -> 1 ME Channel
+        // ECalculator ME Channel: Casing + IV Circuit + AE2 cable
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1),
-                ItemList.Circuit_IV.get(1),
+                casing.copy(),
+                getIVChip(),
                 getAE2MEGlassCable())
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_ME_CHANNEL, 1))
             .eut(1920)
             .duration(250)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // ECalculator Transmitter Bus: Casing + IV Circuit + Emitter (IV) -> 1 Transmitter Bus
+        // ECalculator Transmitter Bus: Casing + IV Circuit + Emitter (IV)
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1),
-                ItemList.Circuit_IV.get(1),
+                casing.copy(),
+                getIVChip(),
                 ItemList.Emitter_IV.get(1))
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_TRANSMITTER_BUS, 1))
             .eut(1920)
             .duration(300)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // ECalculator Tail: Casing + Coolant Cell -> 1 Tail
+        // ECalculator Tail: Casing + Heat Vent
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_CASING, 1),
-                ItemList.CoolantCell_60k.get(1))
+                casing.copy(),
+                ItemList.Reactor_Coolant_Sp_6.get(1))
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_TAIL, 1))
             .eut(1920)
             .duration(200)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
     }
 
     // =========================================================================
@@ -188,71 +193,73 @@ public class RecipeLoader {
     // =========================================================================
 
     private static void registerEFabricatorRecipes() {
-        // EFabricator Casing: TungstenSteel plates (6) + LuV Circuit + Robot Arm (LuV) -> 1 Casing
+        ItemStack casing = BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_CASING, 1);
+
+        // EFabricator Casing: TungstenSteel plates (6) + LuV Circuit + Robot Arm (LuV)
         GTValues.RA.stdBuilder()
             .itemInputs(
                 getPlateStack(Materials.TungstenSteel, 6),
-                ItemList.Circuit_LuV.get(1),
+                getLuVChip(),
                 ItemList.Robot_Arm_LuV.get(1))
-            .itemOutputs(BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_CASING, 1))
+            .itemOutputs(casing)
             .eut(7680)
             .duration(400)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EFabricator Worker Core: Casing + LuV Circuit + Crafting Table -> 1 Worker
+        // EFabricator Worker Core: Casing + LuV Circuit + Crafting Table
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_CASING, 1),
-                ItemList.Circuit_LuV.get(1),
+                casing.copy(),
+                getLuVChip(),
                 new ItemStack(net.minecraft.init.Blocks.crafting_table))
             .itemOutputs(BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_WORKER, 1))
             .eut(7680)
             .duration(500)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EFabricator Pattern Bus: Casing + LuV Circuit + AE2 Blank Pattern -> 1 Pattern Bus
+        // EFabricator Pattern Bus: Casing + LuV Circuit + AE2 Blank Pattern
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_CASING, 1),
-                ItemList.Circuit_LuV.get(1),
+                casing.copy(),
+                getLuVChip(),
                 getAE2BlankPattern())
             .itemOutputs(BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_PATTERN_BUS, 1))
             .eut(7680)
             .duration(350)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EFabricator Parallel Processor: Casing + LuV Circuit + CPU Chip -> 1 Processor
+        // EFabricator Parallel Processor: Casing + LuV Circuit + CPU Chip
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_CASING, 1),
-                ItemList.Circuit_LuV.get(1),
-                ItemList.Circuit_Chip_Cpu.get(1))
+                casing.copy(),
+                getLuVChip(),
+                ItemList.Circuit_Chip_CPU.get(1))
             .itemOutputs(BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_PARALLEL_PROC, 1))
             .eut(7680)
             .duration(400)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EFabricator ME Channel: Casing + LuV Circuit + AE2 cable -> 1 ME Channel
+        // EFabricator ME Channel: Casing + LuV Circuit + AE2 cable
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_CASING, 1),
-                ItemList.Circuit_LuV.get(1),
+                casing.copy(),
+                getLuVChip(),
                 getAE2MEGlassCable())
             .itemOutputs(BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_ME_CHANNEL, 1))
             .eut(7680)
             .duration(300)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
 
-        // EFabricator Vent: Casing + Iron Bars + Motor (HV) -> 1 Vent
+        // EFabricator Vent: Casing + Iron Bars + Motor (HV)
         GTValues.RA.stdBuilder()
             .itemInputs(
-                BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_CASING, 1),
+                casing.copy(),
                 new ItemStack(net.minecraft.init.Blocks.iron_bars),
                 ItemList.Electric_Motor_HV.get(1))
             .itemOutputs(BlockLoader.getEFabricatorBlock(BlockLoader.EFAB_META_VENT, 1))
             .eut(1920)
             .duration(150)
-            .addTo(GT_Recipe.GT_Recipe_Map.sAssemblerRecipes);
+            .addTo(RecipeMaps.assemblerRecipes);
     }
 
     // =========================================================================
@@ -260,9 +267,24 @@ public class RecipeLoader {
     // =========================================================================
 
     private static ItemStack getPlateStack(Materials material, int amount) {
-        ItemStack stack = OrePrefixes.plate.get(material);
+        ItemStack stack = (ItemStack) OrePrefixes.plate.get(material);
         stack.stackSize = amount;
         return stack;
+    }
+
+    /** HV circuit - GTNH uses OrePrefixes for tiered circuits */
+    private static ItemStack getHVChip() {
+        return (ItemStack) OrePrefixes.circuit.get(Materials.Advanced);
+    }
+
+    /** IV circuit */
+    private static ItemStack getIVChip() {
+        return (ItemStack) OrePrefixes.circuit.get(Materials.Elite);
+    }
+
+    /** LuV circuit */
+    private static ItemStack getLuVChip() {
+        return (ItemStack) OrePrefixes.circuit.get(Materials.Master);
     }
 
     private static ItemStack getAE2StorageComponent() {

@@ -10,6 +10,6 @@ public class ItemECOAEBase extends Item {
         super();
         setUnlocalizedName(ECOAEExtension.MODID + "." + unlocalizedName);
         setTextureName(ECOAEExtension.MODID + ":" + unlocalizedName);
-        setCreativeTab(gregtech.api.util.GTModHandler.getGTCreativeTab());
+        setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabMisc);
     }
 }

@@ -40,15 +40,15 @@ public class Config {
             "Enable debug logging");
 
         // EStorage
-        eStorageBaseCapacityL4 = configuration.getLong(
-            "eStorageBaseCapacityL4", "EStorage", eStorageBaseCapacityL4, 1000, Long.MAX_VALUE,
-            "Base storage capacity for L4 tier (bytes)");
-        eStorageBaseCapacityL6 = configuration.getLong(
-            "eStorageBaseCapacityL6", "EStorage", eStorageBaseCapacityL6, 1000, Long.MAX_VALUE,
-            "Base storage capacity for L6 tier (bytes)");
-        eStorageBaseCapacityL9 = configuration.getLong(
-            "eStorageBaseCapacityL9", "EStorage", eStorageBaseCapacityL9, 1000, Long.MAX_VALUE,
-            "Base storage capacity for L9 tier (bytes)");
+        eStorageBaseCapacityL4 = configuration.get(
+            "EStorage", "eStorageBaseCapacityL4", (int) eStorageBaseCapacityL4,
+            "Base storage capacity for L4 tier (bytes)").getInt();
+        eStorageBaseCapacityL6 = configuration.get(
+            "EStorage", "eStorageBaseCapacityL6", (int) eStorageBaseCapacityL6,
+            "Base storage capacity for L6 tier (bytes)").getInt();
+        eStorageBaseCapacityL9 = configuration.get(
+            "EStorage", "eStorageBaseCapacityL9", (int) eStorageBaseCapacityL9,
+            "Base storage capacity for L9 tier (bytes)").getInt();
         eStorageMaxCellDrivesL4 = configuration.getInt(
             "eStorageMaxCellDrivesL4", "EStorage", eStorageMaxCellDrivesL4, 1, 64,
             "Max cell drives for L4 tier");

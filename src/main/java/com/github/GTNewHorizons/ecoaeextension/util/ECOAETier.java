@@ -1,7 +1,5 @@
 package com.github.GTNewHorizons.ecoaeextension.util;
 
-import gregtech.api.enums.GTValues;
-
 import com.github.GTNewHorizons.ecoaeextension.Config;
 
 /**
@@ -10,9 +8,9 @@ import com.github.GTNewHorizons.ecoaeextension.Config;
  */
 public enum ECOAETier {
 
-    L4("L4", GTValues.HV, 512, 1),
-    L6("L6", GTValues.IV, 2048, 4),
-    L9("L9", GTValues.LuV, 8192, 16);
+    L4("L4", 3, 512, 1),
+    L6("L6", 5, 2048, 4),
+    L9("L9", 6, 8192, 16);
 
     public final String name;
     public final int voltageTier;
@@ -33,8 +31,8 @@ public enum ECOAETier {
      * @return The corresponding ECOAETier, defaults to L4 if below HV
      */
     public static ECOAETier fromVoltageTier(int maxVoltageTier) {
-        if (maxVoltageTier >= GTValues.LuV) return L9;
-        if (maxVoltageTier >= GTValues.IV) return L6;
+        if (maxVoltageTier >= 6) return L9;  // LuV = tier 6
+        if (maxVoltageTier >= 5) return L6;  // IV = tier 5
         return L4;
     }
 

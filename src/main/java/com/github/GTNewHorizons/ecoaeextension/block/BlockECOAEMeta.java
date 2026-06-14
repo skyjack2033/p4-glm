@@ -30,7 +30,7 @@ public class BlockECOAEMeta extends Block {
         this.subNames = subNames;
         this.iconPaths = iconPaths;
         setBlockName(ECOAEExtension.MODID + "." + blockName);
-        setCreativeTab(gregtech.api.util.GTModHandler.getGTCreativeTab());
+        setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabMisc);
         setHardness(5.0F);
         setResistance(10.0F);
         setStepSound(soundTypeMetal);

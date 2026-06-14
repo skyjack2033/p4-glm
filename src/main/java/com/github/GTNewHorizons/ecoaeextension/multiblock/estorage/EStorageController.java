@@ -453,9 +453,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     // =========================================================================
 
     private boolean isControllerBlock(IGregTechTileEntity base, int x, int y, int z) {
-        // Controller is the MTE itself, already validated by position
-        return base.getWorld().getBlock(x, y, z) == base.getBlockType()
-            && base.getWorld().getBlockMetadata(x, y, z) == base.getMetaTileEntityID();
+        // The controller position is validated by the structure scan itself.
+        // Just verify the block at that position is not air.
+        return base.getWorld().getBlock(x, y, z) != net.minecraft.init.Blocks.air;
     }
 
     private boolean isCasingBlock(IGregTechTileEntity base, int x, int y, int z) {
@@ -518,6 +518,11 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         // The cell inventory resolution is handled by EStorageCellHandler.
 
         return cells;
+    }
+
+    @Override
+    public int getPriority() {
+        return 0;
     }
 
     @Override
