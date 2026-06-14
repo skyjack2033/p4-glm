@@ -4,6 +4,7 @@ import com.github.GTNewHorizons.ecoaeextension.loader.BlockLoader;
 import com.github.GTNewHorizons.ecoaeextension.loader.ItemLoader;
 import com.github.GTNewHorizons.ecoaeextension.loader.MachineLoader;
 import com.github.GTNewHorizons.ecoaeextension.loader.RecipeLoader;
+import com.github.GTNewHorizons.ecoaeextension.recipe.ECOAENEIHandler;
 
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
@@ -33,6 +34,12 @@ public class CommonProxy {
     public void postInit(FMLPostInitializationEvent event) {
         // Register recipes after all mods are loaded
         RecipeLoader.registerRecipes();
+
+        // Register NEI handlers if NEI is present (NEI is client-side and optional)
+        if (cpw.mods.fml.common.Loader.isModLoaded("NotEnoughItems")) {
+            ECOAENEIHandler.register();
+        }
+
         ECOAEExtension.LOG.info("ECOAE Extension post-initialization complete.");
     }
 

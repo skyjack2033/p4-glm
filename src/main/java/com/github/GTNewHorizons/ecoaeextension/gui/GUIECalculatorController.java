@@ -32,17 +32,43 @@ public class GUIECalculatorController extends GuiContainer {
         String tier = "Tier: " + controller.getCurrentTier().name;
         fontRendererObj.drawString(tier, 8, 18, 4210752);
 
-        String threads = "Threads: " + controller.getTotalThreads();
+        // Thread count breakdown (regular + hyper)
+        int totalThreads = controller.getTotalThreads();
+        int hyperThreads = controller.getInstalledHyperThreads();
+        int regularThreads = totalThreads - hyperThreads;
+        String threads = "Threads: " + regularThreads;
+        if (hyperThreads > 0) {
+            threads += " + " + hyperThreads + " HT";
+        }
         fontRendererObj.drawString(threads, 8, 30, 4210752);
 
+        // Total storage bytes
         String storage = "Storage: " + formatBytes(controller.getTotalStorageBytes());
-        fontRendererObj.drawString(storage, 8, 42, 4210752);
+        fontRendererObj.drawString(storage, 8, 42, 0x55FF55);
+
+        // Cell drives and parallel processors
+        String cellDrives = "Cell Drives: " + controller.getInstalledCellDrives();
+        fontRendererObj.drawString(cellDrives, 8, 54, 4210752);
 
         String parallel = "Parallel: " + controller.getParallelCount() + "x";
-        fontRendererObj.drawString(parallel, 8, 54, 4210752);
+        fontRendererObj.drawString(parallel, 8, 66, 4210752);
 
-        String vcpu = "vCPU: " + (controller.isVCPUActive() ? "Active" : "Inactive");
-        fontRendererObj.drawString(vcpu, 8, 66, controller.isVCPUActive() ? 0x00AA00 : 0xAA0000);
+        // vCPU status with color indicator bar
+        boolean vcpuActive = controller.isVCPUActive();
+        String vcpu = "vCPU: " + (vcpuActive ? "ACTIVE" : "INACTIVE");
+        int vcpuColor = vcpuActive ? 0x00FF00 : 0xFF5555;
+        fontRendererObj.drawString(vcpu, 8, 78, vcpuColor);
+
+        // Draw vCPU status indicator bar
+        int barX = 8;
+        int barY = 88;
+        int barWidth = xSize - 16;
+        int barHeight = 3;
+        // Background
+        drawRect(barX, barY, barX + barWidth, barY + barHeight, 0xFF333333);
+        // Status fill
+        int fillColor = vcpuActive ? 0xFF00FF00 : 0xFFFF5555;
+        drawRect(barX, barY, barX + barWidth, barY + barHeight, fillColor);
 
         String playerInv = I18n.format("container.inventory");
         fontRendererObj.drawString(playerInv, 8, ySize - 96 + 2, 4210752);

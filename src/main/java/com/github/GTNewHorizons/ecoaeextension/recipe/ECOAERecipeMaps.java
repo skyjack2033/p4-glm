@@ -1,5 +1,8 @@
 package com.github.GTNewHorizons.ecoaeextension.recipe;
 
+import com.github.GTNewHorizons.ecoaeextension.loader.MachineLoader;
+
+import gregtech.api.GregTechAPI;
 import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMapBackend;
 import gregtech.api.recipe.RecipeMapBuilder;
@@ -26,6 +29,7 @@ public class ECOAERecipeMaps {
         .of("ecoaeext.recipe.ECOAEProcessingRecipes")
         .maxIO(4, 4, 2, 2)
         .progressBar(gregtech.api.gui.modularui.GTUITextures.PROGRESSBAR_ARROW)
-        .neiHandlerInfo(builder -> builder.setDisplayStack(gregtech.api.enums.ItemList.Machine_Multi_Furnace.get(1)))
+        .neiHandlerInfo(builder -> builder
+            .setDisplayStack(GregTechAPI.METATILEENTITIES[MachineLoader.ID_ESTORAGE_CONTROLLER_L4].getStackForm(1)))
         .build();
 }
