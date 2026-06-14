@@ -108,7 +108,7 @@ public class RecipeLoader {
             .itemInputs(
                 BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_THREAD_CORE, 1),
                 getIVChip(),
-                OrePrefixes.ingot.get(Materials.NaquadahAlloy))
+                gregtech.api.util.GTOreDictUnificator.get(OrePrefixes.ingot, Materials.NaquadahAlloy, 1))
             .itemOutputs(BlockLoader.getECalculatorBlock(BlockLoader.ECALC_META_HYPER_THREAD, 1))
             .eut(1920)
             .duration(500)
@@ -219,9 +219,7 @@ public class RecipeLoader {
     // =========================================================================
 
     private static ItemStack getPlateStack(Materials material, int amount) {
-        ItemStack stack = (ItemStack) OrePrefixes.plate.get(material);
-        stack.stackSize = amount;
-        return stack;
+        return gregtech.api.util.GTOreDictUnificator.get(OrePrefixes.plate, material, amount);
     }
 
     /** HV circuit */
