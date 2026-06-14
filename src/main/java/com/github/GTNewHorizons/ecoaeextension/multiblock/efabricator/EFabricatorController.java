@@ -309,6 +309,12 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     @Override
     public IStructureDefinition<EFabricatorController> getStructureDefinition() {
+        // NOTE: The 'E' element (controller position) maps to ofBlock(CASING_BLOCK, CASING_META)
+        // so that StructureLib's construct() helper fills the position with a casing block.
+        // Manual building is required -- the player must place the controller block at the 'E'
+        // position themselves. The construct() helper will incorrectly place a casing there,
+        // but checkMachine() skips validation of the controller position (sx=1, sz=0 in the
+        // middle layer), so the structure still validates correctly after manual correction.
         if (structureDefinition == null) {
             structureDefinition = StructureDefinition.<EFabricatorController>builder()
                 .addShape("main", new String[][] {
@@ -657,7 +663,10 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         int[] w = shapeToWorld(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, 0, sx, sy, sz);
         TileEntity te = getTileAt(w[0], w[1], w[2]);
         if (te instanceof IGregTechTileEntity) {
-            addToMachineList((IGregTechTileEntity) te, CASING_META);
+            IMetaTileEntity mte = ((IGregTechTileEntity) te).getMetaTileEntity();
+            if (mte instanceof MTEHatchInput) {
+                addToMachineList((IGregTechTileEntity) te, CASING_META);
+            }
         }
     }
 

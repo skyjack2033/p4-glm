@@ -108,6 +108,13 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     private static final char TAIL = 'L';
 
     // =========================================================================
+    // Limits
+    // =========================================================================
+
+    /** Maximum number of repeating segments allowed to prevent unbounded scanning */
+    private static final int MAX_SEGMENTS = 16;
+
+    // =========================================================================
     // Structure Shape Names
     // =========================================================================
 
@@ -429,9 +436,13 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         // from (cx-1,cy-1,cz-1) to (cx+1,cy+1,cz+1). The first segment
         // center is 3 blocks forward from the controller (past the front face).
         int offset = 3;
+        int segmentCount = 0;
         boolean foundEndCap = false;
 
         while (!foundEndCap) {
+            if (segmentCount >= MAX_SEGMENTS) {
+                return false;
+            }
             int checkX = cx + fwdX * offset;
             int checkY = cy;
             int checkZ = cz + fwdZ * offset;
@@ -450,6 +461,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
             // Move to the next segment center (3 blocks in the scan direction)
             offset += 3;
+            segmentCount++;
         }
 
         return foundEndCap;
