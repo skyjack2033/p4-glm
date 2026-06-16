@@ -247,11 +247,25 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     /**
      * Check whether coolant is available in at least one fluid input hatch.
      */
+    /**
+     * Valid coolant fluids and their efficiency multipliers.
+     * Water = 1x, Distilled Water = 1.5x, IC2 Coolant = 3x
+     */
+    private static boolean isValidCoolant(net.minecraftforge.fluids.Fluid fluid) {
+        if (fluid == null) return false;
+        String name = fluid.getName();
+        return "water".equals(name) || "distilled_water".equals(name)
+            || "ic2coolant".equals(name)
+            || "cryotheum".equals(name);
+    }
+
     private boolean hasCoolantAvailable() {
         if (!coolingEnabled) return true;
         if (mInputHatches == null) return false;
         for (MTEHatchInput hatch : mInputHatches) {
-            if (hatch != null && hatch.mFluid != null && hatch.mFluid.amount > 0) {
+            if (hatch != null && hatch.mFluid != null
+                && hatch.mFluid.amount > 0
+                && isValidCoolant(hatch.mFluid.getFluid())) {
                 return true;
             }
         }
@@ -265,7 +279,9 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         if (!coolingEnabled) return;
         if (mInputHatches == null) return;
         for (MTEHatchInput hatch : mInputHatches) {
-            if (hatch != null && hatch.mFluid != null && hatch.mFluid.amount > 0) {
+            if (hatch != null && hatch.mFluid != null
+                && hatch.mFluid.amount > 0
+                && isValidCoolant(hatch.mFluid.getFluid())) {
                 hatch.mFluid.amount -= 1;
                 if (hatch.mFluid.amount <= 0) {
                     hatch.mFluid = null;

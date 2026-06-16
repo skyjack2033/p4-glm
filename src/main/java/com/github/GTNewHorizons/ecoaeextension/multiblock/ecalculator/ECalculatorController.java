@@ -28,6 +28,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.events.MENetworkCraftingCpuChange;
+import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -160,6 +161,12 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     /** Queue of active crafting jobs being processed */
     private final List<ActiveCraftingJob> activeJobs = new ArrayList<>();
+
+    /** Pattern items stored in the controller. Decoded into ICraftingPatternDetails on demand. */
+    private final List<ItemStack> patternItems = new ArrayList<>();
+
+    /** Decoded patterns registered with AE2 via provideCrafting(). */
+    private final List<ICraftingPatternDetails> storedPatterns = new ArrayList<>();
 
     /** Machine action source for AE2 security */
     private MachineSource machineSource;
@@ -588,13 +595,15 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     /**
      * Called by AE2 when the crafting grid rebuilds its pattern list.
-     * The ECalculator does not provide patterns itself (it accelerates others'),
-     * so this is a no-op. We implement ICraftingProvider to be discoverable by the grid.
+     * Registers all stored patterns from the controller's pattern inventory.
      */
     @Override
     public void provideCrafting(ICraftingProviderHelper craftingTracker) {
-        // The ECalculator does not provide crafting patterns.
-        // It acts as a crafting medium that accepts and accelerates patterns.
+        for (ICraftingPatternDetails pattern : storedPatterns) {
+            if (pattern != null) {
+                craftingTracker.addCraftingOption(this, pattern);
+            }
+        }
     }
 
     /**
@@ -629,7 +638,109 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     @Override
     public boolean isBusy() {
-        return !activeJobs.isEmpty();
+        // Allow multiple concurrent jobs based on thread core count
+        int maxConcurrent = Math.max(1, installedThreadCores + installedHyperThreads);
+        return activeJobs.size() >= maxConcurrent;
+    }
+
+    // =========================================================================
+    // Pattern Management
+    // =========================================================================
+
+    /**
+     * Add a pattern item to the controller. The item is decoded into ICraftingPatternDetails
+     * and registered with AE2 if connected.
+     *
+     * @param patternStack The pattern item stack to add
+     * @return true if the pattern was added successfully
+     */
+    public boolean addPatternItem(ItemStack patternStack) {
+        if (patternStack == null) return false;
+        if (!(patternStack.getItem() instanceof appeng.api.implementations.ICraftingPatternItem)) return false;
+
+        try {
+            net.minecraft.world.World world = getBaseMetaTileEntity() != null ? getBaseMetaTileEntity().getWorld()
+                : null;
+            if (world == null) return false;
+
+            ICraftingPatternDetails details = ((appeng.api.implementations.ICraftingPatternItem) patternStack.getItem())
+                .getPatternForItem(patternStack, world);
+            if (details == null) return false;
+
+            patternItems.add(patternStack.copy());
+            storedPatterns.add(details);
+            notifyPatternChange();
+            return true;
+        } catch (Exception e) {
+            ECOAEExtension.LOG.debug("Failed to decode pattern item", e);
+            return false;
+        }
+    }
+
+    /**
+     * Remove a pattern item at the given index.
+     *
+     * @param index The index of the pattern to remove
+     * @return The removed pattern ItemStack, or null if index is invalid
+     */
+    public ItemStack removePatternItem(int index) {
+        if (index < 0 || index >= patternItems.size()) return null;
+
+        ItemStack removed = patternItems.remove(index);
+        if (index < storedPatterns.size()) {
+            storedPatterns.remove(index);
+        }
+        notifyPatternChange();
+        return removed;
+    }
+
+    /**
+     * Get the list of pattern items stored in this controller.
+     */
+    public List<ItemStack> getPatternItems() {
+        return patternItems;
+    }
+
+    /**
+     * Refresh stored patterns by re-decoding all pattern items.
+     */
+    public void refreshPatterns() {
+        storedPatterns.clear();
+        net.minecraft.world.World world = getBaseMetaTileEntity() != null ? getBaseMetaTileEntity().getWorld() : null;
+        if (world == null) return;
+
+        for (ItemStack stack : patternItems) {
+            if (stack != null && stack.getItem() instanceof appeng.api.implementations.ICraftingPatternItem) {
+                try {
+                    ICraftingPatternDetails details = ((appeng.api.implementations.ICraftingPatternItem) stack
+                        .getItem()).getPatternForItem(stack, world);
+                    if (details != null) {
+                        storedPatterns.add(details);
+                    }
+                } catch (Exception e) {
+                    ECOAEExtension.LOG.debug("Failed to refresh pattern", e);
+                }
+            }
+        }
+        notifyPatternChange();
+    }
+
+    /**
+     * Notify AE2 that patterns have changed.
+     */
+    private void notifyPatternChange() {
+        if (aeProxy == null || !ae2Connected) return;
+        try {
+            appeng.api.networking.IGridNode node = aeProxy.getNode();
+            if (node != null) {
+                appeng.api.networking.IGrid grid = node.getGrid();
+                if (grid != null) {
+                    grid.postEvent(new MENetworkCraftingPatternChange(this, node));
+                }
+            }
+        } catch (Exception e) {
+            ECOAEExtension.LOG.debug("Failed to notify pattern change", e);
+        }
     }
 
     @Override
@@ -700,12 +811,14 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         if (!ae2Connected) return;
 
         try {
+            // Refresh patterns from stored items before notifying AE2
+            refreshPatterns();
+
             // Register as a crafting provider with the AE2 crafting grid
             IGrid grid = getGrid();
             if (grid != null && aeProxy != null && aeProxy.getNode() != null) {
-                // Notify AE2 that a new crafting CPU is available.
-                // MENetworkCraftingCpuChange tells AE2 to re-scan for CPUs.
-                grid.postEvent(new MENetworkCraftingCpuChange(aeProxy.getNode()));
+                // Notify AE2 that patterns have changed
+                grid.postEvent(new MENetworkCraftingPatternChange(this, aeProxy.getNode()));
             }
 
             // Calculate total storage from installed calculator cells
@@ -717,11 +830,12 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             vCPUActive = true;
 
             ECOAEExtension.LOG.info(
-                "ECalculator connected to AE2 network: threads={}, hyper={}, storage={} bytes, parallel={}",
+                "ECalculator connected to AE2 network: threads={}, hyper={}, storage={} bytes, parallel={}, patterns={}",
                 installedThreadCores,
                 installedHyperThreads,
                 totalStorageBytes,
-                getParallelCount());
+                getParallelCount(),
+                storedPatterns.size());
 
         } catch (Exception e) {
             ECOAEExtension.LOG.error("Failed to connect ECalculator to AE2 network", e);
@@ -944,6 +1058,17 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             jobList.appendTag(jobTag);
         }
         aNBT.setTag(NBT_CRAFTING_JOBS, jobList);
+
+        // Save pattern items
+        NBTTagList patternList = new NBTTagList();
+        for (ItemStack stack : patternItems) {
+            if (stack != null) {
+                NBTTagCompound stackTag = new NBTTagCompound();
+                stack.writeToNBT(stackTag);
+                patternList.appendTag(stackTag);
+            }
+        }
+        aNBT.setTag("ECalc_PatternItems", patternList);
     }
 
     @Override
@@ -967,6 +1092,20 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                 ActiveCraftingJob job = ActiveCraftingJob.readFromNBT(jobTag);
                 if (job != null) {
                     activeJobs.add(job);
+                }
+            }
+        }
+
+        // Load pattern items
+        patternItems.clear();
+        storedPatterns.clear();
+        if (aNBT.hasKey("ECalc_PatternItems")) {
+            NBTTagList patternList = aNBT.getTagList("ECalc_PatternItems", 10);
+            for (int i = 0; i < patternList.tagCount(); i++) {
+                NBTTagCompound stackTag = patternList.getCompoundTagAt(i);
+                ItemStack stack = ItemStack.loadItemStackFromNBT(stackTag);
+                if (stack != null) {
+                    patternItems.add(stack);
                 }
             }
         }
