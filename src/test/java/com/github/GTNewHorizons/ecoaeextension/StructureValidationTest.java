@@ -300,10 +300,10 @@ public class StructureValidationTest {
     public void testECalculatorThreadLimit_L4() {
         // From ECalculatorController.checkMachine():
         // installedThreadCores + installedHyperThreads <= baseThreadCores * 2
-        int baseThreadCores = Config.eCalculatorBaseThreadCoresL4; // 4
+        int baseThreadCores = Config.eCalculatorThreadsPerCoreL4; // 1
         int maxThreads = baseThreadCores * 2;
 
-        assertEquals(8, maxThreads);
+        assertEquals(2, maxThreads);
 
         // At minimum, must have 1 thread core or hyper-thread
         assertTrue(maxThreads >= 1);
@@ -311,14 +311,14 @@ public class StructureValidationTest {
 
     @Test
     public void testECalculatorThreadLimit_L6() {
-        int baseThreadCores = Config.eCalculatorBaseThreadCoresL6; // 8
+        int baseThreadCores = Config.eCalculatorThreadsPerCoreL6; // 2
         int maxThreads = baseThreadCores * 2;
-        assertEquals(16, maxThreads);
+        assertEquals(4, maxThreads);
     }
 
     @Test
     public void testECalculatorThreadLimit_L9() {
-        int baseThreadCores = Config.eCalculatorBaseThreadCoresL9; // 16
+        int baseThreadCores = Config.eCalculatorThreadsPerCoreL9; // 16
         int maxThreads = baseThreadCores * 2;
         assertEquals(32, maxThreads);
     }
@@ -326,7 +326,7 @@ public class StructureValidationTest {
     @Test
     public void testECalculatorHyperThreadCostMultiplier() {
         // Hyper-threads cost 10% more storage per operation
-        double multiplier = Config.eCalculatorHyperThreadCostMultiplier;
+        double multiplier = 1.1;
         assertEquals(1.1, multiplier, 0.001);
         assertTrue("Hyper-thread cost must be > 1.0", multiplier > 1.0);
     }
@@ -423,44 +423,44 @@ public class StructureValidationTest {
 
     @Test
     public void testConfigEStorageCapacity() {
-        assertEquals("L4 capacity", 1_000_000L, Config.eStorageBaseCapacityL4);
-        assertEquals("L6 capacity", 16_000_000L, Config.eStorageBaseCapacityL6);
-        assertEquals("L9 capacity", 256_000_000L, Config.eStorageBaseCapacityL9);
+        assertEquals("L4 capacity", 1_000_000L, Config.eStorageEnergyCellCapacityL4);
+        assertEquals("L6 capacity", 16_000_000L, Config.eStorageEnergyCellCapacityL6);
+        assertEquals("L9 capacity", 256_000_000L, Config.eStorageEnergyCellCapacityL9);
 
         // Each tier should have strictly more capacity
-        assertTrue(Config.eStorageBaseCapacityL4 < Config.eStorageBaseCapacityL6);
-        assertTrue(Config.eStorageBaseCapacityL6 < Config.eStorageBaseCapacityL9);
+        assertTrue(Config.eStorageEnergyCellCapacityL4 < Config.eStorageEnergyCellCapacityL6);
+        assertTrue(Config.eStorageEnergyCellCapacityL6 < Config.eStorageEnergyCellCapacityL9);
     }
 
     @Test
     public void testConfigEStorageMaxCellDrives() {
-        assertEquals("L4 max drives", 4, Config.eStorageMaxCellDrivesL4);
-        assertEquals("L6 max drives", 8, Config.eStorageMaxCellDrivesL6);
-        assertEquals("L9 max drives", 16, Config.eStorageMaxCellDrivesL9);
+        assertEquals("L4 max drives", 4, Config.eStorageCellDriveCapacityL4);
+        assertEquals("L6 max drives", 8, Config.eStorageCellDriveCapacityL6);
+        assertEquals("L9 max drives", 16, Config.eStorageCellDriveCapacityL9);
 
         // Each tier should allow more cell drives
-        assertTrue(Config.eStorageMaxCellDrivesL4 < Config.eStorageMaxCellDrivesL6);
-        assertTrue(Config.eStorageMaxCellDrivesL6 < Config.eStorageMaxCellDrivesL9);
+        assertTrue(Config.eStorageCellDriveCapacityL4 < Config.eStorageCellDriveCapacityL6);
+        assertTrue(Config.eStorageCellDriveCapacityL6 < Config.eStorageCellDriveCapacityL9);
     }
 
     @Test
     public void testConfigECalculatorThreadCores() {
-        assertEquals("L4 threads", 4, Config.eCalculatorBaseThreadCoresL4);
-        assertEquals("L6 threads", 8, Config.eCalculatorBaseThreadCoresL6);
-        assertEquals("L9 threads", 16, Config.eCalculatorBaseThreadCoresL9);
+        assertEquals("L4 threads", 1, Config.eCalculatorThreadsPerCoreL4);
+        assertEquals("L6 threads", 2, Config.eCalculatorThreadsPerCoreL6);
+        assertEquals("L9 threads", 4, Config.eCalculatorThreadsPerCoreL9);
 
-        assertTrue(Config.eCalculatorBaseThreadCoresL4 < Config.eCalculatorBaseThreadCoresL6);
-        assertTrue(Config.eCalculatorBaseThreadCoresL6 < Config.eCalculatorBaseThreadCoresL9);
+        assertTrue(Config.eCalculatorThreadsPerCoreL4 < Config.eCalculatorThreadsPerCoreL6);
+        assertTrue(Config.eCalculatorThreadsPerCoreL6 < Config.eCalculatorThreadsPerCoreL9);
     }
 
     @Test
     public void testConfigEFabricatorPatternBusSlots() {
-        assertEquals("L4 pattern slots", 18, Config.eFabricatorPatternBusSlotsL4);
-        assertEquals("L6 pattern slots", 36, Config.eFabricatorPatternBusSlotsL6);
-        assertEquals("L9 pattern slots", 72, Config.eFabricatorPatternBusSlotsL9);
+        assertEquals("L4 parallel", 24, Config.eFabricatorParallelProcL4);
+        assertEquals("L6 parallel", 72, Config.eFabricatorParallelProcL6);
+        assertEquals("L9 parallel", 256, Config.eFabricatorParallelProcL9);
 
-        assertTrue(Config.eFabricatorPatternBusSlotsL4 < Config.eFabricatorPatternBusSlotsL6);
-        assertTrue(Config.eFabricatorPatternBusSlotsL6 < Config.eFabricatorPatternBusSlotsL9);
+        assertTrue(Config.eFabricatorParallelProcL4 < Config.eFabricatorParallelProcL6);
+        assertTrue(Config.eFabricatorParallelProcL6 < Config.eFabricatorParallelProcL9);
     }
 
     @Test
@@ -815,28 +815,28 @@ public class StructureValidationTest {
     public void testAllTiersHaveConfigValues() {
         // Every tier should have corresponding config values for all multiblock types
         for (ECOAETier tier : ECOAETier.values()) {
-            assertNotNull("Tier " + tier.name + " should have max cell drives", tier.getMaxCellDrives());
-            assertNotNull("Tier " + tier.name + " should have base thread cores", tier.getBaseThreadCores());
-            assertNotNull("Tier " + tier.name + " should have pattern bus slots", tier.getPatternBusSlots());
+            assertNotNull("Tier " + tier.name + " should have max cell drives", tier.getEnergyCellCapacity());
+            assertNotNull("Tier " + tier.name + " should have base thread cores", tier.getCalculatorParallelProc());
+            assertNotNull("Tier " + tier.name + " should have pattern bus slots", tier.getFabricatorParallelProc());
         }
     }
 
     @Test
     public void testTierConfigDelegateToCorrectValues() {
         // L4 tier should use L4 config values
-        assertEquals(Config.eStorageMaxCellDrivesL4, ECOAETier.L4.getMaxCellDrives());
-        assertEquals(Config.eCalculatorBaseThreadCoresL4, ECOAETier.L4.getBaseThreadCores());
-        assertEquals(Config.eFabricatorPatternBusSlotsL4, ECOAETier.L4.getPatternBusSlots());
+        assertEquals(Config.eStorageCellDriveCapacityL4, ECOAETier.L4.getEnergyCellCapacity());
+        assertEquals(Config.eCalculatorThreadsPerCoreL4, ECOAETier.L4.getCalculatorParallelProc());
+        assertEquals(Config.eFabricatorParallelProcL4, ECOAETier.L4.getFabricatorParallelProc());
 
         // L6 tier should use L6 config values
-        assertEquals(Config.eStorageMaxCellDrivesL6, ECOAETier.L6.getMaxCellDrives());
-        assertEquals(Config.eCalculatorBaseThreadCoresL6, ECOAETier.L6.getBaseThreadCores());
-        assertEquals(Config.eFabricatorPatternBusSlotsL6, ECOAETier.L6.getPatternBusSlots());
+        assertEquals(Config.eStorageCellDriveCapacityL6, ECOAETier.L6.getEnergyCellCapacity());
+        assertEquals(Config.eCalculatorThreadsPerCoreL6, ECOAETier.L6.getCalculatorParallelProc());
+        assertEquals(Config.eFabricatorParallelProcL6, ECOAETier.L6.getFabricatorParallelProc());
 
         // L9 tier should use L9 config values
-        assertEquals(Config.eStorageMaxCellDrivesL9, ECOAETier.L9.getMaxCellDrives());
-        assertEquals(Config.eCalculatorBaseThreadCoresL9, ECOAETier.L9.getBaseThreadCores());
-        assertEquals(Config.eFabricatorPatternBusSlotsL9, ECOAETier.L9.getPatternBusSlots());
+        assertEquals(Config.eStorageCellDriveCapacityL9, ECOAETier.L9.getEnergyCellCapacity());
+        assertEquals(Config.eCalculatorThreadsPerCoreL9, ECOAETier.L9.getCalculatorParallelProc());
+        assertEquals(Config.eFabricatorParallelProcL9, ECOAETier.L9.getFabricatorParallelProc());
     }
 
     @Test

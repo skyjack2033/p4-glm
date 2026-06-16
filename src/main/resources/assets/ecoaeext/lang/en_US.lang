@@ -106,6 +106,12 @@ ecoaeext.overclock.mode1=Overclock I (2x Speed, 1.5x Energy)
 ecoaeext.overclock.mode2=Overclock II (4x Speed, 2.5x Energy)
 ecoaeext.overclock.mode3=Overclock III (8x Speed, 4x Energy)
 
+# Overclock Short Names (for display)
+ecoaeext.overclock.name.normal=Normal
+ecoaeext.overclock.name.mode1=Overclock I
+ecoaeext.overclock.name.mode2=Overclock II
+ecoaeext.overclock.name.mode3=Overclock III
+
 # ============================================================================
 # Tier Names
 # ============================================================================
@@ -138,7 +144,7 @@ ecoaeext.status.formed=Structure Formed
 ecoaeext.status.invalid=Structure Invalid
 
 # ============================================================================
-# Tooltip
+# Tooltip - Generic
 # ============================================================================
 
 ecoaeext.tooltip.tier_scales=Tier scales with energy hatch voltage
@@ -146,3 +152,110 @@ ecoaeext.tooltip.ae2_integrates=Integrates with Applied Energistics 2
 ecoaeext.tooltip.storage_cells=Supports item, fluid, and gas storage cells
 ecoaeext.tooltip.pattern_crafting=Supports pattern-based auto-crafting
 ecoaeext.tooltip.virtual_cpus=Provides virtual CPUs for AE2 crafting
+
+# ============================================================================
+# Tooltip - EStorage Controller
+# ============================================================================
+
+ecoaeext.tooltip.estorage_controller=EStorage Controller
+ecoaeext.tooltip.estorage_desc=Extendable AE2-integrated storage system
+ecoaeext.tooltip.estorage_tier_l4=L4 (HV): %s, %s drives
+ecoaeext.tooltip.estorage_tier_l6=L6 (IV): %s, %s drives
+ecoaeext.tooltip.estorage_tier_l9=L9 (LuV): %s, %s drives
+
+# ============================================================================
+# Tooltip - ECalculator Controller
+# ============================================================================
+
+ecoaeext.tooltip.ecalculator_controller=ECalculator Controller
+ecoaeext.tooltip.ecalculator_desc=Extendable AE2 crafting CPU system
+ecoaeext.tooltip.ecalculator_vcpu=Provides virtual CPUs for AE2 autocrafting
+ecoaeext.tooltip.ecalculator_threads=Thread cores enable parallel crafting execution
+ecoaeext.tooltip.ecalculator_hyper=Hyper-threads add parallelism at %s%% byte cost
+ecoaeext.tooltip.ecalculator_tier_l4=L4 (HV): %s base threads, %s parallel
+ecoaeext.tooltip.ecalculator_tier_l6=L6 (IV): %s base threads, %s parallel
+ecoaeext.tooltip.ecalculator_tier_l9=L9 (LuV): %s base threads, %s parallel
+
+# ============================================================================
+# Tooltip - EFabricator Controller
+# ============================================================================
+
+ecoaeext.tooltip.efabricator_controller=EFabricator Controller
+ecoaeext.tooltip.efabricator_desc=Extendable AE2 auto-crafting multiblock
+ecoaeext.tooltip.efabricator_pattern=Supports pattern-based crafting with overclock
+ecoaeext.tooltip.efabricator_structure=Structure: controller + repeating segments + end cap
+ecoaeext.tooltip.efabricator_tier_slots=Tier Pattern Slots (per bus):
+ecoaeext.tooltip.efabricator_slot_l4=  L4 (HV): %s
+ecoaeext.tooltip.efabricator_slot_l6=  L6 (IV): %s
+ecoaeext.tooltip.efabricator_slot_l9=  L9 (LuV): %s
+ecoaeext.tooltip.efabricator_queue=Worker Queue Depth: %s
+ecoaeext.tooltip.efabricator_overclock=Modes:
+ecoaeext.tooltip.oc_normal=  Normal: %s speed, %s EU
+ecoaeext.tooltip.oc_mode1=  OC I: %s speed, %s EU
+ecoaeext.tooltip.oc_mode2=  OC II: %s speed, %s EU
+ecoaeext.tooltip.oc_mode3=  OC III: %s speed, %s EU
+
+# ============================================================================
+# Tooltip - Structure Descriptions
+# ============================================================================
+
+ecoaeext.tooltip.structure.estorage_title=EStorage Multiblock Structure:
+ecoaeext.tooltip.structure.estorage_fixed=- 3x3x3 fixed section with controller and ME channel
+ecoaeext.tooltip.structure.estorage_segments=- Repeating segments (min %s, max %s):
+ecoaeext.tooltip.structure.estorage_segment_info=  Each segment: cell drives, energy cells, and vents
+ecoaeext.tooltip.structure.estorage_endcap=- End cap of casings at the far end
+ecoaeext.tooltip.structure.estorage_tier=- Tier determined by energy hatch voltage (L4/L6/L9)
+
+# ============================================================================
+# Chat Messages
+# ============================================================================
+
+ecoaeext.chat.cell_inserted=Cell inserted. Active cells: %s/%s
+ecoaeext.chat.no_cell_slots=No available cell slots. Structure has %s drives.
+ecoaeext.chat.cell_removed=Cell removed. Active cells: %s/%s
+ecoaeext.chat.no_cells=No cells to remove.
+ecoaeext.chat.pattern_added=Pattern added. Stored patterns: %s
+ecoaeext.chat.pattern_failed=Failed to add pattern.
+ecoaeext.chat.pattern_removed=Pattern removed. Stored patterns: %s
+ecoaeext.chat.no_patterns=No patterns to remove.
+
+# ============================================================================
+# GUI - Common
+# ============================================================================
+
+ecoaeext.gui.tier=Tier: %s
+ecoaeext.gui.parallel=Parallel: %sx
+
+# ============================================================================
+# GUI - EStorage
+# ============================================================================
+
+ecoaeext.gui.estorage.segments=Segments: %s
+ecoaeext.gui.estorage.drives=Drives: %s/%s
+ecoaeext.gui.estorage.capacity=Capacity: %s
+ecoaeext.gui.estorage.energy_cells=Energy Cells: %s
+ecoaeext.gui.estorage.ae2_connected=AE2: Connected
+ecoaeext.gui.estorage.ae2_disconnected=AE2: Disconnected
+
+# ============================================================================
+# GUI - ECalculator
+# ============================================================================
+
+ecoaeext.gui.ecalculator.threads_count=Threads: %s
+ecoaeext.gui.ecalculator.threads_with_hyper=Threads: %s + %s HT
+ecoaeext.gui.ecalculator.storage=Storage: %s
+ecoaeext.gui.ecalculator.cell_drives=Cell Drives: %s
+ecoaeext.gui.ecalculator.vcpu_active=vCPU: ACTIVE
+ecoaeext.gui.ecalculator.vcpu_inactive=vCPU: INACTIVE
+
+# ============================================================================
+# GUI - EFabricator
+# ============================================================================
+
+ecoaeext.gui.efabricator.overclock_button=Overclock
+ecoaeext.gui.efabricator.cooling_button=Cooling
+ecoaeext.gui.efabricator.patterns_count=Patterns: %s
+ecoaeext.gui.efabricator.workers_count=Workers: %s
+ecoaeext.gui.efabricator.mode=Mode: %s
+ecoaeext.gui.efabricator.cooling_on=Cooling: ON
+ecoaeext.gui.efabricator.cooling_off=Cooling: OFF

@@ -53,46 +53,46 @@ public enum ECOAETier {
      *
      * @return The max cell drives for this tier
      */
-    public int getMaxCellDrives() {
+    public long getEnergyCellCapacity() {
         switch (this) {
             case L9:
-                return Config.eStorageMaxCellDrivesL9;
+                return Config.eStorageEnergyCellCapacityL9;
             case L6:
-                return Config.eStorageMaxCellDrivesL6;
+                return Config.eStorageEnergyCellCapacityL6;
             default:
-                return Config.eStorageMaxCellDrivesL4;
+                return Config.eStorageEnergyCellCapacityL4;
         }
     }
 
     /**
-     * Get the base number of thread cores for ECalculator at this tier from Config.
+     * Get the parallel proc value per block for ECalculator at this tier from Config.
      *
-     * @return The base thread cores for this tier
+     * @return The parallel proc value per block
      */
-    public int getBaseThreadCores() {
+    public int getCalculatorParallelProc() {
         switch (this) {
             case L9:
-                return Config.eCalculatorBaseThreadCoresL9;
+                return Config.eCalculatorParallelProcL9;
             case L6:
-                return Config.eCalculatorBaseThreadCoresL6;
+                return Config.eCalculatorParallelProcL6;
             default:
-                return Config.eCalculatorBaseThreadCoresL4;
+                return Config.eCalculatorParallelProcL4;
         }
     }
 
     /**
-     * Get the pattern bus slots for EFabricator at this tier from Config.
+     * Get the parallel proc value per block for EFabricator at this tier from Config.
      *
-     * @return The pattern bus slots for this tier
+     * @return The parallel proc value per block
      */
-    public int getPatternBusSlots() {
+    public int getFabricatorParallelProc() {
         switch (this) {
             case L9:
-                return Config.eFabricatorPatternBusSlotsL9;
+                return Config.eFabricatorParallelProcL9;
             case L6:
-                return Config.eFabricatorPatternBusSlotsL6;
+                return Config.eFabricatorParallelProcL6;
             default:
-                return Config.eFabricatorPatternBusSlotsL4;
+                return Config.eFabricatorParallelProcL4;
         }
     }
 

@@ -29,33 +29,37 @@ public class GUIECalculatorController extends GuiContainer {
         String title = I18n.format("ecoaeext.gui.ecalculator.title");
         fontRendererObj.drawString(title, (xSize / 2 - fontRendererObj.getStringWidth(title) / 2), 6, 4210752);
 
-        String tier = "Tier: " + controller.getCurrentTier().name;
+        String tier = I18n.format("ecoaeext.gui.tier", controller.getCurrentTier().name);
         fontRendererObj.drawString(tier, 8, 18, 4210752);
 
         // Thread count breakdown (regular + hyper)
         int totalThreads = controller.getTotalThreads();
         int hyperThreads = controller.getInstalledHyperThreads();
         int regularThreads = totalThreads - hyperThreads;
-        String threads = "Threads: " + regularThreads;
+        String threads;
         if (hyperThreads > 0) {
-            threads += " + " + hyperThreads + " HT";
+            threads = I18n.format("ecoaeext.gui.ecalculator.threads_with_hyper", regularThreads, hyperThreads);
+        } else {
+            threads = I18n.format("ecoaeext.gui.ecalculator.threads_count", regularThreads);
         }
         fontRendererObj.drawString(threads, 8, 30, 4210752);
 
         // Total storage bytes
-        String storage = "Storage: " + formatBytes(controller.getTotalStorageBytes());
+        String storage = I18n
+            .format("ecoaeext.gui.ecalculator.storage", formatBytes(controller.getTotalStorageBytes()));
         fontRendererObj.drawString(storage, 8, 42, 0x55FF55);
 
         // Cell drives and parallel processors
-        String cellDrives = "Cell Drives: " + controller.getInstalledCellDrives();
+        String cellDrives = I18n.format("ecoaeext.gui.ecalculator.cell_drives", controller.getInstalledCellDrives());
         fontRendererObj.drawString(cellDrives, 8, 54, 4210752);
 
-        String parallel = "Parallel: " + controller.getParallelCount() + "x";
+        String parallel = I18n.format("ecoaeext.gui.parallel", controller.getParallelCount());
         fontRendererObj.drawString(parallel, 8, 66, 4210752);
 
         // vCPU status with color indicator bar
         boolean vcpuActive = controller.isVCPUActive();
-        String vcpu = "vCPU: " + (vcpuActive ? "ACTIVE" : "INACTIVE");
+        String vcpu = I18n
+            .format(vcpuActive ? "ecoaeext.gui.ecalculator.vcpu_active" : "ecoaeext.gui.ecalculator.vcpu_inactive");
         int vcpuColor = vcpuActive ? 0x00FF00 : 0xFF5555;
         fontRendererObj.drawString(vcpu, 8, 78, vcpuColor);
 

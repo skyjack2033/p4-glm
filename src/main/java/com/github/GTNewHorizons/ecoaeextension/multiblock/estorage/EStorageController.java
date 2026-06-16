@@ -7,6 +7,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
@@ -138,17 +139,17 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     private void updateTierConfig() {
         switch (currentTier) {
             case L9:
-                storageCapacity = Config.eStorageBaseCapacityL9;
-                maxCellDrives = Config.eStorageMaxCellDrivesL9;
+                storageCapacity = Config.eStorageEnergyCellCapacityL9;
+                maxCellDrives = (int) Config.eStorageCellDriveCapacityL9;
                 break;
             case L6:
-                storageCapacity = Config.eStorageBaseCapacityL6;
-                maxCellDrives = Config.eStorageMaxCellDrivesL6;
+                storageCapacity = Config.eStorageEnergyCellCapacityL6;
+                maxCellDrives = (int) Config.eStorageCellDriveCapacityL6;
                 break;
             case L4:
             default:
-                storageCapacity = Config.eStorageBaseCapacityL4;
-                maxCellDrives = Config.eStorageMaxCellDrivesL4;
+                storageCapacity = Config.eStorageEnergyCellCapacityL4;
+                maxCellDrives = (int) Config.eStorageCellDriveCapacityL4;
                 break;
         }
     }
@@ -727,7 +728,7 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     /**
      * Get the maximum number of cell drives allowed by the current tier.
      */
-    public int getMaxCellDrives() {
+    public int getEnergyCellCapacity() {
         return maxCellDrives;
     }
 
@@ -833,17 +834,17 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
                 aPlayer.inventory.decrStackSize(aPlayer.inventory.currentItem, 1);
                 aPlayer.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
-                        net.minecraft.util.EnumChatFormatting.GREEN + "Cell inserted. Active cells: "
-                            + getActiveCellCount()
-                            + "/"
-                            + cellStacks.size()));
+                        net.minecraft.util.EnumChatFormatting.GREEN + String.format(
+                            StatCollector.translateToLocal("ecoaeext.chat.cell_inserted"),
+                            getActiveCellCount(),
+                            cellStacks.size())));
                 return true;
             } else {
                 aPlayer.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
-                        net.minecraft.util.EnumChatFormatting.RED + "No available cell slots. Structure has "
-                            + installedCellDrives
-                            + " drives."));
+                        net.minecraft.util.EnumChatFormatting.RED + String.format(
+                            StatCollector.translateToLocal("ecoaeext.chat.no_cell_slots"),
+                            installedCellDrives)));
                 return true;
             }
         }
@@ -858,16 +859,17 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
                     }
                     aPlayer.addChatMessage(
                         new net.minecraft.util.ChatComponentText(
-                            net.minecraft.util.EnumChatFormatting.YELLOW + "Cell removed. Active cells: "
-                                + getActiveCellCount()
-                                + "/"
-                                + cellStacks.size()));
+                            net.minecraft.util.EnumChatFormatting.YELLOW + String.format(
+                                StatCollector.translateToLocal("ecoaeext.chat.cell_removed"),
+                                getActiveCellCount(),
+                                cellStacks.size())));
                     return true;
                 }
             }
             aPlayer.addChatMessage(
                 new net.minecraft.util.ChatComponentText(
-                    net.minecraft.util.EnumChatFormatting.RED + "No cells to remove."));
+                    net.minecraft.util.EnumChatFormatting.RED
+                        + StatCollector.translateToLocal("ecoaeext.chat.no_cells")));
             return true;
         }
 
@@ -892,38 +894,37 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
 
     @Override
     public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {
-        tooltip.add(EnumChatFormatting.AQUA + "EStorage Controller");
-        tooltip.add(EnumChatFormatting.GRAY + "Extendable AE2-integrated storage system");
-        tooltip.add(EnumChatFormatting.GRAY + "Supports item, fluid, and gas storage cells");
+        tooltip.add(EnumChatFormatting.AQUA + StatCollector.translateToLocal("ecoaeext.tooltip.estorage_controller"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.estorage_desc"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.storage_cells"));
         tooltip.add(
-            EnumChatFormatting.YELLOW + "L4 (HV): "
-                + formatBytes(Config.eStorageBaseCapacityL4)
-                + EnumChatFormatting.GRAY
-                + ", "
-                + Config.eStorageMaxCellDrivesL4
-                + " drives");
+            EnumChatFormatting.YELLOW + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.estorage_tier_l4"),
+                formatBytes(Config.eStorageEnergyCellCapacityL4),
+                Config.eStorageCellDriveCapacityL4));
         tooltip.add(
-            EnumChatFormatting.YELLOW + "L6 (IV): "
-                + formatBytes(Config.eStorageBaseCapacityL6)
-                + EnumChatFormatting.GRAY
-                + ", "
-                + Config.eStorageMaxCellDrivesL6
-                + " drives");
+            EnumChatFormatting.YELLOW + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.estorage_tier_l6"),
+                formatBytes(Config.eStorageEnergyCellCapacityL6),
+                Config.eStorageCellDriveCapacityL6));
         tooltip.add(
-            EnumChatFormatting.YELLOW + "L9 (LuV): "
-                + formatBytes(Config.eStorageBaseCapacityL9)
-                + EnumChatFormatting.GRAY
-                + ", "
-                + Config.eStorageMaxCellDrivesL9
-                + " drives");
+            EnumChatFormatting.YELLOW + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.estorage_tier_l9"),
+                formatBytes(Config.eStorageEnergyCellCapacityL9),
+                Config.eStorageCellDriveCapacityL9));
     }
 
     @Override
     public String[] getStructureDescription(ItemStack stackSize) {
-        return new String[] { "EStorage Multiblock Structure:", "- 3x3x3 fixed section with controller and ME channel",
-            "- Repeating segments (min " + MIN_SEGMENTS + ", max " + MAX_SEGMENTS + "):",
-            "  Each segment: cell drives, energy cells, and vents", "- End cap of casings at the far end",
-            "- Tier determined by energy hatch voltage (L4/L6/L9)" };
+        return new String[] { StatCollector.translateToLocal("ecoaeext.tooltip.structure.estorage_title"),
+            StatCollector.translateToLocal("ecoaeext.tooltip.structure.estorage_fixed"),
+            String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.structure.estorage_segments"),
+                MIN_SEGMENTS,
+                MAX_SEGMENTS),
+            StatCollector.translateToLocal("ecoaeext.tooltip.structure.estorage_segment_info"),
+            StatCollector.translateToLocal("ecoaeext.tooltip.structure.estorage_endcap"),
+            StatCollector.translateToLocal("ecoaeext.tooltip.structure.estorage_tier") };
     }
 
     /**

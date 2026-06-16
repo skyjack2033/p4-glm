@@ -30,27 +30,32 @@ public class GUIEStorageController extends GuiContainer {
         fontRendererObj.drawString(title, (xSize / 2 - fontRendererObj.getStringWidth(title) / 2), 6, 4210752);
 
         // Draw status info
-        String tier = "Tier: " + controller.getCurrentTier().name;
+        String tier = I18n.format("ecoaeext.gui.tier", controller.getCurrentTier().name);
         fontRendererObj.drawString(tier, 8, 18, 4210752);
 
-        String segments = "Segments: " + controller.getSegmentCount();
+        String segments = I18n.format("ecoaeext.gui.estorage.segments", controller.getSegmentCount());
         fontRendererObj.drawString(segments, 8, 30, 4210752);
 
         // Cell drives with max allowed display
-        String cellDrives = "Drives: " + controller.getInstalledCellDrives() + "/" + controller.getMaxCellDrives();
+        String cellDrives = I18n.format(
+            "ecoaeext.gui.estorage.drives",
+            controller.getInstalledCellDrives(),
+            controller.getEnergyCellCapacity());
         fontRendererObj.drawString(cellDrives, 8, 42, 4210752);
 
         // Total storage capacity
-        String capacity = "Capacity: " + formatStorageBytes(controller.getStorageCapacity());
+        String capacity = I18n
+            .format("ecoaeext.gui.estorage.capacity", formatStorageBytes(controller.getStorageCapacity()));
         fontRendererObj.drawString(capacity, 8, 54, 0x55FF55);
 
         // Energy cells
-        String energyCells = "Energy Cells: " + controller.getInstalledEnergyCells();
+        String energyCells = I18n.format("ecoaeext.gui.estorage.energy_cells", controller.getInstalledEnergyCells());
         fontRendererObj.drawString(energyCells, 8, 66, 4210752);
 
         // AE2 connection status with colored indicator bar
         boolean ae2Connected = controller.isAE2Connected();
-        String ae2Status = "AE2: " + (ae2Connected ? "Connected" : "Disconnected");
+        String ae2Status = I18n
+            .format(ae2Connected ? "ecoaeext.gui.estorage.ae2_connected" : "ecoaeext.gui.estorage.ae2_disconnected");
         int ae2Color = ae2Connected ? 0x00AA00 : 0xAA0000;
         fontRendererObj.drawString(ae2Status, 8, 78, ae2Color);
 

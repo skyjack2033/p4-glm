@@ -106,6 +106,12 @@ ecoaeext.overclock.mode1=超频I（2倍速度，1.5倍能耗）
 ecoaeext.overclock.mode2=超频II（4倍速度，2.5倍能耗）
 ecoaeext.overclock.mode3=超频III（8倍速度，4倍能耗）
 
+# 超频简短名称（用于显示）
+ecoaeext.overclock.name.normal=正常
+ecoaeext.overclock.name.mode1=超频I
+ecoaeext.overclock.name.mode2=超频II
+ecoaeext.overclock.name.mode3=超频III
+
 # ============================================================================
 # 等级名称
 # ============================================================================
@@ -138,7 +144,7 @@ ecoaeext.status.formed=结构已形成
 ecoaeext.status.invalid=结构无效
 
 # ============================================================================
-# 提示信息
+# 提示信息 - 通用
 # ============================================================================
 
 ecoaeext.tooltip.tier_scales=等级随能量仓电压提升
@@ -146,3 +152,110 @@ ecoaeext.tooltip.ae2_integrates=集成应用能源2
 ecoaeext.tooltip.storage_cells=支持物品、流体和气体存储单元
 ecoaeext.tooltip.pattern_crafting=支持基于样板的自动合成
 ecoaeext.tooltip.virtual_cpus=为AE2合成提供虚拟CPU
+
+# ============================================================================
+# 提示信息 - EStorage 控制器
+# ============================================================================
+
+ecoaeext.tooltip.estorage_controller=EStorage 控制器
+ecoaeext.tooltip.estorage_desc=可扩展的AE2集成存储系统
+ecoaeext.tooltip.estorage_tier_l4=L4（HV）：%s，%s个驱动器
+ecoaeext.tooltip.estorage_tier_l6=L6（IV）：%s，%s个驱动器
+ecoaeext.tooltip.estorage_tier_l9=L9（LuV）：%s，%s个驱动器
+
+# ============================================================================
+# 提示信息 - ECalculator 控制器
+# ============================================================================
+
+ecoaeext.tooltip.ecalculator_controller=ECalculator 控制器
+ecoaeext.tooltip.ecalculator_desc=可扩展的AE2合成CPU系统
+ecoaeext.tooltip.ecalculator_vcpu=为AE2自动合成提供虚拟CPU
+ecoaeext.tooltip.ecalculator_threads=线程核心启用并行合成执行
+ecoaeext.tooltip.ecalculator_hyper=超线程以%s%%字节成本增加并行度
+ecoaeext.tooltip.ecalculator_tier_l4=L4（HV）：%s个基础线程，%s倍并行
+ecoaeext.tooltip.ecalculator_tier_l6=L6（IV）：%s个基础线程，%s倍并行
+ecoaeext.tooltip.ecalculator_tier_l9=L9（LuV）：%s个基础线程，%s倍并行
+
+# ============================================================================
+# 提示信息 - EFabricator 控制器
+# ============================================================================
+
+ecoaeext.tooltip.efabricator_controller=EFabricator 控制器
+ecoaeext.tooltip.efabricator_desc=可扩展的AE2自动合成多方块
+ecoaeext.tooltip.efabricator_pattern=支持基于样板的自动合成及超频
+ecoaeext.tooltip.efabricator_structure=结构：控制器 + 重复段 + 端盖
+ecoaeext.tooltip.efabricator_tier_slots=各等级样板槽位（每总线）：
+ecoaeext.tooltip.efabricator_slot_l4=  L4（HV）：%s
+ecoaeext.tooltip.efabricator_slot_l6=  L6（IV）：%s
+ecoaeext.tooltip.efabricator_slot_l9=  L9（LuV）：%s
+ecoaeext.tooltip.efabricator_queue=工作队列深度：%s
+ecoaeext.tooltip.efabricator_overclock=超频模式：
+ecoaeext.tooltip.oc_normal=  正常：%s速度，%s EU
+ecoaeext.tooltip.oc_mode1=  超频I：%s速度，%s EU
+ecoaeext.tooltip.oc_mode2=  超频II：%s速度，%s EU
+ecoaeext.tooltip.oc_mode3=  超频III：%s速度，%s EU
+
+# ============================================================================
+# 提示信息 - 结构描述
+# ============================================================================
+
+ecoaeext.tooltip.structure.estorage_title=EStorage多方块结构：
+ecoaeext.tooltip.structure.estorage_fixed=- 3x3x3固定区域，包含控制器和ME通道
+ecoaeext.tooltip.structure.estorage_segments=- 重复段（最少%s，最多%s）：
+ecoaeext.tooltip.structure.estorage_segment_info=  每段包含：单元驱动器、能量单元和通风口
+ecoaeext.tooltip.structure.estorage_endcap=- 远端为外壳端盖
+ecoaeext.tooltip.structure.estorage_tier=- 等级由能量仓电压决定（L4/L6/L9）
+
+# ============================================================================
+# 聊天消息
+# ============================================================================
+
+ecoaeext.chat.cell_inserted=单元已插入。活跃单元：%s/%s
+ecoaeext.chat.no_cell_slots=无可用单元槽位。结构拥有%s个驱动器。
+ecoaeext.chat.cell_removed=单元已移除。活跃单元：%s/%s
+ecoaeext.chat.no_cells=没有可移除的单元。
+ecoaeext.chat.pattern_added=样板已添加。已存储样板：%s
+ecoaeext.chat.pattern_failed=添加样板失败。
+ecoaeext.chat.pattern_removed=样板已移除。已存储样板：%s
+ecoaeext.chat.no_patterns=没有可移除的样板。
+
+# ============================================================================
+# GUI - 通用
+# ============================================================================
+
+ecoaeext.gui.tier=等级：%s
+ecoaeext.gui.parallel=并行：%sx
+
+# ============================================================================
+# GUI - EStorage
+# ============================================================================
+
+ecoaeext.gui.estorage.segments=段数：%s
+ecoaeext.gui.estorage.drives=驱动器：%s/%s
+ecoaeext.gui.estorage.capacity=容量：%s
+ecoaeext.gui.estorage.energy_cells=能量单元：%s
+ecoaeext.gui.estorage.ae2_connected=AE2：已连接
+ecoaeext.gui.estorage.ae2_disconnected=AE2：未连接
+
+# ============================================================================
+# GUI - ECalculator
+# ============================================================================
+
+ecoaeext.gui.ecalculator.threads_count=线程：%s
+ecoaeext.gui.ecalculator.threads_with_hyper=线程：%s + %s 超线程
+ecoaeext.gui.ecalculator.storage=存储：%s
+ecoaeext.gui.ecalculator.cell_drives=单元驱动器：%s
+ecoaeext.gui.ecalculator.vcpu_active=vCPU：活跃
+ecoaeext.gui.ecalculator.vcpu_inactive=vCPU：不活跃
+
+# ============================================================================
+# GUI - EFabricator
+# ============================================================================
+
+ecoaeext.gui.efabricator.overclock_button=超频
+ecoaeext.gui.efabricator.cooling_button=冷却
+ecoaeext.gui.efabricator.patterns_count=样板：%s
+ecoaeext.gui.efabricator.workers_count=工作核心：%s
+ecoaeext.gui.efabricator.mode=模式：%s
+ecoaeext.gui.efabricator.cooling_on=冷却：开
+ecoaeext.gui.efabricator.cooling_off=冷却：关

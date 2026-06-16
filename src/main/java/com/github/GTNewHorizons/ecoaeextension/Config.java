@@ -9,25 +9,31 @@ public class Config {
     // General
     public static boolean debugMode = false;
 
-    // EStorage
-    public static long eStorageBaseCapacityL4 = 1_000_000;
-    public static long eStorageBaseCapacityL6 = 16_000_000;
-    public static long eStorageBaseCapacityL9 = 256_000_000;
-    public static int eStorageMaxCellDrivesL4 = 4;
-    public static int eStorageMaxCellDrivesL6 = 8;
-    public static int eStorageMaxCellDrivesL9 = 16;
+    // EStorage - energy cell capacity per segment (RF -> EU, 1 EU = 4 RF)
+    public static long eStorageEnergyCellCapacityL4 = 2_500_000; // 10M RF / 4
+    public static long eStorageEnergyCellCapacityL6 = 25_000_000; // 100M RF / 4
+    public static long eStorageEnergyCellCapacityL9 = 250_000_000; // 1B RF / 4
+    public static long eStorageCellDriveCapacityL4 = 65_536_000L; // 64M * 1024 bytes
+    public static long eStorageCellDriveCapacityL6 = 1_048_576_000L; // 1024M * 1024 bytes
+    public static long eStorageCellDriveCapacityL9 = 16_777_216_000L; // 16384M * 1024 bytes
 
-    // ECalculator
-    public static int eCalculatorBaseThreadCoresL4 = 4;
-    public static int eCalculatorBaseThreadCoresL6 = 8;
-    public static int eCalculatorBaseThreadCoresL9 = 16;
-    public static double eCalculatorHyperThreadCostMultiplier = 1.1;
+    // ECalculator - parallel proc values per block
+    public static int eCalculatorParallelProcL4 = 256;
+    public static int eCalculatorParallelProcL6 = 2048;
+    public static int eCalculatorParallelProcL9 = 16384;
+    public static int eCalculatorThreadsPerCoreL4 = 1;
+    public static int eCalculatorThreadsPerCoreL6 = 2;
+    public static int eCalculatorThreadsPerCoreL9 = 4;
+    public static int eCalculatorHyperThreadsL4 = 2;
+    public static int eCalculatorHyperThreadsL6 = 4;
+    public static int eCalculatorHyperThreadsL9 = 8;
 
-    // EFabricator
-    public static int eFabricatorPatternBusSlotsL4 = 18;
-    public static int eFabricatorPatternBusSlotsL6 = 36;
-    public static int eFabricatorPatternBusSlotsL9 = 72;
+    // EFabricator - parallel proc values per block
+    public static int eFabricatorParallelProcL4 = 24;
+    public static int eFabricatorParallelProcL6 = 72;
+    public static int eFabricatorParallelProcL9 = 256;
     public static int eFabricatorWorkerQueueDepth = 32;
+    public static int eFabricatorWorkDelay = 20; // ticks
 
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
@@ -37,101 +43,73 @@ public class Config {
             .getBoolean("debugMode", Configuration.CATEGORY_GENERAL, debugMode, "Enable debug logging");
 
         // EStorage
-        eStorageBaseCapacityL4 = configuration
+        eStorageEnergyCellCapacityL4 = configuration
             .get(
                 "EStorage",
-                "eStorageBaseCapacityL4",
-                (int) eStorageBaseCapacityL4,
-                "Base storage capacity for L4 tier (bytes)")
+                "eStorageEnergyCellCapacityL4",
+                (int) eStorageEnergyCellCapacityL4,
+                "Energy cell capacity for L4 tier (EU)")
             .getInt();
-        eStorageBaseCapacityL6 = configuration
+        eStorageEnergyCellCapacityL6 = configuration
             .get(
                 "EStorage",
-                "eStorageBaseCapacityL6",
-                (int) eStorageBaseCapacityL6,
-                "Base storage capacity for L6 tier (bytes)")
+                "eStorageEnergyCellCapacityL6",
+                (int) eStorageEnergyCellCapacityL6,
+                "Energy cell capacity for L6 tier (EU)")
             .getInt();
-        eStorageBaseCapacityL9 = configuration
+        eStorageEnergyCellCapacityL9 = configuration
             .get(
                 "EStorage",
-                "eStorageBaseCapacityL9",
-                (int) eStorageBaseCapacityL9,
-                "Base storage capacity for L9 tier (bytes)")
+                "eStorageEnergyCellCapacityL9",
+                (int) eStorageEnergyCellCapacityL9,
+                "Energy cell capacity for L9 tier (EU)")
             .getInt();
-        eStorageMaxCellDrivesL4 = configuration.getInt(
-            "eStorageMaxCellDrivesL4",
-            "EStorage",
-            eStorageMaxCellDrivesL4,
-            1,
-            64,
-            "Max cell drives for L4 tier");
-        eStorageMaxCellDrivesL6 = configuration.getInt(
-            "eStorageMaxCellDrivesL6",
-            "EStorage",
-            eStorageMaxCellDrivesL6,
-            1,
-            64,
-            "Max cell drives for L6 tier");
-        eStorageMaxCellDrivesL9 = configuration.getInt(
-            "eStorageMaxCellDrivesL9",
-            "EStorage",
-            eStorageMaxCellDrivesL9,
-            1,
-            64,
-            "Max cell drives for L9 tier");
 
         // ECalculator
-        eCalculatorBaseThreadCoresL4 = configuration.getInt(
-            "eCalculatorBaseThreadCoresL4",
+        eCalculatorParallelProcL4 = configuration.getInt(
+            "eCalculatorParallelProcL4",
             "ECalculator",
-            eCalculatorBaseThreadCoresL4,
+            eCalculatorParallelProcL4,
             1,
-            256,
-            "Base thread cores for L4 tier");
-        eCalculatorBaseThreadCoresL6 = configuration.getInt(
-            "eCalculatorBaseThreadCoresL6",
+            65536,
+            "Parallel proc value per block L4");
+        eCalculatorParallelProcL6 = configuration.getInt(
+            "eCalculatorParallelProcL6",
             "ECalculator",
-            eCalculatorBaseThreadCoresL6,
+            eCalculatorParallelProcL6,
             1,
-            256,
-            "Base thread cores for L6 tier");
-        eCalculatorBaseThreadCoresL9 = configuration.getInt(
-            "eCalculatorBaseThreadCoresL9",
+            65536,
+            "Parallel proc value per block L6");
+        eCalculatorParallelProcL9 = configuration.getInt(
+            "eCalculatorParallelProcL9",
             "ECalculator",
-            eCalculatorBaseThreadCoresL9,
+            eCalculatorParallelProcL9,
             1,
-            256,
-            "Base thread cores for L9 tier");
-        eCalculatorHyperThreadCostMultiplier = configuration.getFloat(
-            "eCalculatorHyperThreadCostMultiplier",
-            "ECalculator",
-            (float) eCalculatorHyperThreadCostMultiplier,
-            1.0f,
-            10.0f,
-            "Cost multiplier for hyper-thread cores (1.1 = 10% more)");
+            65536,
+            "Parallel proc value per block L9");
 
         // EFabricator
-        eFabricatorPatternBusSlotsL4 = configuration.getInt(
-            "eFabricatorPatternBusSlotsL4",
+        eFabricatorParallelProcL4 = configuration.getInt(
+            "eFabricatorParallelProcL4",
             "EFabricator",
-            eFabricatorPatternBusSlotsL4,
+            eFabricatorParallelProcL4,
             1,
-            256,
-            "Pattern bus slots for L4 tier");
-        eFabricatorPatternBusSlotsL6 = configuration.getInt(
-            "eFabricatorPatternBusSlotsL6",
+            65536,
+            "Parallel proc value per block L4");
+        eFabricatorParallelProcL6 = configuration.getInt(
+            "eFabricatorParallelProcL6",
             "EFabricator",
-            eFabricatorPatternBusSlotsL6,
+            eFabricatorParallelProcL6,
             1,
-            256,
-            "Pattern bus slots for L6 tier");
-        eFabricatorPatternBusSlotsL9 = configuration.getInt(
-            "eFabricatorPatternBusSlotsL9",
+            65536,
+            "Parallel proc value per block L6");
+        eFabricatorParallelProcL9 = configuration.getInt(
+            "eFabricatorParallelProcL9",
             "EFabricator",
-            eFabricatorPatternBusSlotsL9,
+            eFabricatorParallelProcL9,
             1,
-            256,
-            "Pattern bus slots for L9 tier");
+            65536,
+            "Parallel proc value per block L9");
         eFabricatorWorkerQueueDepth = configuration.getInt(
             "eFabricatorWorkerQueueDepth",
             "EFabricator",
@@ -139,6 +117,8 @@ public class Config {
             1,
             1024,
             "Worker queue depth");
+        eFabricatorWorkDelay = configuration
+            .getInt("eFabricatorWorkDelay", "EFabricator", eFabricatorWorkDelay, 1, 100, "Work delay in ticks");
 
         if (configuration.hasChanged()) {
             configuration.save();

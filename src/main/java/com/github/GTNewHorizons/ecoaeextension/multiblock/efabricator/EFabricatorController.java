@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
@@ -168,7 +169,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     }
 
     private void updateTierConfig() {
-        patternBusSlots = currentTier.getPatternBusSlots();
+        patternBusSlots = currentTier.getFabricatorParallelProc();
     }
 
     // =========================================================================
@@ -192,13 +193,13 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     public String getOverclockModeName() {
         switch (overclockMode) {
             case 1:
-                return "Overclock I";
+                return StatCollector.translateToLocal("ecoaeext.overclock.name.mode1");
             case 2:
-                return "Overclock II";
+                return StatCollector.translateToLocal("ecoaeext.overclock.name.mode2");
             case 3:
-                return "Overclock III";
+                return StatCollector.translateToLocal("ecoaeext.overclock.name.mode3");
             default:
-                return "Normal";
+                return StatCollector.translateToLocal("ecoaeext.overclock.name.normal");
         }
     }
 
@@ -916,14 +917,16 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
                 aPlayer.inventory.decrStackSize(aPlayer.inventory.currentItem, 1);
                 aPlayer.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
-                        net.minecraft.util.EnumChatFormatting.GREEN + "Pattern added. Stored patterns: "
-                            + patternHandler.getPatternItems()
-                                .size()));
+                        net.minecraft.util.EnumChatFormatting.GREEN + String.format(
+                            StatCollector.translateToLocal("ecoaeext.chat.pattern_added"),
+                            patternHandler.getPatternItems()
+                                .size())));
                 return true;
             } else {
                 aPlayer.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
-                        net.minecraft.util.EnumChatFormatting.RED + "Failed to add pattern."));
+                        net.minecraft.util.EnumChatFormatting.RED
+                            + StatCollector.translateToLocal("ecoaeext.chat.pattern_failed")));
                 return true;
             }
         }
@@ -941,15 +944,17 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
                     }
                     aPlayer.addChatMessage(
                         new net.minecraft.util.ChatComponentText(
-                            net.minecraft.util.EnumChatFormatting.YELLOW + "Pattern removed. Stored patterns: "
-                                + patternHandler.getPatternItems()
-                                    .size()));
+                            net.minecraft.util.EnumChatFormatting.YELLOW + String.format(
+                                StatCollector.translateToLocal("ecoaeext.chat.pattern_removed"),
+                                patternHandler.getPatternItems()
+                                    .size())));
                     return true;
                 }
             }
             aPlayer.addChatMessage(
                 new net.minecraft.util.ChatComponentText(
-                    net.minecraft.util.EnumChatFormatting.RED + "No patterns to remove."));
+                    net.minecraft.util.EnumChatFormatting.RED
+                        + StatCollector.translateToLocal("ecoaeext.chat.no_patterns")));
             return true;
         }
 
@@ -974,63 +979,44 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     @Override
     public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {
-        tooltip.add(EnumChatFormatting.AQUA + "EFabricator Controller");
-        tooltip.add(EnumChatFormatting.GRAY + "Extendable AE2 auto-crafting multiblock");
-        tooltip.add(EnumChatFormatting.GRAY + "Supports pattern-based crafting with overclock");
-        tooltip.add(EnumChatFormatting.GRAY + "Structure: controller + repeating segments + end cap");
+        tooltip
+            .add(EnumChatFormatting.AQUA + StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_controller"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_desc"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_pattern"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_structure"));
         tooltip.add("");
-        tooltip.add(EnumChatFormatting.YELLOW + "Tier Pattern Slots (per bus):");
+        tooltip
+            .add(EnumChatFormatting.YELLOW + StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_tier_slots"));
         tooltip.add(
-            EnumChatFormatting.GRAY + "  L4 (HV):  " + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL4);
+            EnumChatFormatting.GRAY + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_slot_l4"),
+                Config.eFabricatorParallelProcL4));
         tooltip.add(
-            EnumChatFormatting.GRAY + "  L6 (IV):  " + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL6);
+            EnumChatFormatting.GRAY + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_slot_l6"),
+                Config.eFabricatorParallelProcL6));
         tooltip.add(
-            EnumChatFormatting.GRAY + "  L9 (LuV): " + EnumChatFormatting.GREEN + Config.eFabricatorPatternBusSlotsL9);
+            EnumChatFormatting.GRAY + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_slot_l9"),
+                Config.eFabricatorParallelProcL9));
         tooltip.add(
-            EnumChatFormatting.GRAY + "Worker Queue Depth: "
-                + EnumChatFormatting.GREEN
-                + Config.eFabricatorWorkerQueueDepth);
+            EnumChatFormatting.GRAY + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_queue"),
+                Config.eFabricatorWorkerQueueDepth));
         tooltip.add("");
-        tooltip.add(EnumChatFormatting.YELLOW + "Overclock Modes:");
+        tooltip
+            .add(EnumChatFormatting.YELLOW + StatCollector.translateToLocal("ecoaeext.tooltip.efabricator_overclock"));
         tooltip.add(
-            EnumChatFormatting.GRAY + "  Normal: "
-                + EnumChatFormatting.GREEN
-                + "1x"
-                + EnumChatFormatting.GRAY
-                + " speed, "
-                + EnumChatFormatting.GREEN
-                + "1x"
-                + EnumChatFormatting.GRAY
-                + " EU");
+            EnumChatFormatting.GRAY
+                + String.format(StatCollector.translateToLocal("ecoaeext.tooltip.oc_normal"), "1x", "1x"));
         tooltip.add(
-            EnumChatFormatting.GRAY + "  OC I:   "
-                + EnumChatFormatting.GREEN
-                + "2x"
-                + EnumChatFormatting.GRAY
-                + " speed, "
-                + EnumChatFormatting.YELLOW
-                + "1.5x"
-                + EnumChatFormatting.GRAY
-                + " EU");
+            EnumChatFormatting.GRAY
+                + String.format(StatCollector.translateToLocal("ecoaeext.tooltip.oc_mode1"), "2x", "1.5x"));
         tooltip.add(
-            EnumChatFormatting.GRAY + "  OC II:  "
-                + EnumChatFormatting.GREEN
-                + "4x"
-                + EnumChatFormatting.GRAY
-                + " speed, "
-                + EnumChatFormatting.YELLOW
-                + "2.5x"
-                + EnumChatFormatting.GRAY
-                + " EU");
+            EnumChatFormatting.GRAY
+                + String.format(StatCollector.translateToLocal("ecoaeext.tooltip.oc_mode2"), "4x", "2.5x"));
         tooltip.add(
-            EnumChatFormatting.GRAY + "  OC III: "
-                + EnumChatFormatting.GREEN
-                + "8x"
-                + EnumChatFormatting.GRAY
-                + " speed, "
-                + EnumChatFormatting.RED
-                + "4x"
-                + EnumChatFormatting.GRAY
-                + " EU");
+            EnumChatFormatting.GRAY
+                + String.format(StatCollector.translateToLocal("ecoaeext.tooltip.oc_mode3"), "8x", "4x"));
     }
 }

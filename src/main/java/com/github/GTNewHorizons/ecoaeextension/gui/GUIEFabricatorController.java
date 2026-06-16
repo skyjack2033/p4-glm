@@ -34,8 +34,22 @@ public class GUIEFabricatorController extends GuiContainer {
         super.initGui();
         int x = (width - xSize) / 2;
         int y = (height - ySize) / 2;
-        buttonList.add(new GuiButton(BUTTON_OVERCLOCK, x + 10, y + 90, 60, 20, "Overclock"));
-        buttonList.add(new GuiButton(BUTTON_COOLING, x + 80, y + 90, 60, 20, "Cooling"));
+        buttonList.add(
+            new GuiButton(
+                BUTTON_OVERCLOCK,
+                x + 10,
+                y + 90,
+                60,
+                20,
+                I18n.format("ecoaeext.gui.efabricator.overclock_button")));
+        buttonList.add(
+            new GuiButton(
+                BUTTON_COOLING,
+                x + 80,
+                y + 90,
+                60,
+                20,
+                I18n.format("ecoaeext.gui.efabricator.cooling_button")));
     }
 
     @Override
@@ -55,16 +69,16 @@ public class GUIEFabricatorController extends GuiContainer {
         String title = I18n.format("ecoaeext.gui.efabricator.title");
         fontRendererObj.drawString(title, (xSize / 2 - fontRendererObj.getStringWidth(title) / 2), 6, 4210752);
 
-        String tier = "Tier: " + controller.getCurrentTier().name;
+        String tier = I18n.format("ecoaeext.gui.tier", controller.getCurrentTier().name);
         fontRendererObj.drawString(tier, 8, 18, 4210752);
 
-        String patterns = "Patterns: " + controller.getTotalPatternSlots();
+        String patterns = I18n.format("ecoaeext.gui.efabricator.patterns_count", controller.getTotalPatternSlots());
         fontRendererObj.drawString(patterns, 8, 30, 4210752);
 
-        String workers = "Workers: " + controller.getInstalledWorkers();
+        String workers = I18n.format("ecoaeext.gui.efabricator.workers_count", controller.getInstalledWorkers());
         fontRendererObj.drawString(workers, 8, 42, 4210752);
 
-        String parallel = "Parallel: " + controller.getParallelCount() + "x";
+        String parallel = I18n.format("ecoaeext.gui.parallel", controller.getParallelCount());
         fontRendererObj.drawString(parallel, 8, 54, 4210752);
 
         // Overclock mode with color-coded indicator
@@ -84,7 +98,7 @@ public class GUIEFabricatorController extends GuiContainer {
                 ocColor = 0x55FF55;
                 break; // Green - Normal
         }
-        String overclock = "Mode: " + controller.getOverclockModeName();
+        String overclock = I18n.format("ecoaeext.gui.efabricator.mode", controller.getOverclockModeName());
         fontRendererObj.drawString(overclock, 8, 66, ocColor);
         // Draw overclock mode indicator bar (4 segments, filled to current mode)
         for (int i = 0; i < 4; i++) {
@@ -95,7 +109,8 @@ public class GUIEFabricatorController extends GuiContainer {
         // Cooling state with visual indicator
         boolean coolingActive = controller.isCoolingEnabled();
         int coolingColor = coolingActive ? 0x00AA00 : 0xAA0000;
-        String cooling = "Cooling: " + (coolingActive ? "ON" : "OFF");
+        String cooling = I18n
+            .format(coolingActive ? "ecoaeext.gui.efabricator.cooling_on" : "ecoaeext.gui.efabricator.cooling_off");
         fontRendererObj.drawString(cooling, 8, 82, coolingColor);
         // Draw cooling indicator dot
         drawRect(

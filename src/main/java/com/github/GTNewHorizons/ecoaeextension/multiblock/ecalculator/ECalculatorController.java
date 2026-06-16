@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
@@ -205,14 +206,14 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     private void updateTierConfig() {
         switch (currentTier) {
             case L9:
-                baseThreadCores = Config.eCalculatorBaseThreadCoresL9;
+                baseThreadCores = Config.eCalculatorThreadsPerCoreL9;
                 break;
             case L6:
-                baseThreadCores = Config.eCalculatorBaseThreadCoresL6;
+                baseThreadCores = Config.eCalculatorThreadsPerCoreL6;
                 break;
             case L4:
             default:
-                baseThreadCores = Config.eCalculatorBaseThreadCoresL4;
+                baseThreadCores = Config.eCalculatorThreadsPerCoreL4;
                 break;
         }
     }
@@ -903,7 +904,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         // Apply hyper-thread cost multiplier to effective storage
         // Hyper-threads consume 10% more storage per operation
         if (installedHyperThreads > 0) {
-            double hyperCost = 1.0 + (installedHyperThreads * (Config.eCalculatorHyperThreadCostMultiplier - 1.0));
+            double hyperCost = 1.0 + (installedHyperThreads * (1.1 - 1.0));
             totalStorageBytes = (long) (totalStorageBytes / hyperCost);
         }
     }
@@ -1137,7 +1138,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * Get the byte cost multiplier for hyper-thread cores.
      */
     public double getHyperThreadCostMultiplier() {
-        return Config.eCalculatorHyperThreadCostMultiplier;
+        return 1.1;
     }
 
     /**
@@ -1213,13 +1214,15 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                 aPlayer.inventory.decrStackSize(aPlayer.inventory.currentItem, 1);
                 aPlayer.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
-                        net.minecraft.util.EnumChatFormatting.GREEN + "Pattern added. Stored patterns: "
-                            + patternItems.size()));
+                        net.minecraft.util.EnumChatFormatting.GREEN + String.format(
+                            StatCollector.translateToLocal("ecoaeext.chat.pattern_added"),
+                            patternItems.size())));
                 return true;
             } else {
                 aPlayer.addChatMessage(
                     new net.minecraft.util.ChatComponentText(
-                        net.minecraft.util.EnumChatFormatting.RED + "Failed to add pattern."));
+                        net.minecraft.util.EnumChatFormatting.RED
+                            + StatCollector.translateToLocal("ecoaeext.chat.pattern_failed")));
                 return true;
             }
         }
@@ -1234,14 +1237,16 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                     }
                     aPlayer.addChatMessage(
                         new net.minecraft.util.ChatComponentText(
-                            net.minecraft.util.EnumChatFormatting.YELLOW + "Pattern removed. Stored patterns: "
-                                + patternItems.size()));
+                            net.minecraft.util.EnumChatFormatting.YELLOW + String.format(
+                                StatCollector.translateToLocal("ecoaeext.chat.pattern_removed"),
+                                patternItems.size())));
                     return true;
                 }
             }
             aPlayer.addChatMessage(
                 new net.minecraft.util.ChatComponentText(
-                    net.minecraft.util.EnumChatFormatting.RED + "No patterns to remove."));
+                    net.minecraft.util.EnumChatFormatting.RED
+                        + StatCollector.translateToLocal("ecoaeext.chat.no_patterns")));
             return true;
         }
 
@@ -1266,39 +1271,31 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     @Override
     public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {
-        tooltip.add(EnumChatFormatting.AQUA + "ECalculator Controller");
-        tooltip.add(EnumChatFormatting.GRAY + "Extendable AE2 crafting CPU system");
-        tooltip.add(EnumChatFormatting.GRAY + "Provides virtual CPUs for AE2 autocrafting");
-        tooltip.add(EnumChatFormatting.GRAY + "Thread cores enable parallel crafting execution");
+        tooltip
+            .add(EnumChatFormatting.AQUA + StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_controller"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_desc"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_vcpu"));
+        tooltip.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_threads"));
         tooltip.add(
-            EnumChatFormatting.GRAY + "Hyper-threads add parallelism at "
-                + (int) ((Config.eCalculatorHyperThreadCostMultiplier - 1.0) * 100)
-                + "% byte cost");
+            EnumChatFormatting.GRAY + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_hyper"),
+                (int) ((1.1 - 1.0) * 100)));
         tooltip.add("");
         tooltip.add(
-            EnumChatFormatting.YELLOW + "L4 (HV): "
-                + Config.eCalculatorBaseThreadCoresL4
-                + " base threads, "
-                + EnumChatFormatting.GREEN
-                + "1x"
-                + EnumChatFormatting.GRAY
-                + " parallel");
+            EnumChatFormatting.YELLOW + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_tier_l4"),
+                Config.eCalculatorThreadsPerCoreL4,
+                "1x"));
         tooltip.add(
-            EnumChatFormatting.YELLOW + "L6 (IV): "
-                + Config.eCalculatorBaseThreadCoresL6
-                + " base threads, "
-                + EnumChatFormatting.GREEN
-                + "4x"
-                + EnumChatFormatting.GRAY
-                + " parallel");
+            EnumChatFormatting.YELLOW + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_tier_l6"),
+                Config.eCalculatorThreadsPerCoreL6,
+                "4x"));
         tooltip.add(
-            EnumChatFormatting.YELLOW + "L9 (LuV): "
-                + Config.eCalculatorBaseThreadCoresL9
-                + " base threads, "
-                + EnumChatFormatting.GREEN
-                + "16x"
-                + EnumChatFormatting.GRAY
-                + " parallel");
+            EnumChatFormatting.YELLOW + String.format(
+                StatCollector.translateToLocal("ecoaeext.tooltip.ecalculator_tier_l9"),
+                Config.eCalculatorThreadsPerCoreL9,
+                "16x"));
     }
 
     /**
