@@ -141,12 +141,13 @@ dependencies {
 - [x] Recipe registration (19 assembler recipes)
 - [x] Localization files (en_US.lang, zh_CN.lang) with correct key format
 - [x] StructureLib construct() method for auto-build
+- [x] StructureLib element definitions (ofBlock) for all controllers
 - [x] Block name localization (tile.ecoaeext.* format)
 - [x] Controller texture system (uses block textures)
 - [x] NEI integration (recipe maps registered)
+- [x] EStorageCellHandler custom cell inventory implementation
 
 ### Remaining (Polish & Testing)
-- [ ] Custom cell inventory implementation for EStorageCellHandler
 - [ ] Actual in-game testing with GTNH dev environment
 - [ ] Custom block textures (optional - currently using GT5 defaults)
 - [ ] Recipe output items refinement
