@@ -202,7 +202,10 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
 
     @Override
     public boolean isBusy() {
-        return !activeJobs.isEmpty();
+        // Only report busy when the queue is completely full.
+        // This allows AE2 to push multiple jobs for parallel processing.
+        int maxQueue = controller.getWorkerQueueDepth();
+        return activeJobs.size() >= maxQueue;
     }
 
     @Override

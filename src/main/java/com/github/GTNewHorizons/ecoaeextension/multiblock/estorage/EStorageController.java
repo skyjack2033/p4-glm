@@ -44,7 +44,8 @@ import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
  * <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV) affecting capacity and cell count</li>
  * </ul>
  */
-public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorageController> implements ICellProvider {
+public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorageController>
+    implements ICellProvider, appeng.api.storage.ISaveProvider {
 
     // =========================================================================
     // Constants
@@ -100,6 +101,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
 
     /** Tick counter for periodic processing */
     private int tickCounter;
+
+    /** Cell ItemStacks stored in the controller (one per cell drive slot) */
+    private final List<ItemStack> cellStacks = new ArrayList<>();
 
     // =========================================================================
     // Constructors
@@ -190,43 +194,27 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         int controllerY = aBaseMetaTileEntity.getYCoord();
         int controllerZ = aBaseMetaTileEntity.getZCoord();
 
-        // Step 1: Find the fixed 3x3 section by scanning all directions from the controller.
-        // The controller is at the center of the middle layer (y+1) of the fixed section.
-        // We look for the section origin at (controller - 1) in each direction.
-        ForgeDirection scanDir = ForgeDirection.UNKNOWN;
-        int fixedX = 0;
-        int fixedY = 0;
-        int fixedZ = 0;
-        boolean foundFixedSection = false;
+        // Step 1: Validate the fixed 3x3x3 section.
+        // The controller is at local (1,1,1) of the 3x3x3 section, so origin is always -1.
+        int fixedX = controllerX - 1;
+        int fixedY = controllerY - 1;
+        int fixedZ = controllerZ - 1;
 
-        for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
-            // The controller is always at local (1,1,1) of the 3x3x3 section,
-            // so the origin is always controller - 1 in each axis.
-            // The scan direction only determines which face is "front" for segment placement.
-            int testX = controllerX - 1;
-            int testY = controllerY - 1;
-            int testZ = controllerZ - 1;
+        // Segments extend opposite to the controller's front facing direction.
+        // If controller faces NORTH, segments extend SOUTH (behind the controller).
+        ForgeDirection scanDir = aBaseMetaTileEntity.getFrontFacing()
+            .getOpposite();
 
-            if (validateFixedSection(aBaseMetaTileEntity, testX, testY, testZ, dir)) {
-                fixedX = testX;
-                fixedY = testY;
-                fixedZ = testZ;
-                scanDir = dir;
-                foundFixedSection = true;
-                break;
-            }
-        }
-
-        if (!foundFixedSection || scanDir == ForgeDirection.UNKNOWN) {
+        if (!validateFixedSection(aBaseMetaTileEntity, fixedX, fixedY, fixedZ, scanDir)) {
             return false;
         }
 
         // Step 2: Scan outward from the fixed section for repeating segments.
         // Segments start one block past the front face of the fixed section.
-        // For positive direction: start at section origin + 3 (front face) + 1
-        // For negative direction: start at section origin + 0 (front face) - 1
+        // The fixed section is 3x3x3, so front face is at origin + 3 in the scan direction.
+        // Segments start at origin + 3 (for positive) or origin - 1 (for negative).
         int segmentEdgeX = fixedX + (scanDir.offsetX > 0 ? 3 : (scanDir.offsetX < 0 ? -1 : 1));
-        int segmentEdgeY = fixedY; // Same base Y as fixed section
+        int segmentEdgeY = fixedY + (scanDir.offsetY > 0 ? 3 : (scanDir.offsetY < 0 ? -1 : 1));
         int segmentEdgeZ = fixedZ + (scanDir.offsetZ > 0 ? 3 : (scanDir.offsetZ < 0 ? -1 : 1));
 
         ScanResult result = scanSegments(aBaseMetaTileEntity, segmentEdgeX, segmentEdgeY, segmentEdgeZ, scanDir);
@@ -240,6 +228,14 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         // Step 3: Validate the end cap after the last segment
         if (!validateEndCap(aBaseMetaTileEntity, result.endX, result.endY, result.endZ, scanDir)) {
             return false;
+        }
+
+        // Ensure cellStacks list has entries for all installed cell drives
+        while (cellStacks.size() < installedCellDrives) {
+            cellStacks.add(null); // Placeholder - players insert cells via GUI
+        }
+        while (cellStacks.size() > installedCellDrives) {
+            cellStacks.remove(cellStacks.size() - 1);
         }
 
         // All validation passed - notify base class
@@ -526,12 +522,33 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     @Override
     public List<IMEInventoryHandler> getCellArray(StorageChannel channel) {
         List<IMEInventoryHandler> cells = new ArrayList<>();
+        if (channel != StorageChannel.ITEMS) return cells;
 
-        // TODO: Iterate over cell drive tile entities in the structure and collect their cells
-        // Each cell drive holds storage cells that provide IMEInventoryHandler for the channel.
-        // The cell inventory resolution is handled by EStorageCellHandler.
-
+        // Return handlers for stored cell ItemStacks
+        for (int i = 0; i < cellStacks.size(); i++) {
+            ItemStack cellStack = cellStacks.get(i);
+            if (cellStack != null) {
+                try {
+                    IMEInventoryHandler handler = com.github.GTNewHorizons.ecoaeextension.ae2.EStorageCellHandler.INSTANCE
+                        .getCellInventory(cellStack, this, channel);
+                    if (handler != null) {
+                        cells.add(handler);
+                    }
+                } catch (Exception e) {
+                    ECOAEExtension.LOG.debug("Failed to get cell inventory for slot {}", i, e);
+                }
+            }
+        }
         return cells;
+    }
+
+    @Override
+    public void saveChanges(appeng.api.storage.IMEInventory inventory) {
+        // Called by EStorageCellInventory when cell data changes.
+        // Mark the controller as needing to save its NBT data.
+        if (getBaseMetaTileEntity() != null) {
+            getBaseMetaTileEntity().markDirty();
+        }
     }
 
     @Override
@@ -615,6 +632,7 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         installedEnergyCells = 0;
         installedVents = 0;
         segmentCount = 0;
+        cellStacks.clear();
 
         super.onStructureInvalidated();
     }
@@ -663,6 +681,18 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         aNBT.setInteger(NBT_INSTALLED_ENERGY, installedEnergyCells);
         aNBT.setInteger(NBT_INSTALLED_VENTS, installedVents);
         aNBT.setInteger(NBT_SEGMENT_COUNT, segmentCount);
+
+        // Save cell ItemStacks
+        net.minecraft.nbt.NBTTagList cellList = new net.minecraft.nbt.NBTTagList();
+        for (int i = 0; i < cellStacks.size(); i++) {
+            if (cellStacks.get(i) != null) {
+                net.minecraft.nbt.NBTTagCompound cellTag = new net.minecraft.nbt.NBTTagCompound();
+                cellStacks.get(i)
+                    .writeToNBT(cellTag);
+                cellList.appendTag(cellTag);
+            }
+        }
+        aNBT.setTag("ecoae_cells", cellList);
     }
 
     @Override
@@ -672,6 +702,15 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         installedEnergyCells = aNBT.getInteger(NBT_INSTALLED_ENERGY);
         installedVents = aNBT.getInteger(NBT_INSTALLED_VENTS);
         segmentCount = aNBT.getInteger(NBT_SEGMENT_COUNT);
+
+        // Load cell ItemStacks
+        cellStacks.clear();
+        if (aNBT.hasKey("ecoae_cells")) {
+            net.minecraft.nbt.NBTTagList cellList = aNBT.getTagList("ecoae_cells", 10);
+            for (int i = 0; i < cellList.tagCount(); i++) {
+                cellStacks.add(ItemStack.loadItemStackFromNBT(cellList.getCompoundTagAt(i)));
+            }
+        }
     }
 
     // =========================================================================

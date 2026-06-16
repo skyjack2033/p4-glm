@@ -22,13 +22,12 @@ import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
-import appeng.api.networking.events.MENetworkCraftingPatternChange;
+import appeng.api.networking.events.MENetworkCraftingCpuChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -703,15 +702,10 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         try {
             // Register as a crafting provider with the AE2 crafting grid
             IGrid grid = getGrid();
-            if (grid != null) {
-                ICraftingGrid craftingGrid = grid.getCache(ICraftingGrid.class);
-                if (craftingGrid != null) {
-                    // The CraftingGridCache discovers CPUs through grid events.
-                    // Post a crafting pattern change event to notify the grid of our presence.
-                    if (aeProxy != null && aeProxy.getNode() != null) {
-                        grid.postEvent(new MENetworkCraftingPatternChange(this, aeProxy.getNode()));
-                    }
-                }
+            if (grid != null && aeProxy != null && aeProxy.getNode() != null) {
+                // Notify AE2 that a new crafting CPU is available.
+                // MENetworkCraftingCpuChange tells AE2 to re-scan for CPUs.
+                grid.postEvent(new MENetworkCraftingCpuChange(aeProxy.getNode()));
             }
 
             // Calculate total storage from installed calculator cells
@@ -747,10 +741,10 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         try {
             IGrid grid = getGrid();
             if (grid != null && aeProxy != null && aeProxy.getNode() != null) {
-                grid.postEvent(new MENetworkCraftingPatternChange(this, aeProxy.getNode()));
+                grid.postEvent(new MENetworkCraftingCpuChange(aeProxy.getNode()));
             }
         } catch (Exception e) {
-            ECOAEExtension.LOG.debug("Failed to post pattern change on disconnect", e);
+            ECOAEExtension.LOG.debug("Failed to post CPU change on disconnect", e);
         }
 
         super.disconnectFromAE2Network();
@@ -1167,6 +1161,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
          * Based on the number of inputs and outputs.
          */
         private int calculateTotalSteps(ICraftingPatternDetails pattern) {
+            if (pattern == null) return 1;
             int steps = 0;
             if (pattern.getInputs() != null) {
                 for (Object input : pattern.getInputs()) {
