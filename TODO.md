@@ -46,9 +46,13 @@
 - [x] EStorage: Implement getCellArray() (was returning empty list)
 - [x] EStorage: Add ISaveProvider for cell data persistence
 - [x] EStorage: Add cellStacks field with NBT persistence
+- [x] EStorage: Add insertCell()/removeCell() for cell management
 - [x] ECalculator: Fix NPE in ActiveCraftingJob.readFromNBT
 - [x] ECalculator: Fix wrong AE2 event (MENetworkCraftingPatternChange -> MENetworkCraftingCpuChange)
 - [x] EFabricator: Fix isBusy() (was preventing concurrent job acceptance)
+- [x] EFabricator: Add pattern inventory with addPatternItem()/removePatternItem()
+- [x] EFabricator: Add refreshPatterns() to decode pattern items
+- [x] EFabricator: Update NBT persistence for pattern items
 
 ## Remaining
 
@@ -62,7 +66,6 @@
 - [ ] EStorage: No IAEPowerStorage (uses GT energy hatches only)
 - [ ] ECalculator: No real CraftingCPUCluster objects (AE2 may not discover as CPU)
 - [ ] ECalculator: No per-thread-core CPU delegation
-- [ ] EFabricator: Patterns not populated from structure blocks
 - [ ] EFabricator: No coolant type validation (any fluid works)
 - [ ] EFabricator: No parallel processor modifier system
 
