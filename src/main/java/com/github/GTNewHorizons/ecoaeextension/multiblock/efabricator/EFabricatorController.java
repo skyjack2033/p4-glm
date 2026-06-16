@@ -16,6 +16,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.ae2.EFabricatorPatternHandler;
+import com.github.GTNewHorizons.ecoaeextension.gui.mui2.EFabricatorGui;
 import com.github.GTNewHorizons.ecoaeextension.loader.BlockLoader;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMultiBlockBase;
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
@@ -26,6 +27,7 @@ import appeng.me.helpers.AENetworkProxy;
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.implementations.MTEHatchInput;
+import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
 
 /**
  * EFabricator Controller - An extendable AE2 auto-crafting multiblock.
@@ -907,6 +909,7 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
     @Override
     public boolean onRightclick(IGregTechTileEntity aBaseMetaTileEntity, EntityPlayer aPlayer) {
         if (aBaseMetaTileEntity.isClientSide()) {
+            openGui(aPlayer);
             return true;
         }
 
@@ -958,15 +961,14 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
             return true;
         }
 
-        // Normal right-click opens GUI
-        aPlayer.openGui(
-            ECOAEExtension.instance,
-            com.github.GTNewHorizons.ecoaeextension.gui.ECOAEGuiHandler.GUI_ID_EFABRICATOR,
-            aBaseMetaTileEntity.getWorld(),
-            aBaseMetaTileEntity.getXCoord(),
-            aBaseMetaTileEntity.getYCoord(),
-            aBaseMetaTileEntity.getZCoord());
+        // Normal right-click opens GUI via GT5 MUI2 system
+        openGui(aPlayer);
         return true;
+    }
+
+    @Override
+    protected MTEMultiBlockBaseGui<?> getGui() {
+        return new EFabricatorGui(this);
     }
 
     // =========================================================================

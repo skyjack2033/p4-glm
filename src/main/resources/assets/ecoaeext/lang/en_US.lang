@@ -16,13 +16,12 @@ ecoaeext.machine.ECOAE_EStorage_L6.desc=Extendable AE2 Storage System (IV Tier)
 ecoaeext.machine.ECOAE_EStorage_L9.name=EStorage Controller L9
 ecoaeext.machine.ECOAE_EStorage_L9.desc=Extendable AE2 Storage System (LuV Tier)
 
-# EStorage Blocks
-ecoaeext.block.estorage_casing.name=EStorage Casing
-ecoaeext.block.estorage_cell_drive.name=EStorage Cell Drive
-ecoaeext.block.estorage_energy_cell.name=EStorage Energy Cell
-ecoaeext.block.estorage_me_channel.name=EStorage ME Channel
-ecoaeext.block.estorage_vent.name=EStorage Vent
-ecoaeext.block.estorage_tail.name=EStorage Tail
+# EStorage Blocks (tile.ecoaeext.estorage_blocks.<subname>.name)
+tile.ecoaeext.estorage_blocks.casing.name=EStorage Casing
+tile.ecoaeext.estorage_blocks.cell_drive.name=EStorage Cell Drive
+tile.ecoaeext.estorage_blocks.energy_cell.name=EStorage Energy Cell
+tile.ecoaeext.estorage_blocks.me_channel.name=EStorage ME Channel
+tile.ecoaeext.estorage_blocks.vent.name=EStorage Vent
 
 # EStorage Items
 ecoaeext.item.storage_cell_16m.name=16M Storage Cell
@@ -48,14 +47,15 @@ ecoaeext.machine.ECOAE_ECalculator_L6.desc=AE2 Crafting CPU Multiblock (IV Tier)
 ecoaeext.machine.ECOAE_ECalculator_L9.name=ECalculator Controller L9
 ecoaeext.machine.ECOAE_ECalculator_L9.desc=AE2 Crafting CPU Multiblock (LuV Tier)
 
-# ECalculator Blocks
-ecoaeext.block.ecalculator_casing.name=ECalculator Casing
-ecoaeext.block.ecalculator_thread_core.name=ECalculator Thread Core
-ecoaeext.block.ecalculator_hyper_thread.name=ECalculator Hyper-Thread Core
-ecoaeext.block.ecalculator_cell_drive.name=ECalculator Cell Drive
-ecoaeext.block.ecalculator_me_channel.name=ECalculator ME Channel
-ecoaeext.block.ecalculator_transmitter_bus.name=ECalculator Transmitter Bus
-ecoaeext.block.ecalculator_tail.name=ECalculator Tail
+# ECalculator Blocks (tile.ecoaeext.ecalculator_blocks.<subname>.name)
+tile.ecoaeext.ecalculator_blocks.casing.name=ECalculator Casing
+tile.ecoaeext.ecalculator_blocks.thread_core.name=ECalculator Thread Core
+tile.ecoaeext.ecalculator_blocks.hyper_thread.name=ECalculator Hyper-Thread Core
+tile.ecoaeext.ecalculator_blocks.parallel_proc.name=ECalculator Parallel Processor
+tile.ecoaeext.ecalculator_blocks.cell_drive.name=ECalculator Cell Drive
+tile.ecoaeext.ecalculator_blocks.me_channel.name=ECalculator ME Channel
+tile.ecoaeext.ecalculator_blocks.transmitter_bus.name=ECalculator Transmitter Bus
+tile.ecoaeext.ecalculator_blocks.tail.name=ECalculator Tail
 
 # ECalculator Items
 ecoaeext.item.calculator_cell_64m.name=64M Calculator Cell
@@ -81,13 +81,13 @@ ecoaeext.machine.ECOAE_EFabricator_L6.desc=AE2 Auto-Crafting Multiblock (IV Tier
 ecoaeext.machine.ECOAE_EFabricator_L9.name=EFabricator Controller L9
 ecoaeext.machine.ECOAE_EFabricator_L9.desc=AE2 Auto-Crafting Multiblock (LuV Tier)
 
-# EFabricator Blocks
-ecoaeext.block.efabricator_casing.name=EFabricator Casing
-ecoaeext.block.efabricator_worker.name=EFabricator Worker Core
-ecoaeext.block.efabricator_pattern_bus.name=EFabricator Pattern Bus
-ecoaeext.block.efabricator_me_channel.name=EFabricator ME Channel
-ecoaeext.block.efabricator_vent.name=EFabricator Vent
-ecoaeext.block.efabricator_tail.name=EFabricator Tail
+# EFabricator Blocks (tile.ecoaeext.efabricator_blocks.<subname>.name)
+tile.ecoaeext.efabricator_blocks.casing.name=EFabricator Casing
+tile.ecoaeext.efabricator_blocks.worker.name=EFabricator Worker Core
+tile.ecoaeext.efabricator_blocks.pattern_bus.name=EFabricator Pattern Bus
+tile.ecoaeext.efabricator_blocks.parallel_proc.name=EFabricator Parallel Processor
+tile.ecoaeext.efabricator_blocks.me_channel.name=EFabricator ME Channel
+tile.ecoaeext.efabricator_blocks.vent.name=EFabricator Vent
 
 # EFabricator GUI
 ecoaeext.gui.efabricator.title=EFabricator Controller

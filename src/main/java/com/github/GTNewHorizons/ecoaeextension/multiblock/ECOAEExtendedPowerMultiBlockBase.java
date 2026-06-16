@@ -415,7 +415,7 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
 
     @Override
     public boolean onRightclick(IGregTechTileEntity aBaseMetaTileEntity, EntityPlayer aPlayer) {
-        // TODO: Open GUI
+        openGui(aPlayer);
         return true;
     }
 
