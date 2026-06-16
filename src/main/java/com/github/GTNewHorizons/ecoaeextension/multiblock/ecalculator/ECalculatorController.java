@@ -1205,6 +1205,47 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         if (aBaseMetaTileEntity.isClientSide()) {
             return true;
         }
+
+        // Check if player is holding a pattern - insert it
+        ItemStack heldItem = aPlayer.getHeldItem();
+        if (heldItem != null && heldItem.getItem() instanceof appeng.api.implementations.ICraftingPatternItem) {
+            if (addPatternItem(heldItem)) {
+                aPlayer.inventory.decrStackSize(aPlayer.inventory.currentItem, 1);
+                aPlayer.addChatMessage(
+                    new net.minecraft.util.ChatComponentText(
+                        net.minecraft.util.EnumChatFormatting.GREEN + "Pattern added. Stored patterns: "
+                            + patternItems.size()));
+                return true;
+            } else {
+                aPlayer.addChatMessage(
+                    new net.minecraft.util.ChatComponentText(
+                        net.minecraft.util.EnumChatFormatting.RED + "Failed to add pattern."));
+                return true;
+            }
+        }
+
+        // Check if player is sneaking with empty hand - remove last pattern
+        if (aPlayer.isSneaking() && (heldItem == null)) {
+            if (!patternItems.isEmpty()) {
+                ItemStack removed = removePatternItem(patternItems.size() - 1);
+                if (removed != null) {
+                    if (!aPlayer.inventory.addItemStackToInventory(removed)) {
+                        aPlayer.dropPlayerItemWithRandomChoice(removed, false);
+                    }
+                    aPlayer.addChatMessage(
+                        new net.minecraft.util.ChatComponentText(
+                            net.minecraft.util.EnumChatFormatting.YELLOW + "Pattern removed. Stored patterns: "
+                                + patternItems.size()));
+                    return true;
+                }
+            }
+            aPlayer.addChatMessage(
+                new net.minecraft.util.ChatComponentText(
+                    net.minecraft.util.EnumChatFormatting.RED + "No patterns to remove."));
+            return true;
+        }
+
+        // Normal right-click opens GUI
         aPlayer.openGui(
             ECOAEExtension.instance,
             com.github.GTNewHorizons.ecoaeextension.gui.ECOAEGuiHandler.GUI_ID_ECALCULATOR,

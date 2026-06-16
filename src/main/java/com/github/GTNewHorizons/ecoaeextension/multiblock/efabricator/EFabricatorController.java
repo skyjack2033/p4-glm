@@ -908,6 +908,52 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         if (aBaseMetaTileEntity.isClientSide()) {
             return true;
         }
+
+        // Check if player is holding a pattern - insert it
+        ItemStack heldItem = aPlayer.getHeldItem();
+        if (heldItem != null && heldItem.getItem() instanceof appeng.api.implementations.ICraftingPatternItem) {
+            if (patternHandler != null && patternHandler.addPatternItem(heldItem, aBaseMetaTileEntity.getWorld())) {
+                aPlayer.inventory.decrStackSize(aPlayer.inventory.currentItem, 1);
+                aPlayer.addChatMessage(
+                    new net.minecraft.util.ChatComponentText(
+                        net.minecraft.util.EnumChatFormatting.GREEN + "Pattern added. Stored patterns: "
+                            + patternHandler.getPatternItems()
+                                .size()));
+                return true;
+            } else {
+                aPlayer.addChatMessage(
+                    new net.minecraft.util.ChatComponentText(
+                        net.minecraft.util.EnumChatFormatting.RED + "Failed to add pattern."));
+                return true;
+            }
+        }
+
+        // Check if player is sneaking with empty hand - remove last pattern
+        if (aPlayer.isSneaking() && (heldItem == null)) {
+            if (patternHandler != null && !patternHandler.getPatternItems()
+                .isEmpty()) {
+                ItemStack removed = patternHandler.removePatternItem(
+                    patternHandler.getPatternItems()
+                        .size() - 1);
+                if (removed != null) {
+                    if (!aPlayer.inventory.addItemStackToInventory(removed)) {
+                        aPlayer.dropPlayerItemWithRandomChoice(removed, false);
+                    }
+                    aPlayer.addChatMessage(
+                        new net.minecraft.util.ChatComponentText(
+                            net.minecraft.util.EnumChatFormatting.YELLOW + "Pattern removed. Stored patterns: "
+                                + patternHandler.getPatternItems()
+                                    .size()));
+                    return true;
+                }
+            }
+            aPlayer.addChatMessage(
+                new net.minecraft.util.ChatComponentText(
+                    net.minecraft.util.EnumChatFormatting.RED + "No patterns to remove."));
+            return true;
+        }
+
+        // Normal right-click opens GUI
         aPlayer.openGui(
             ECOAEExtension.instance,
             com.github.GTNewHorizons.ecoaeextension.gui.ECOAEGuiHandler.GUI_ID_EFABRICATOR,

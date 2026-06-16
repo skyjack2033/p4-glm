@@ -824,6 +824,54 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         if (aBaseMetaTileEntity.isClientSide()) {
             return true;
         }
+
+        // Check if player is holding a storage cell - insert it
+        ItemStack heldItem = aPlayer.getHeldItem();
+        if (heldItem != null
+            && heldItem.getItem() instanceof com.github.GTNewHorizons.ecoaeextension.item.ItemStorageCell) {
+            if (insertCell(heldItem)) {
+                aPlayer.inventory.decrStackSize(aPlayer.inventory.currentItem, 1);
+                aPlayer.addChatMessage(
+                    new net.minecraft.util.ChatComponentText(
+                        net.minecraft.util.EnumChatFormatting.GREEN + "Cell inserted. Active cells: "
+                            + getActiveCellCount()
+                            + "/"
+                            + cellStacks.size()));
+                return true;
+            } else {
+                aPlayer.addChatMessage(
+                    new net.minecraft.util.ChatComponentText(
+                        net.minecraft.util.EnumChatFormatting.RED + "No available cell slots. Structure has "
+                            + installedCellDrives
+                            + " drives."));
+                return true;
+            }
+        }
+
+        // Check if player is sneaking with empty hand - remove last cell
+        if (aPlayer.isSneaking() && (heldItem == null)) {
+            for (int i = cellStacks.size() - 1; i >= 0; i--) {
+                ItemStack removed = removeCell(i);
+                if (removed != null) {
+                    if (!aPlayer.inventory.addItemStackToInventory(removed)) {
+                        aPlayer.dropPlayerItemWithRandomChoice(removed, false);
+                    }
+                    aPlayer.addChatMessage(
+                        new net.minecraft.util.ChatComponentText(
+                            net.minecraft.util.EnumChatFormatting.YELLOW + "Cell removed. Active cells: "
+                                + getActiveCellCount()
+                                + "/"
+                                + cellStacks.size()));
+                    return true;
+                }
+            }
+            aPlayer.addChatMessage(
+                new net.minecraft.util.ChatComponentText(
+                    net.minecraft.util.EnumChatFormatting.RED + "No cells to remove."));
+            return true;
+        }
+
+        // Normal right-click opens GUI
         aPlayer.openGui(
             ECOAEExtension.instance,
             com.github.GTNewHorizons.ecoaeextension.gui.ECOAEGuiHandler.GUI_ID_ESTORAGE,
