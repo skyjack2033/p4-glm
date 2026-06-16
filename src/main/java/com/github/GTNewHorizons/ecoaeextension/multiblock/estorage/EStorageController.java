@@ -5,7 +5,6 @@ import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -163,102 +162,44 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     // Structure Definition
     // =========================================================================
 
+    // Structure offsets: controller position in the shape array
+    private static final int HORIZONTAL_OFF_SET = 0;
+    private static final int VERTICAL_OFF_SET = 1;
+    private static final int DEPTH_OFF_SET = 0;
+    private static final String STRUCTURE_PIECE_MAIN = "main";
+
+    // Shape definition: [y][z][x] convention
+    // y=0 (bottom): CC / CM
+    // y=1 (middle): ~C / CC (~ = controller at x=0, z=0)
+    // y=2 (top): CC / CC
+    private static final String[][] shape = new String[][] { { "CC", "CM" }, // y=0
+        { "~C", "CC" }, // y=1 (controller at x=0, z=0)
+        { "CC", "CC" } // y=2
+    };
+
     @Override
     public IStructureDefinition<EStorageController> getStructureDefinition() {
         return StructureDefinition.<EStorageController>builder()
-            .addShape("main", getStructurePattern())
+            .addShape(STRUCTURE_PIECE_MAIN, com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(shape))
             .addElement('C', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING))
-            .addElement('E', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING))
             .addElement('M', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_ME_CHANNEL))
             .build();
     }
 
     @Override
     public String[][] getStructurePattern() {
-        // Fixed 3x3x3 section only (y, z, x convention for StructureLib)
-        // Layer y=0 (bottom): CCC / CMC / CCC
-        // Layer y=1 (middle): CCC / CEC / CCC (E = controller at center)
-        // Layer y=2 (top): CCC / CCC / CCC
-        return new String[][] { { "CCC", "CMC", "CCC" }, { "CCC", "CEC", "CCC" }, { "CCC", "CCC", "CCC" } };
+        return shape;
     }
 
     @Override
     public void construct(ItemStack stackSize, boolean hintsOnly) {
-        // Build a minimal structure: fixed section + 1 segment + end cap
-        // Controller is at corner of 2x3x2 fixed section
-        // Structure extends in the -X direction from the controller
-        int cx = getBaseMetaTileEntity().getXCoord();
-        int cy = getBaseMetaTileEntity().getYCoord();
-        int cz = getBaseMetaTileEntity().getZCoord();
-
-        // Build the 2x3x2 fixed section (controller at 0,0,0)
-        // x=0..1, y=-1..1, z=0..1
-        for (int dx = 0; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                for (int dz = 0; dz <= 1; dz++) {
-                    // Controller position - skip
-                    if (dx == 0 && dy == 0 && dz == 0) continue;
-
-                    // ME channel at (1, -1, 1)
-                    if (dx == 1 && dy == -1 && dz == 1) {
-                        if (!hintsOnly) {
-                            getBaseMetaTileEntity().getWorld()
-                                .setBlock(
-                                    cx + dx,
-                                    cy + dy,
-                                    cz + dz,
-                                    BlockLoader.estorageBlocks,
-                                    BlockLoader.ESTORAGE_META_ME_CHANNEL,
-                                    2);
-                        }
-                        continue;
-                    }
-
-                    // All other positions: casings
-                    if (!hintsOnly) {
-                        getBaseMetaTileEntity().getWorld()
-                            .setBlock(
-                                cx + dx,
-                                cy + dy,
-                                cz + dz,
-                                BlockLoader.estorageBlocks,
-                                BlockLoader.ESTORAGE_META_CASING,
-                                2);
-                    }
-                }
-            }
-        }
-
-        // Build 1 segment at x=-2..-1, y=-1..1, z=0..1
-        // Near (x=-1): cell drives at y=-1,0,1
-        // Far (x=-2): energy cells at y=-1,1; vent at y=0
-        for (int dy = -1; dy <= 1; dy++) {
-            if (!hintsOnly) {
-                getBaseMetaTileEntity().getWorld()
-                    .setBlock(cx - 1, cy + dy, cz, BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CELL_DRIVE, 2);
-            }
-            int meta = (dy == 0) ? BlockLoader.ESTORAGE_META_VENT : BlockLoader.ESTORAGE_META_ENERGY_CELL;
-            if (!hintsOnly) {
-                getBaseMetaTileEntity().getWorld()
-                    .setBlock(cx - 2, cy + dy, cz, BlockLoader.estorageBlocks, meta, 2);
-            }
-        }
-
-        // Build end cap at x=-3..-4, y=-1..1, z=0..1 (all casings)
-        for (int dx = -3; dx >= -4; dx--) {
-            for (int dy = -1; dy <= 1; dy++) {
-                if (!hintsOnly) {
-                    getBaseMetaTileEntity().getWorld()
-                        .setBlock(
-                            cx + dx,
-                            cy + dy,
-                            cz,
-                            BlockLoader.estorageBlocks,
-                            BlockLoader.ESTORAGE_META_CASING,
-                            2);
-                }
-            }
-        }
+        this.buildPiece(
+            STRUCTURE_PIECE_MAIN,
+            stackSize,
+            hintsOnly,
+            HORIZONTAL_OFF_SET,
+            VERTICAL_OFF_SET,
+            DEPTH_OFF_SET);
     }
 
     // =========================================================================
@@ -273,116 +214,13 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         installedVents = 0;
         segmentCount = 0;
 
-        if (aBaseMetaTileEntity == null || aBaseMetaTileEntity.getWorld() == null) {
+        // Use StructureLib's checkPiece to validate the fixed section
+        if (!checkPiece(STRUCTURE_PIECE_MAIN, HORIZONTAL_OFF_SET, VERTICAL_OFF_SET, DEPTH_OFF_SET)) {
             return false;
-        }
-
-        int cx = aBaseMetaTileEntity.getXCoord();
-        int cy = aBaseMetaTileEntity.getYCoord();
-        int cz = aBaseMetaTileEntity.getZCoord();
-
-        // Step 1: Validate the fixed 2x3x2 section.
-        // Controller is at (0,0,0), section spans x=0..1, y=-1..1, z=0..1
-        // ME channel at (1,-1,1), all others are casings
-        for (int dx = 0; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                for (int dz = 0; dz <= 1; dz++) {
-                    // Controller position - skip
-                    if (dx == 0 && dy == 0 && dz == 0) continue;
-
-                    Block block = aBaseMetaTileEntity.getWorld()
-                        .getBlock(cx + dx, cy + dy, cz + dz);
-                    int meta = aBaseMetaTileEntity.getWorld()
-                        .getBlockMetadata(cx + dx, cy + dy, cz + dz);
-
-                    // ME channel at (1, -1, 1)
-                    if (dx == 1 && dy == -1 && dz == 1) {
-                        if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_ME_CHANNEL) {
-                            return false;
-                        }
-                        continue;
-                    }
-
-                    // All other positions: casings
-                    if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_CASING) {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        // Step 2: Scan for segments extending in -X direction
-        // Segments start at x=-1 (adjacent to fixed section)
-        int segX = cx - 1;
-        int count = 0;
-
-        while (count < MAX_SEGMENTS) {
-            // Check if this is a valid segment (3 high x 1 wide x 1 deep)
-            if (!validateSegment(aBaseMetaTileEntity, segX, cy, cz)) {
-                break;
-            }
-            count++;
-            segX -= 1; // Each segment is 1 block deep
-        }
-
-        if (count < MIN_SEGMENTS) {
-            return false;
-        }
-
-        segmentCount = count;
-
-        // Step 3: Validate end cap (3 high x 2 deep x 1 wide, all casings)
-        if (!validateEndCap(aBaseMetaTileEntity, segX, cy, cz)) {
-            return false;
-        }
-
-        // Ensure cellStacks list has entries for all installed cell drives
-        while (cellStacks.size() < installedCellDrives) {
-            cellStacks.add(null);
-        }
-        while (cellStacks.size() > installedCellDrives) {
-            cellStacks.remove(cellStacks.size() - 1);
         }
 
         // All validation passed - notify base class
         onStructureFormed();
-        return true;
-    }
-
-    /**
-     * Validate a single segment at the given position.
-     * Segment is 3 high (y=-1..1) x 1 wide (z=0) x 1 deep (x=segX)
-     * Cell drives at y=-1,1; cell drive at y=0
-     */
-    private boolean validateSegment(IGregTechTileEntity base, int sx, int cy, int cz) {
-        for (int dy = -1; dy <= 1; dy++) {
-            Block block = base.getWorld()
-                .getBlock(sx, cy + dy, cz);
-            int meta = base.getWorld()
-                .getBlockMetadata(sx, cy + dy, cz);
-
-            if (block != BlockLoader.estorageBlocks) return false;
-            if (meta != BlockLoader.ESTORAGE_META_CELL_DRIVE) return false;
-            installedCellDrives++;
-        }
-        return true;
-    }
-
-    /**
-     * Validate the end cap (3 high x 2 deep x 1 wide, all casings).
-     */
-    private boolean validateEndCap(IGregTechTileEntity base, int ox, int cy, int cz) {
-        for (int dx = 0; dx >= -1; dx--) {
-            for (int dy = -1; dy <= 1; dy++) {
-                Block block = base.getWorld()
-                    .getBlock(ox + dx, cy + dy, cz);
-                int meta = base.getWorld()
-                    .getBlockMetadata(ox + dx, cy + dy, cz);
-                if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_CASING) {
-                    return false;
-                }
-            }
-        }
         return true;
     }
 
