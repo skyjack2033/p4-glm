@@ -318,6 +318,13 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         return installedProcessors;
     }
 
+    /**
+     * Get the pattern handler for GUI access. Allows the GUI to add/remove pattern items.
+     */
+    public EFabricatorPatternHandler getPatternHandler() {
+        return patternHandler;
+    }
+
     // =========================================================================
     // Structure Definition
     // =========================================================================
@@ -765,6 +772,10 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
             // ICraftingProvider with the AE2 grid and posts MENetworkCraftingPatternChange
             // to trigger provideCrafting() discovery.
             if (patternHandler != null) {
+                // Refresh patterns from stored items before activating
+                if (getBaseMetaTileEntity() != null && getBaseMetaTileEntity().getWorld() != null) {
+                    patternHandler.refreshPatterns(getBaseMetaTileEntity().getWorld());
+                }
                 patternHandler.activate();
             }
 

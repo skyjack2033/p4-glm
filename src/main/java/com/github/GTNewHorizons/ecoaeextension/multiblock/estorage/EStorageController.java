@@ -760,6 +760,62 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     }
 
     // =========================================================================
+    // Cell Management
+    // =========================================================================
+
+    /**
+     * Insert a storage cell into the first available slot.
+     *
+     * @param cellStack The cell ItemStack to insert
+     * @return true if the cell was inserted successfully
+     */
+    public boolean insertCell(ItemStack cellStack) {
+        if (cellStack == null) return false;
+        if (!(cellStack.getItem() instanceof com.github.GTNewHorizons.ecoaeextension.item.ItemStorageCell))
+            return false;
+
+        // Find first null slot
+        for (int i = 0; i < cellStacks.size(); i++) {
+            if (cellStacks.get(i) == null) {
+                cellStacks.set(i, cellStack.copy());
+                return true;
+            }
+        }
+        return false; // No available slots
+    }
+
+    /**
+     * Remove a storage cell from the given slot.
+     *
+     * @param slotIndex The slot index to remove from
+     * @return The removed cell ItemStack, or null if slot is empty/invalid
+     */
+    public ItemStack removeCell(int slotIndex) {
+        if (slotIndex < 0 || slotIndex >= cellStacks.size()) return null;
+        ItemStack removed = cellStacks.get(slotIndex);
+        cellStacks.set(slotIndex, null);
+        return removed;
+    }
+
+    /**
+     * Get the list of cell ItemStacks (for GUI display).
+     */
+    public List<ItemStack> getCellStacks() {
+        return cellStacks;
+    }
+
+    /**
+     * Get the number of non-null cells installed.
+     */
+    public int getActiveCellCount() {
+        int count = 0;
+        for (ItemStack stack : cellStacks) {
+            if (stack != null) count++;
+        }
+        return count;
+    }
+
+    // =========================================================================
     // GUI
     // =========================================================================
 

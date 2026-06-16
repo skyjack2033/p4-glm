@@ -8,6 +8,7 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.world.World;
 
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.efabricator.EFabricatorController;
@@ -51,11 +52,15 @@ import appeng.me.helpers.AENetworkProxy;
 public class EFabricatorPatternHandler implements ICraftingProvider {
 
     private static final String NBT_ACTIVE_JOBS = "EF_ActiveJobs";
+    private static final String NBT_PATTERN_ITEMS = "EF_PatternItems";
 
     private final EFabricatorController controller;
 
     /** Patterns stored in the pattern buses. Registered with AE2 via provideCrafting(). */
     private final List<ICraftingPatternDetails> storedPatterns = new ArrayList<>();
+
+    /** Pattern items stored in the handler. Decoded into ICraftingPatternDetails on change. */
+    private final List<ItemStack> patternItems = new ArrayList<>();
 
     /** Currently active crafting jobs being processed by worker cores. */
     private final List<ActiveJob> activeJobs = new ArrayList<>();
@@ -146,6 +151,104 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
 
     public boolean isActive() {
         return registered;
+    }
+
+    // =========================================================================
+    // Pattern Item Management
+    // =========================================================================
+
+    /**
+     * Add a pattern item to the handler. The item is decoded into ICraftingPatternDetails
+     * and registered with AE2 if the handler is active.
+     *
+     * @param patternStack The pattern item stack to add
+     * @param world        The world (needed for pattern decoding)
+     * @return true if the pattern was added successfully
+     */
+    public boolean addPatternItem(ItemStack patternStack, World world) {
+        if (patternStack == null || world == null) return false;
+        if (!(patternStack.getItem() instanceof appeng.api.implementations.ICraftingPatternItem)) return false;
+
+        try {
+            ICraftingPatternDetails details = ((appeng.api.implementations.ICraftingPatternItem) patternStack.getItem())
+                .getPatternForItem(patternStack, world);
+            if (details == null) return false;
+
+            patternItems.add(patternStack.copy());
+            storedPatterns.add(details);
+
+            if (registered) {
+                notifyPatternChange();
+            }
+            return true;
+        } catch (Exception e) {
+            ECOAEExtension.LOG.debug("Failed to decode pattern item", e);
+            return false;
+        }
+    }
+
+    /**
+     * Remove a pattern item at the given index.
+     *
+     * @param index The index of the pattern to remove
+     * @return The removed pattern ItemStack, or null if index is invalid
+     */
+    public ItemStack removePatternItem(int index) {
+        if (index < 0 || index >= patternItems.size()) return null;
+
+        ItemStack removed = patternItems.remove(index);
+        if (index < storedPatterns.size()) {
+            storedPatterns.remove(index);
+        }
+
+        if (registered) {
+            notifyPatternChange();
+        }
+        return removed;
+    }
+
+    /**
+     * Get the list of pattern items stored in this handler.
+     */
+    public List<ItemStack> getPatternItems() {
+        return patternItems;
+    }
+
+    /**
+     * Clear all stored patterns.
+     */
+    public void clearPatterns() {
+        patternItems.clear();
+        storedPatterns.clear();
+        if (registered) {
+            notifyPatternChange();
+        }
+    }
+
+    /**
+     * Refresh stored patterns by re-decoding all pattern items.
+     * Called after loading from NBT or when the world changes.
+     *
+     * @param world The world (needed for pattern decoding)
+     */
+    public void refreshPatterns(World world) {
+        storedPatterns.clear();
+        for (ItemStack stack : patternItems) {
+            if (stack != null && stack.getItem() instanceof appeng.api.implementations.ICraftingPatternItem) {
+                try {
+                    ICraftingPatternDetails details = ((appeng.api.implementations.ICraftingPatternItem) stack
+                        .getItem()).getPatternForItem(stack, world);
+                    if (details != null) {
+                        storedPatterns.add(details);
+                    }
+                } catch (Exception e) {
+                    ECOAEExtension.LOG.debug("Failed to refresh pattern", e);
+                }
+            }
+        }
+        if (registered) {
+            notifyPatternChange();
+        }
     }
 
     // =========================================================================
@@ -447,14 +550,27 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
             jobList.appendTag(jobTag);
         }
         tag.setTag(NBT_ACTIVE_JOBS, jobList);
+
+        // Save pattern items
+        NBTTagList patternList = new NBTTagList();
+        for (ItemStack stack : patternItems) {
+            if (stack != null) {
+                NBTTagCompound stackTag = new NBTTagCompound();
+                stack.writeToNBT(stackTag);
+                patternList.appendTag(stackTag);
+            }
+        }
+        tag.setTag(NBT_PATTERN_ITEMS, patternList);
     }
 
     /**
-     * Load handler state from NBT. Active job progress is restored; pattern details
-     * are re-populated from pattern buses on the next provideCrafting() call.
+     * Load handler state from NBT. Active job progress and pattern items are restored.
+     * Pattern details are decoded on the next refreshPatterns() call.
      */
     public void loadNBTData(NBTTagCompound tag) {
         activeJobs.clear();
+        patternItems.clear();
+        storedPatterns.clear();
 
         if (tag.hasKey(NBT_ACTIVE_JOBS)) {
             NBTTagList jobList = tag.getTagList(NBT_ACTIVE_JOBS, 10); // 10 = NBTTagCompound
@@ -463,6 +579,18 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
                 ActiveJob job = ActiveJob.readFromNBT(jobTag);
                 if (job != null) {
                     activeJobs.add(job);
+                }
+            }
+        }
+
+        // Load pattern items (will be decoded into storedPatterns on next refresh)
+        if (tag.hasKey(NBT_PATTERN_ITEMS)) {
+            NBTTagList patternList = tag.getTagList(NBT_PATTERN_ITEMS, 10);
+            for (int i = 0; i < patternList.tagCount(); i++) {
+                NBTTagCompound stackTag = patternList.getCompoundTagAt(i);
+                ItemStack stack = ItemStack.loadItemStackFromNBT(stackTag);
+                if (stack != null) {
+                    patternItems.add(stack);
                 }
             }
         }
