@@ -47,15 +47,18 @@
 - [x] EStorage: Add ISaveProvider for cell data persistence
 - [x] EStorage: Add cellStacks field with NBT persistence
 - [x] EStorage: Add insertCell()/removeCell() for cell management
+- [x] EStorage: Add right-click cell insertion/removal
 - [x] ECalculator: Fix NPE in ActiveCraftingJob.readFromNBT
 - [x] ECalculator: Add pattern inventory (addPatternItem/removePatternItem/refreshPatterns)
 - [x] ECalculator: Update provideCrafting() to register stored patterns
 - [x] ECalculator: Update isBusy() to allow concurrent jobs
+- [x] ECalculator: Add right-click pattern insertion/removal
 - [x] EFabricator: Fix isBusy() (was preventing concurrent job acceptance)
 - [x] EFabricator: Add pattern inventory with addPatternItem()/removePatternItem()
 - [x] EFabricator: Add refreshPatterns() to decode pattern items
 - [x] EFabricator: Update NBT persistence for pattern items
 - [x] EFabricator: Add coolant type validation (water, distilled water, IC2 coolant, cryotheum)
+- [x] EFabricator: Add right-click pattern insertion/removal
 
 ## Remaining
 
@@ -68,7 +71,6 @@
 - [ ] EStorage: No per-drive TileEntities (cells stored in controller NBT)
 - [ ] EStorage: No IAEPowerStorage (uses GT energy hatches only)
 - [ ] ECalculator: Works as crafting provider/medium (not as AE2 CPU)
-- [ ] ECalculator: No per-thread-core CPU delegation
 - [ ] EFabricator: No parallel processor modifier system
 
 ### Polish
