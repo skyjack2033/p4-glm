@@ -11,7 +11,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
@@ -371,97 +370,34 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         return structureDefinition;
     }
 
+    // Structure offsets: controller position in the shape array
+    private static final int HORIZONTAL_OFF_SET = 1;
+    private static final int VERTICAL_OFF_SET = 1;
+    private static final int DEPTH_OFF_SET = 0;
+    private static final String STRUCTURE_PIECE_MAIN = "main";
+
+    // Shape definition: [y][z][x] convention
+    // 3x3x2 fixed section with controller at center
+    private static final String[][] shape = new String[][] { { "C~C", "CMC" }, // y=0 (bottom, ~ = controller, M = ME
+                                                                               // channel)
+        { "CCC", "CKC" }, // y=1 (middle, K = vent)
+        { "CCC", "CCC" } // y=2 (top)
+    };
+
     @Override
     public String[][] getStructurePattern() {
-        return new String[][] { { "CCC", "CMC", "CCC" }, { "CCC", "EKC", "CCC" }, { "CCC", "CFC", "CCC" } };
+        return shape;
     }
 
     @Override
     public void construct(ItemStack stackSize, boolean hintsOnly) {
-        // EFabricator structure: 3x3x2 fixed section + segments + end cap
-        // Fixed section: x=-1..1, y=-1..1, z=0..1 (controller at center)
-        // ME channel at (0, -1, 0), vent at (0, 0, 1), fluid hatch at (0, +1, 1)
-        // Segments extend in +Z direction
-        int cx = getBaseMetaTileEntity().getXCoord();
-        int cy = getBaseMetaTileEntity().getYCoord();
-        int cz = getBaseMetaTileEntity().getZCoord();
-
-        // Build 3x3x2 fixed section
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                for (int dz = 0; dz <= 1; dz++) {
-                    // Controller position - skip
-                    if (dx == 0 && dy == 0 && dz == 0) continue;
-
-                    // ME channel at (0, -1, 0)
-                    if (dx == 0 && dy == -1 && dz == 0) {
-                        if (!hintsOnly) {
-                            getBaseMetaTileEntity().getWorld()
-                                .setBlock(cx + dx, cy + dy, cz + dz, ME_CHANNEL_BLOCK, ME_CHANNEL_META, 2);
-                        }
-                        continue;
-                    }
-
-                    // Vent at (0, 0, 1)
-                    if (dx == 0 && dy == 0 && dz == 1) {
-                        if (!hintsOnly) {
-                            getBaseMetaTileEntity().getWorld()
-                                .setBlock(cx, cy, cz + 1, VENT_BLOCK, VENT_META, 2);
-                        }
-                        continue;
-                    }
-
-                    // All other positions: casings
-                    if (!hintsOnly) {
-                        getBaseMetaTileEntity().getWorld()
-                            .setBlock(cx + dx, cy + dy, cz + dz, CASING_BLOCK, CASING_META, 2);
-                    }
-                }
-            }
-        }
-
-        // Build 1 segment at z=2..3 (3 wide x 3 high x 2 deep)
-        // Near (z=2): pattern buses at y=-1,1; worker at y=0; side casings
-        // Far (z=3): parallel procs at y=-1,1; vent at y=0; side casings
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
-                if (dx != 0) {
-                    // Side casings
-                    if (!hintsOnly) {
-                        getBaseMetaTileEntity().getWorld()
-                            .setBlock(cx + dx, cy + dy, cz + 2, CASING_BLOCK, CASING_META, 2);
-                        getBaseMetaTileEntity().getWorld()
-                            .setBlock(cx + dx, cy + dy, cz + 3, CASING_BLOCK, CASING_META, 2);
-                    }
-                    continue;
-                }
-                // Center column
-                int nearMeta;
-                if (dy == 0) nearMeta = WORKER_META;
-                else nearMeta = PATTERN_BUS_META;
-                if (!hintsOnly) {
-                    getBaseMetaTileEntity().getWorld()
-                        .setBlock(cx, cy + dy, cz + 2, PATTERN_BUS_BLOCK, nearMeta, 2);
-                }
-                int farMeta;
-                if (dy == 0) farMeta = VENT_META;
-                else farMeta = PROCESSOR_META;
-                if (!hintsOnly) {
-                    getBaseMetaTileEntity().getWorld()
-                        .setBlock(cx, cy + dy, cz + 3, PROCESSOR_BLOCK, farMeta, 2);
-                }
-            }
-        }
-
-        // Build end cap at z=4 (3x3x1 wall of casings)
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                if (!hintsOnly) {
-                    getBaseMetaTileEntity().getWorld()
-                        .setBlock(cx + dx, cy + dy, cz + 4, CASING_BLOCK, CASING_META, 2);
-                }
-            }
-        }
+        this.buildPiece(
+            STRUCTURE_PIECE_MAIN,
+            stackSize,
+            hintsOnly,
+            HORIZONTAL_OFF_SET,
+            VERTICAL_OFF_SET,
+            DEPTH_OFF_SET);
     }
 
     // =========================================================================
@@ -476,90 +412,8 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
         installedWorkers = 0;
         installedProcessors = 0;
 
-        // Bail early if block references are not populated
-        if (CASING_BLOCK == null || ME_CHANNEL_BLOCK == null
-            || VENT_BLOCK == null
-            || PATTERN_BUS_BLOCK == null
-            || WORKER_BLOCK == null
-            || PROCESSOR_BLOCK == null) {
-            return false;
-        }
-
-        // Compute facing-dependent direction vectors.
-        // forward = direction the structure extends (opposite of front face)
-        // right = perpendicular "right" direction (clockwise from forward, top-down view)
-        ForgeDirection facing = aBaseMetaTileEntity.getFrontFacing();
-        int fwdX, fwdZ;
-        switch (facing) {
-            case NORTH:
-                fwdX = 0;
-                fwdZ = 1;
-                break; // front faces north -> extends south (+Z)
-            case SOUTH:
-                fwdX = 0;
-                fwdZ = -1;
-                break; // front faces south -> extends north (-Z)
-            case WEST:
-                fwdX = 1;
-                fwdZ = 0;
-                break; // front faces west -> extends east (+X)
-            case EAST:
-                fwdX = -1;
-                fwdZ = 0;
-                break; // front faces east -> extends west (-X)
-            default:
-                return false;
-        }
-        int rightX = -fwdZ;
-        int rightZ = fwdX;
-
-        int cx = aBaseMetaTileEntity.getXCoord();
-        int cy = aBaseMetaTileEntity.getYCoord();
-        int cz = aBaseMetaTileEntity.getZCoord();
-
-        // Try to find the structure by probing for the end cap at increasing depths.
-        // The end cap is a 3x3x1 wall of casings at the far end.
-        // We check from the maximum depth down to find the longest valid structure.
-        int bestSegments = -1;
-        for (int numSegs = MAX_SEGMENTS; numSegs >= 0; numSegs--) {
-            int endCapDepthStart = FIXED_DEPTH + numSegs * SEGMENT_DEPTH;
-            if (validateEndCap(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, endCapDepthStart)
-                && validateSegments(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, numSegs)) {
-                bestSegments = numSegs;
-                break;
-            }
-        }
-
-        if (bestSegments < 0) {
-            invalidateStructure();
-            return false;
-        }
-
-        // Validate fixed section
-        if (!validateFixedSection(cx, cy, cz, fwdX, fwdZ, rightX, rightZ)) {
-            invalidateStructure();
-            return false;
-        }
-
-        // Register components in each segment (re-scan now that we know segment count)
-        for (int seg = 0; seg < bestSegments; seg++) {
-            int depthBase = FIXED_DEPTH + seg * SEGMENT_DEPTH;
-            if (!registerSegmentComponents(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, depthBase)) {
-                invalidateStructure();
-                return false;
-            }
-        }
-
-        // Register fluid hatches in fixed section (position 'F' = center of top layer)
-        registerFluidHatchAt(cx, cy, cz, fwdX, fwdZ, rightX, rightZ, 1, 2, 1);
-
-        // Validate minimum components
-        if (installedPatternBuses < 1 || installedWorkers < 1) {
-            ECOAEExtension.LOG.debug(
-                "EFabricator: insufficient components (buses={}, workers={})",
-                installedPatternBuses,
-                installedWorkers);
-            invalidateStructure();
+        // Use StructureLib's checkPiece to validate the fixed section
+        if (!checkPiece(STRUCTURE_PIECE_MAIN, HORIZONTAL_OFF_SET, VERTICAL_OFF_SET, DEPTH_OFF_SET)) {
             return false;
         }
 
