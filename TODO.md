@@ -38,7 +38,17 @@
 ### Build System
 - [x] dependencies.gradle with correct version numbers
 - [x] BUILD SUCCESSFUL - 0 errors
-- [x] JAR builds successfully (108KB, 40 classes, 22 textures, 2 lang files)
+- [x] JAR builds successfully (112KB, 41 classes)
+
+### Critical Bug Fixes (2026-06-16)
+- [x] EStorage: Fix direction scanning (was always picking DOWN)
+- [x] EStorage: Fix segment edge Y calculation
+- [x] EStorage: Implement getCellArray() (was returning empty list)
+- [x] EStorage: Add ISaveProvider for cell data persistence
+- [x] EStorage: Add cellStacks field with NBT persistence
+- [x] ECalculator: Fix NPE in ActiveCraftingJob.readFromNBT
+- [x] ECalculator: Fix wrong AE2 event (MENetworkCraftingPatternChange -> MENetworkCraftingCpuChange)
+- [x] EFabricator: Fix isBusy() (was preventing concurrent job acceptance)
 
 ## Remaining
 
@@ -46,6 +56,15 @@
 - [ ] Test multiblock formation
 - [ ] Test AE2 network connectivity
 - [ ] Test recipe registration in NEI
+
+### Known Limitations
+- [ ] EStorage: No per-drive TileEntities (cells stored in controller NBT)
+- [ ] EStorage: No IAEPowerStorage (uses GT energy hatches only)
+- [ ] ECalculator: No real CraftingCPUCluster objects (AE2 may not discover as CPU)
+- [ ] ECalculator: No per-thread-core CPU delegation
+- [ ] EFabricator: Patterns not populated from structure blocks
+- [ ] EFabricator: No coolant type validation (any fluid works)
+- [ ] EFabricator: No parallel processor modifier system
 
 ### Polish
 - [ ] NEI integration for ECOAE recipe map
