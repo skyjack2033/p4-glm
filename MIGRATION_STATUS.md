@@ -137,20 +137,19 @@ dependencies {
 - [x] EFabricator controller with pattern crafting, overclock, cooling, GUI
 - [x] AE2 integration helper classes (GTNH rv1 API)
 - [x] Item classes (storage cells, calculator cells) with registration
-- [x] GUI handler with containers and screens
+- [x] GUI system migrated to GT5 MUI2 framework
 - [x] Recipe registration (19 assembler recipes)
-- [x] Localization file
-- [x] GUI opening on right-click
+- [x] Localization files (en_US.lang, zh_CN.lang) with correct key format
+- [x] StructureLib construct() method for auto-build
+- [x] Block name localization (tile.ecoaeext.* format)
+- [x] Controller texture system (uses block textures)
+- [x] NEI integration (recipe maps registered)
 
 ### Remaining (Polish & Testing)
-- [ ] Custom block registration for casings/parts (currently identified by unlocalized name)
-- [ ] Actual GUI textures (PNG files)
 - [ ] Custom cell inventory implementation for EStorageCellHandler
-- [ ] Block/item texture creation
-- [ ] NEI integration for ECOAE recipe map
 - [ ] Actual in-game testing with GTNH dev environment
-- [ ] Recipe output items (currently placeholders - need MTE item registration)
-- [ ] zh_CN.lang translation file
+- [ ] Custom block textures (optional - currently using GT5 defaults)
+- [ ] Recipe output items refinement
 
 ---
 
