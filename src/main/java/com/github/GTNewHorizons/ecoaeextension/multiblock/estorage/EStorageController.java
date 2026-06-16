@@ -1,5 +1,7 @@
 package com.github.GTNewHorizons.ecoaeextension.multiblock.estorage;
 
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -164,7 +166,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     public IStructureDefinition<EStorageController> getStructureDefinition() {
         return StructureDefinition.<EStorageController>builder()
             .addShape("main", getStructurePattern())
-            // Structure validation is performed manually in checkMachine()
+            .addElement('C', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING))
+            .addElement('E', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING))
+            .addElement('M', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_ME_CHANNEL))
             .build();
     }
 

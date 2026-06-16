@@ -1,5 +1,7 @@
 package com.github.GTNewHorizons.ecoaeextension.multiblock.ecalculator;
 
+import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -226,24 +228,20 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     @Override
     public IStructureDefinition<ECalculatorController> getStructureDefinition() {
-        // TODO: Register actual MTE blocks for casings, thread cores, etc. in MachineLoader
-        // then define proper .addElement() calls here with ofBlock() matching.
-        //
-        // Example (once blocks are registered):
-        // .addElement(CASING, ofBlock(ECalculatorBlocks.CASING, 0))
-        // .addElement(CONTROLLER, ofController())
-        // .addElement(ME_CHANNEL, ofBlock(ECalculatorBlocks.ME_CHANNEL, 0))
-        // .addElement(THREAD_CORE, ofBlock(ECalculatorBlocks.THREAD_CORE, 0))
-        // .addElement(HYPER_THREAD, ofBlock(ECalculatorBlocks.HYPER_THREAD, 0))
-        // .addElement(PARALLEL_PROC, ofBlock(ECalculatorBlocks.PARALLEL_PROC, 0))
-        // .addElement(CELL_DRIVE, ofBlock(ECalculatorBlocks.CELL_DRIVE, 0))
-        // .addElement(TRANSMITTER_BUS, ofBlock(ECalculatorBlocks.TRANSMITTER_BUS, 0))
-        // .addElement(TAIL, ofBlock(ECalculatorBlocks.TAIL, 0))
         return StructureDefinition.<ECalculatorController>builder()
             .addShape(SHAPE_FIXED, getFixedSectionPattern())
             .addShape(SHAPE_SEGMENT_THREAD, getThreadSegmentPattern())
             .addShape(SHAPE_SEGMENT_HYPER, getHyperSegmentPattern())
             .addShape(SHAPE_ENDCAP, getEndCapPattern())
+            .addElement(CASING, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING))
+            .addElement(CONTROLLER, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING))
+            .addElement(ME_CHANNEL, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_ME_CHANNEL))
+            .addElement(THREAD_CORE, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_THREAD_CORE))
+            .addElement(HYPER_THREAD, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_HYPER_THREAD))
+            .addElement(PARALLEL_PROC, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_PARALLEL_PROC))
+            .addElement(CELL_DRIVE, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CELL_DRIVE))
+            .addElement(TRANSMITTER_BUS, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_TRANSMITTER_BUS))
+            .addElement(TAIL, ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_TAIL))
             .build();
     }
 
