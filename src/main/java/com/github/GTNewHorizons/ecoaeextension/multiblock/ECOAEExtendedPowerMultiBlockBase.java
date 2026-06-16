@@ -446,7 +446,9 @@ public abstract class ECOAEExtendedPowerMultiBlockBase<T extends ECOAEExtendedPo
     @Override
     public gregtech.api.interfaces.ITexture[] getTexture(IGregTechTileEntity aBaseMetaTileEntity, ForgeDirection side,
         ForgeDirection facing, int aColorIndex, boolean aActive, boolean aRedstone) {
-        // Return empty array - subclasses should provide proper textures
+        // Return empty array - the controller block will use its block texture
+        // GT5 multiblocks render the controller using the block's texture system
+        // The actual texture is provided by the BlockECOAEMeta class
         return new gregtech.api.interfaces.ITexture[0];
     }
 

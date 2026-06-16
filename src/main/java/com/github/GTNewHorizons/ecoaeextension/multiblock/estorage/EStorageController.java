@@ -177,6 +177,97 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         return new String[][] { { "CCC", "CMC", "CCC" }, { "CCC", "CEC", "CCC" }, { "CCC", "CCC", "CCC" } };
     }
 
+    @Override
+    public void construct(ItemStack stackSize, boolean hintsOnly) {
+        // Build a minimal structure: fixed section + 1 segment + end cap
+        // The structure extends in the -X direction from the controller
+        int baseX = getBaseMetaTileEntity().getXCoord();
+        int baseY = getBaseMetaTileEntity().getYCoord();
+        int baseZ = getBaseMetaTileEntity().getZCoord();
+
+        // Build the 3x3x3 fixed section
+        buildFixedSection(baseX, baseY, baseZ, hintsOnly);
+
+        // Build 1 segment (3 high x 2 deep x 1 wide)
+        buildSegment(baseX - 3, baseY, baseZ, hintsOnly);
+
+        // Build the end cap (3 high x 2 deep x 1 wide, all casings)
+        buildEndCap(baseX - 5, baseY, baseZ, hintsOnly);
+    }
+
+    private void buildFixedSection(int cx, int cy, int cz, boolean hintsOnly) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    int wx = cx + dx;
+                    int wy = cy + dy;
+                    int wz = cz + dz;
+
+                    // Controller position - skip
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
+
+                    // ME channel at (0, -1, 1) relative to controller
+                    if (dx == 0 && dy == -1 && dz == 1) {
+                        if (!hintsOnly) {
+                            getBaseMetaTileEntity().getWorld()
+                                .setBlock(
+                                    wx,
+                                    wy,
+                                    wz,
+                                    BlockLoader.estorageBlocks,
+                                    BlockLoader.ESTORAGE_META_ME_CHANNEL,
+                                    2);
+                        }
+                        continue;
+                    }
+
+                    // All other positions: casings
+                    if (!hintsOnly) {
+                        getBaseMetaTileEntity().getWorld()
+                            .setBlock(wx, wy, wz, BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING, 2);
+                    }
+                }
+            }
+        }
+    }
+
+    private void buildSegment(int ox, int oy, int oz, boolean hintsOnly) {
+        // Segment: 3 high x 2 deep x 1 wide
+        // Near depth (dx=0): cell drives at y=0,2; cell drive at y=1
+        // Far depth (dx=1): energy cells at y=0,2; vent at y=1
+        for (int dy = -1; dy <= 1; dy++) {
+            // Near depth
+            if (!hintsOnly) {
+                getBaseMetaTileEntity().getWorld()
+                    .setBlock(ox, oy + dy, oz, BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CELL_DRIVE, 2);
+            }
+            // Far depth
+            int meta = (dy == 0) ? BlockLoader.ESTORAGE_META_VENT : BlockLoader.ESTORAGE_META_ENERGY_CELL;
+            if (!hintsOnly) {
+                getBaseMetaTileEntity().getWorld()
+                    .setBlock(ox - 1, oy + dy, oz, BlockLoader.estorageBlocks, meta, 2);
+            }
+        }
+    }
+
+    private void buildEndCap(int ox, int oy, int oz, boolean hintsOnly) {
+        // End cap: 3 high x 2 deep x 1 wide, all casings
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dd = 0; dd < 2; dd++) {
+                if (!hintsOnly) {
+                    getBaseMetaTileEntity().getWorld()
+                        .setBlock(
+                            ox - dd,
+                            oy + dy,
+                            oz,
+                            BlockLoader.estorageBlocks,
+                            BlockLoader.ESTORAGE_META_CASING,
+                            2);
+                }
+            }
+        }
+    }
+
     // =========================================================================
     // Structure Validation - checkMachine()
     // =========================================================================

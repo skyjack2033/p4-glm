@@ -265,6 +265,137 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         return getFixedSectionPattern();
     }
 
+    @Override
+    public void construct(ItemStack stackSize, boolean hintsOnly) {
+        int baseX = getBaseMetaTileEntity().getXCoord();
+        int baseY = getBaseMetaTileEntity().getYCoord();
+        int baseZ = getBaseMetaTileEntity().getZCoord();
+
+        // Build the 3x3x3 fixed section
+        buildFixedSection(baseX, baseY, baseZ, hintsOnly);
+
+        // Build 1 thread segment (3 wide x 3 high x 2 deep)
+        buildThreadSegment(baseX, baseY, baseZ + 2, hintsOnly);
+
+        // Build the end cap (3x3x3 with tail at center)
+        buildEndCap(baseX, baseY, baseZ + 4, hintsOnly);
+    }
+
+    private void buildFixedSection(int cx, int cy, int cz, boolean hintsOnly) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    int wx = cx + dx;
+                    int wy = cy + dy;
+                    int wz = cz + dz;
+
+                    // Controller position - skip
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
+
+                    // ME channel at (0, +1, 0) relative to controller
+                    if (dx == 0 && dy == 1 && dz == 0) {
+                        if (!hintsOnly) {
+                            getBaseMetaTileEntity().getWorld()
+                                .setBlock(
+                                    wx,
+                                    wy,
+                                    wz,
+                                    BlockLoader.ecalculatorBlocks,
+                                    BlockLoader.ECALC_META_ME_CHANNEL,
+                                    2);
+                        }
+                        continue;
+                    }
+
+                    // All other positions: casings
+                    if (!hintsOnly) {
+                        getBaseMetaTileEntity().getWorld()
+                            .setBlock(wx, wy, wz, BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING, 2);
+                    }
+                }
+            }
+        }
+    }
+
+    private void buildThreadSegment(int ox, int oy, int oz, boolean hintsOnly) {
+        // Thread segment: 3 wide x 3 high x 2 deep
+        // Near depth (z=0): cell drives at y=0,2; transmitter bus at y=1; side casings
+        // Far depth (z=1): parallel procs at y=0,2; thread core at y=1; side casings
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                // Side casings
+                if (dx != 0) {
+                    if (!hintsOnly) {
+                        getBaseMetaTileEntity().getWorld()
+                            .setBlock(
+                                ox + dx,
+                                oy + dy,
+                                oz,
+                                BlockLoader.ecalculatorBlocks,
+                                BlockLoader.ECALC_META_CASING,
+                                2);
+                        getBaseMetaTileEntity().getWorld()
+                            .setBlock(
+                                ox + dx,
+                                oy + dy,
+                                oz + 1,
+                                BlockLoader.ecalculatorBlocks,
+                                BlockLoader.ECALC_META_CASING,
+                                2);
+                    }
+                    continue;
+                }
+
+                // Center column (dx=0)
+                // Near depth (z=0)
+                int nearMeta;
+                if (dy == 0) nearMeta = BlockLoader.ECALC_META_TRANSMITTER_BUS;
+                else nearMeta = BlockLoader.ECALC_META_CELL_DRIVE;
+                if (!hintsOnly) {
+                    getBaseMetaTileEntity().getWorld()
+                        .setBlock(ox, oy + dy, oz, BlockLoader.ecalculatorBlocks, nearMeta, 2);
+                }
+
+                // Far depth (z=1)
+                int farMeta;
+                if (dy == 0) farMeta = BlockLoader.ECALC_META_THREAD_CORE;
+                else farMeta = BlockLoader.ECALC_META_PARALLEL_PROC;
+                if (!hintsOnly) {
+                    getBaseMetaTileEntity().getWorld()
+                        .setBlock(ox, oy + dy, oz + 1, BlockLoader.ecalculatorBlocks, farMeta, 2);
+                }
+            }
+        }
+    }
+
+    private void buildEndCap(int cx, int cy, int cz, boolean hintsOnly) {
+        // End cap: 3x3x3 with tail block at center
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    int wx = cx + dx;
+                    int wy = cy + dy;
+                    int wz = cz + dz;
+
+                    // Center: tail block
+                    if (dx == 0 && dy == 0 && dz == 0) {
+                        if (!hintsOnly) {
+                            getBaseMetaTileEntity().getWorld()
+                                .setBlock(wx, wy, wz, BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_TAIL, 2);
+                        }
+                        continue;
+                    }
+
+                    // All other positions: casings
+                    if (!hintsOnly) {
+                        getBaseMetaTileEntity().getWorld()
+                            .setBlock(wx, wy, wz, BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING, 2);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Fixed 3x3x3 section.
      * Layer format: "row_z0 / row_z1 / row_z2" where each row has 3 x-positions.
