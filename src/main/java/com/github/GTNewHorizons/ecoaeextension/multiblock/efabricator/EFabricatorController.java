@@ -378,126 +378,87 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     @Override
     public void construct(ItemStack stackSize, boolean hintsOnly) {
-        int baseX = getBaseMetaTileEntity().getXCoord();
-        int baseY = getBaseMetaTileEntity().getYCoord();
-        int baseZ = getBaseMetaTileEntity().getZCoord();
+        // EFabricator structure: 3x3x2 fixed section + segments + end cap
+        // Fixed section: x=-1..1, y=-1..1, z=0..1 (controller at center)
+        // ME channel at (0, -1, 0), vent at (0, 0, 1), fluid hatch at (0, +1, 1)
+        // Segments extend in +Z direction
+        int cx = getBaseMetaTileEntity().getXCoord();
+        int cy = getBaseMetaTileEntity().getYCoord();
+        int cz = getBaseMetaTileEntity().getZCoord();
 
-        // Build the 3x3x3 fixed section
-        buildFixedSection(baseX, baseY, baseZ, hintsOnly);
-
-        // Build 1 segment (3 wide x 3 high x 2 deep)
-        buildSegment(baseX, baseY, baseZ + 2, hintsOnly);
-
-        // Build the end cap (3x3x1 wall of casings)
-        buildEndCap(baseX, baseY, baseZ + 4, hintsOnly);
-    }
-
-    private void buildFixedSection(int cx, int cy, int cz, boolean hintsOnly) {
-        // Layer 0 (bottom): casings + ME channel at center
+        // Build 3x3x2 fixed section
         for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                int wx = cx + dx;
-                int wy = cy - 1;
-                int wz = cz + dz;
-                if (dx == 0 && dz == 0) {
-                    if (!hintsOnly) {
-                        getBaseMetaTileEntity().getWorld()
-                            .setBlock(wx, wy, wz, ME_CHANNEL_BLOCK, ME_CHANNEL_META, 2);
-                    }
-                } else {
-                    if (!hintsOnly) {
-                        getBaseMetaTileEntity().getWorld()
-                            .setBlock(wx, wy, wz, CASING_BLOCK, CASING_META, 2);
-                    }
-                }
-            }
-        }
-
-        // Layer 1 (middle): casings + vent at center, controller at (0,0,-1)
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                int wx = cx + dx;
-                int wy = cy;
-                int wz = cz + dz;
-                if (dx == 0 && dz == 0) {
-                    if (!hintsOnly) {
-                        getBaseMetaTileEntity().getWorld()
-                            .setBlock(wx, wy, wz, VENT_BLOCK, VENT_META, 2);
-                    }
-                } else if (dx == 0 && dz == -1) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = 0; dz <= 1; dz++) {
                     // Controller position - skip
-                    continue;
-                } else {
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
+
+                    // ME channel at (0, -1, 0)
+                    if (dx == 0 && dy == -1 && dz == 0) {
+                        if (!hintsOnly) {
+                            getBaseMetaTileEntity().getWorld()
+                                .setBlock(cx + dx, cy + dy, cz + dz, ME_CHANNEL_BLOCK, ME_CHANNEL_META, 2);
+                        }
+                        continue;
+                    }
+
+                    // Vent at (0, 0, 1)
+                    if (dx == 0 && dy == 0 && dz == 1) {
+                        if (!hintsOnly) {
+                            getBaseMetaTileEntity().getWorld()
+                                .setBlock(cx, cy, cz + 1, VENT_BLOCK, VENT_META, 2);
+                        }
+                        continue;
+                    }
+
+                    // All other positions: casings
                     if (!hintsOnly) {
                         getBaseMetaTileEntity().getWorld()
-                            .setBlock(wx, wy, wz, CASING_BLOCK, CASING_META, 2);
+                            .setBlock(cx + dx, cy + dy, cz + dz, CASING_BLOCK, CASING_META, 2);
                     }
                 }
             }
         }
 
-        // Layer 2 (top): casings + fluid hatch placeholder at center
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                int wx = cx + dx;
-                int wy = cy + 1;
-                int wz = cz + dz;
-                if (!hintsOnly) {
-                    getBaseMetaTileEntity().getWorld()
-                        .setBlock(wx, wy, wz, CASING_BLOCK, CASING_META, 2);
-                }
-            }
-        }
-    }
-
-    private void buildSegment(int ox, int oy, int oz, boolean hintsOnly) {
-        // Segment: 3 wide x 3 high x 2 deep
-        // Near depth (z=0): parallel procs at y=0,2; worker at y=1; side casings
-        // Far depth (z=1): pattern buses at y=0,2; vent at y=1; side casings
+        // Build 1 segment at z=2..3 (3 wide x 3 high x 2 deep)
+        // Near (z=2): pattern buses at y=-1,1; worker at y=0; side casings
+        // Far (z=3): parallel procs at y=-1,1; vent at y=0; side casings
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
-                // Side casings
                 if (dx != 0) {
+                    // Side casings
                     if (!hintsOnly) {
                         getBaseMetaTileEntity().getWorld()
-                            .setBlock(ox + dx, oy + dy, oz, CASING_BLOCK, CASING_META, 2);
+                            .setBlock(cx + dx, cy + dy, cz + 2, CASING_BLOCK, CASING_META, 2);
                         getBaseMetaTileEntity().getWorld()
-                            .setBlock(ox + dx, oy + dy, oz + 1, CASING_BLOCK, CASING_META, 2);
+                            .setBlock(cx + dx, cy + dy, cz + 3, CASING_BLOCK, CASING_META, 2);
                     }
                     continue;
                 }
-
-                // Center column (dx=0)
-                // Near depth (z=0)
+                // Center column
                 int nearMeta;
-                if (dy == 0) nearMeta = PROCESSOR_META;
-                else if (dy == 1) nearMeta = WORKER_META;
-                else nearMeta = PROCESSOR_META;
+                if (dy == 0) nearMeta = WORKER_META;
+                else nearMeta = PATTERN_BUS_META;
                 if (!hintsOnly) {
                     getBaseMetaTileEntity().getWorld()
-                        .setBlock(ox, oy + dy, oz, PATTERN_BUS_BLOCK, nearMeta, 2);
+                        .setBlock(cx, cy + dy, cz + 2, PATTERN_BUS_BLOCK, nearMeta, 2);
                 }
-
-                // Far depth (z=1)
                 int farMeta;
-                if (dy == 0) farMeta = PATTERN_BUS_META;
-                else if (dy == 1) farMeta = VENT_META;
-                else farMeta = PATTERN_BUS_META;
+                if (dy == 0) farMeta = VENT_META;
+                else farMeta = PROCESSOR_META;
                 if (!hintsOnly) {
                     getBaseMetaTileEntity().getWorld()
-                        .setBlock(ox, oy + dy, oz + 1, PATTERN_BUS_BLOCK, farMeta, 2);
+                        .setBlock(cx, cy + dy, cz + 3, PROCESSOR_BLOCK, farMeta, 2);
                 }
             }
         }
-    }
 
-    private void buildEndCap(int ox, int oy, int oz, boolean hintsOnly) {
-        // End cap: 3x3x1 wall of casings
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
+        // Build end cap at z=4 (3x3x1 wall of casings)
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
                 if (!hintsOnly) {
                     getBaseMetaTileEntity().getWorld()
-                        .setBlock(ox + dx, oy + dy, oz, CASING_BLOCK, CASING_META, 2);
+                        .setBlock(cx + dx, cy + dy, cz + 4, CASING_BLOCK, CASING_META, 2);
                 }
             }
         }

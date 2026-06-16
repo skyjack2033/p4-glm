@@ -13,7 +13,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
@@ -265,39 +264,29 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     @Override
     public void construct(ItemStack stackSize, boolean hintsOnly) {
-        int baseX = getBaseMetaTileEntity().getXCoord();
-        int baseY = getBaseMetaTileEntity().getYCoord();
-        int baseZ = getBaseMetaTileEntity().getZCoord();
+        // ECalculator structure: 3x3x2 fixed section + segments + end cap
+        // Fixed section: x=-1..1, y=-1..1, z=0..1 (controller at center)
+        // ME channel at (0, +1, 0) relative to controller
+        // Segments extend in +Z direction
+        int cx = getBaseMetaTileEntity().getXCoord();
+        int cy = getBaseMetaTileEntity().getYCoord();
+        int cz = getBaseMetaTileEntity().getZCoord();
 
-        // Build the 3x3x3 fixed section
-        buildFixedSection(baseX, baseY, baseZ, hintsOnly);
-
-        // Build 1 thread segment (3 wide x 3 high x 2 deep)
-        buildThreadSegment(baseX, baseY, baseZ + 2, hintsOnly);
-
-        // Build the end cap (3x3x3 with tail at center)
-        buildEndCap(baseX, baseY, baseZ + 4, hintsOnly);
-    }
-
-    private void buildFixedSection(int cx, int cy, int cz, boolean hintsOnly) {
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    int wx = cx + dx;
-                    int wy = cy + dy;
-                    int wz = cz + dz;
-
+        // Build 3x3x2 fixed section
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = 0; dz <= 1; dz++) {
                     // Controller position - skip
                     if (dx == 0 && dy == 0 && dz == 0) continue;
 
-                    // ME channel at (0, +1, 0) relative to controller
+                    // ME channel at (0, +1, 0)
                     if (dx == 0 && dy == 1 && dz == 0) {
                         if (!hintsOnly) {
                             getBaseMetaTileEntity().getWorld()
                                 .setBlock(
-                                    wx,
-                                    wy,
-                                    wz,
+                                    cx + dx,
+                                    cy + dy,
+                                    cz + dz,
                                     BlockLoader.ecalculatorBlocks,
                                     BlockLoader.ECALC_META_ME_CHANNEL,
                                     2);
@@ -308,86 +297,86 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                     // All other positions: casings
                     if (!hintsOnly) {
                         getBaseMetaTileEntity().getWorld()
-                            .setBlock(wx, wy, wz, BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING, 2);
+                            .setBlock(
+                                cx + dx,
+                                cy + dy,
+                                cz + dz,
+                                BlockLoader.ecalculatorBlocks,
+                                BlockLoader.ECALC_META_CASING,
+                                2);
                     }
                 }
             }
         }
-    }
 
-    private void buildThreadSegment(int ox, int oy, int oz, boolean hintsOnly) {
-        // Thread segment: 3 wide x 3 high x 2 deep
-        // Near depth (z=0): cell drives at y=0,2; transmitter bus at y=1; side casings
-        // Far depth (z=1): parallel procs at y=0,2; thread core at y=1; side casings
+        // Build 1 segment at z=2..3 (3 wide x 3 high x 2 deep)
+        // Near (z=2): cell drives at y=-1,1; transmitter bus at y=0; side casings
+        // Far (z=3): parallel procs at y=-1,1; thread core at y=0; side casings
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
-                // Side casings
                 if (dx != 0) {
+                    // Side casings
                     if (!hintsOnly) {
                         getBaseMetaTileEntity().getWorld()
                             .setBlock(
-                                ox + dx,
-                                oy + dy,
-                                oz,
+                                cx + dx,
+                                cy + dy,
+                                cz + 2,
                                 BlockLoader.ecalculatorBlocks,
                                 BlockLoader.ECALC_META_CASING,
                                 2);
                         getBaseMetaTileEntity().getWorld()
                             .setBlock(
-                                ox + dx,
-                                oy + dy,
-                                oz + 1,
+                                cx + dx,
+                                cy + dy,
+                                cz + 3,
                                 BlockLoader.ecalculatorBlocks,
                                 BlockLoader.ECALC_META_CASING,
                                 2);
                     }
                     continue;
                 }
-
-                // Center column (dx=0)
-                // Near depth (z=0)
-                int nearMeta;
-                if (dy == 0) nearMeta = BlockLoader.ECALC_META_TRANSMITTER_BUS;
-                else nearMeta = BlockLoader.ECALC_META_CELL_DRIVE;
+                // Center column
+                int nearMeta = (dy == 0) ? BlockLoader.ECALC_META_TRANSMITTER_BUS : BlockLoader.ECALC_META_CELL_DRIVE;
                 if (!hintsOnly) {
                     getBaseMetaTileEntity().getWorld()
-                        .setBlock(ox, oy + dy, oz, BlockLoader.ecalculatorBlocks, nearMeta, 2);
+                        .setBlock(cx, cy + dy, cz + 2, BlockLoader.ecalculatorBlocks, nearMeta, 2);
                 }
-
-                // Far depth (z=1)
-                int farMeta;
-                if (dy == 0) farMeta = BlockLoader.ECALC_META_THREAD_CORE;
-                else farMeta = BlockLoader.ECALC_META_PARALLEL_PROC;
+                int farMeta = (dy == 0) ? BlockLoader.ECALC_META_THREAD_CORE : BlockLoader.ECALC_META_PARALLEL_PROC;
                 if (!hintsOnly) {
                     getBaseMetaTileEntity().getWorld()
-                        .setBlock(ox, oy + dy, oz + 1, BlockLoader.ecalculatorBlocks, farMeta, 2);
+                        .setBlock(cx, cy + dy, cz + 3, BlockLoader.ecalculatorBlocks, farMeta, 2);
                 }
             }
         }
-    }
 
-    private void buildEndCap(int cx, int cy, int cz, boolean hintsOnly) {
-        // End cap: 3x3x3 with tail block at center
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    int wx = cx + dx;
-                    int wy = cy + dy;
-                    int wz = cz + dz;
-
+        // Build end cap at z=4..5 (3x3x2 with tail at center)
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = 4; dz <= 5; dz++) {
                     // Center: tail block
-                    if (dx == 0 && dy == 0 && dz == 0) {
+                    if (dx == 0 && dy == 0 && dz == 4) {
                         if (!hintsOnly) {
                             getBaseMetaTileEntity().getWorld()
-                                .setBlock(wx, wy, wz, BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_TAIL, 2);
+                                .setBlock(
+                                    cx,
+                                    cy,
+                                    cz + 4,
+                                    BlockLoader.ecalculatorBlocks,
+                                    BlockLoader.ECALC_META_TAIL,
+                                    2);
                         }
                         continue;
                     }
-
-                    // All other positions: casings
                     if (!hintsOnly) {
                         getBaseMetaTileEntity().getWorld()
-                            .setBlock(wx, wy, wz, BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING, 2);
+                            .setBlock(
+                                cx + dx,
+                                cy + dy,
+                                cz + dz,
+                                BlockLoader.ecalculatorBlocks,
+                                BlockLoader.ECALC_META_CASING,
+                                2);
                     }
                 }
             }
@@ -465,64 +454,22 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         installedTransmitterBuses = 0;
         totalStorageBytes = 0;
 
-        // Validate the fixed section (3x3x3 around the controller)
-        if (!checkFixedSection(aBaseMetaTileEntity)) {
-            return false;
-        }
+        int cx = aBaseMetaTileEntity.getXCoord();
+        int cy = aBaseMetaTileEntity.getYCoord();
+        int cz = aBaseMetaTileEntity.getZCoord();
 
-        // Scan outward from the fixed section for repeating segments and end cap
-        if (!checkRepeatingSegments(aBaseMetaTileEntity)) {
-            return false;
-        }
-
-        // Validate that we found at least one thread core or hyper-thread
-        if (installedThreadCores == 0 && installedHyperThreads == 0) {
-            return false;
-        }
-
-        // Validate that we found at least one cell drive
-        if (installedCellDrives == 0) {
-            return false;
-        }
-
-        // Validate thread core count against tier limit
-        if (installedThreadCores + installedHyperThreads > baseThreadCores * 2) {
-            return false;
-        }
-
-        // Structure is valid - notify AE2 and update tier
-        onStructureFormed();
-        return true;
-    }
-
-    /**
-     * Validate the fixed 3x3x3 section containing the controller and ME channel.
-     *
-     * @return true if the fixed section is valid
-     */
-    private boolean checkFixedSection(IGregTechTileEntity base) {
-        int cx = base.getXCoord();
-        int cy = base.getYCoord();
-        int cz = base.getZCoord();
-
-        // The controller is at the center of the fixed section.
-        // Scan the 3x3x3 volume centered on the controller position.
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    int wx = cx + dx;
-                    int wy = cy + dy;
-                    int wz = cz + dz;
-
-                    // Skip the controller block itself
+        // Validate 3x3x2 fixed section (x=-1..1, y=-1..1, z=0..1)
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = 0; dz <= 1; dz++) {
                     if (dx == 0 && dy == 0 && dz == 0) continue;
 
-                    net.minecraft.block.Block block = base.getWorld()
-                        .getBlock(wx, wy, wz);
-                    int meta = base.getWorld()
-                        .getBlockMetadata(wx, wy, wz);
+                    net.minecraft.block.Block block = aBaseMetaTileEntity.getWorld()
+                        .getBlock(cx + dx, cy + dy, cz + dz);
+                    int meta = aBaseMetaTileEntity.getWorld()
+                        .getBlockMetadata(cx + dx, cy + dy, cz + dz);
 
-                    // ME channel at position (0, +1, 0) relative to controller
+                    // ME channel at (0, +1, 0)
                     if (dx == 0 && dy == 1 && dz == 0) {
                         if (block != BlockLoader.ecalculatorBlocks || meta != BlockLoader.ECALC_META_ME_CHANNEL) {
                             return false;
@@ -530,7 +477,6 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                         continue;
                     }
 
-                    // All other positions: casings
                     if (block != BlockLoader.ecalculatorBlocks || meta != BlockLoader.ECALC_META_CASING) {
                         return false;
                     }
@@ -538,186 +484,104 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             }
         }
 
+        // Scan for segments extending in +Z direction
+        int segZ = cz + 2;
+        int count = 0;
+
+        while (count < MAX_SEGMENTS) {
+            if (!checkSegment(aBaseMetaTileEntity, cx, cy, segZ)) break;
+            count++;
+            segZ += 2;
+        }
+
+        if (count < 1) return false;
+
+        // Check end cap
+        if (!checkEndCap(aBaseMetaTileEntity, cx, cy, segZ)) return false;
+
+        // Validate minimum components
+        if (installedThreadCores == 0 && installedHyperThreads == 0) return false;
+        if (installedCellDrives == 0) return false;
+
+        onStructureFormed();
         return true;
     }
 
-    /**
-     * Scan for repeating segments extending from the fixed section along the structure axis.
-     * Each segment is 3 high x 2 deep x 3 wide (with side casings).
-     * Segments are followed by a 3x3x3 end cap with a tail block at center.
-     *
-     * @return true if the structure terminates correctly with an end cap
-     */
-    private boolean checkRepeatingSegments(IGregTechTileEntity base) {
-        // Determine the scan direction from the controller's facing.
-        // The structure extends opposite to the front face.
-        ForgeDirection facing = base.getFrontFacing();
-        int fwdX, fwdZ;
-        switch (facing) {
-            case NORTH:
-                fwdX = 0;
-                fwdZ = 1;
-                break; // front faces north -> extends south (+Z)
-            case SOUTH:
-                fwdX = 0;
-                fwdZ = -1;
-                break; // front faces south -> extends north (-Z)
-            case WEST:
-                fwdX = 1;
-                fwdZ = 0;
-                break; // front faces west -> extends east (+X)
-            case EAST:
-                fwdX = -1;
-                fwdZ = 0;
-                break; // front faces east -> extends west (-X)
-            default:
-                return false;
-        }
-
-        int cx = base.getXCoord();
-        int cy = base.getYCoord();
-        int cz = base.getZCoord();
-
-        // The fixed section is 3x3x3 centered on the controller, spanning
-        // from (cx-1,cy-1,cz-1) to (cx+1,cy+1,cz+1). The first segment
-        // starts 2 blocks forward from the controller (one past the front face).
-        int segmentStart = 2;
-        int segmentCount = 0;
-        boolean foundEndCap = false;
-
-        while (!foundEndCap) {
-            if (segmentCount >= MAX_SEGMENTS) {
-                return false;
-            }
-
-            // Try to validate as a 2-deep segment starting at this position
-            int segX = cx + fwdX * segmentStart;
-            int segY = cy;
-            int segZ = cz + fwdZ * segmentStart;
-
-            if (checkSegment(base.getWorld(), segX, segY, segZ)) {
-                // Valid segment - advance by 2 (segment depth)
-                segmentStart += 2;
-                segmentCount++;
-                continue;
-            }
-
-            // Not a valid segment - check if this is an end cap.
-            // The end cap is a 3x3x3 volume centered 1 block forward from segmentStart.
-            int endCapX = cx + fwdX * (segmentStart + 1);
-            int endCapZ = cz + fwdZ * (segmentStart + 1);
-            if (isEndCap(base.getWorld(), endCapX, segY, endCapZ)) {
-                foundEndCap = true;
-                break;
-            }
-
-            // Neither a valid segment nor an end cap - structure is invalid
-            return false;
-        }
-
-        return foundEndCap && segmentCount > 0;
-    }
-
-    /**
-     * Check if a 3x3x3 volume at the given position is an end cap.
-     */
-    private boolean isEndCap(net.minecraft.world.World world, int cx, int cy, int cz) {
-        // Check for the tail block at the center of the 3x3x3 volume
-        net.minecraft.block.Block centerBlock = world.getBlock(cx, cy, cz);
-        int centerMeta = world.getBlockMetadata(cx, cy, cz);
-
-        if (centerBlock != BlockLoader.ecalculatorBlocks || centerMeta != BlockLoader.ECALC_META_TAIL) {
-            return false;
-        }
-
-        // Verify the 3x3x3 volume has casings around the tail block
+    private boolean checkSegment(IGregTechTileEntity base, int cx, int cy, int sz) {
+        // Segment: 3 wide x 3 high x 2 deep
         for (int dy = -1; dy <= 1; dy++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    if (dx == 0 && dy == 0 && dz == 0) continue; // Skip center (tail block)
-                    net.minecraft.block.Block block = world.getBlock(cx + dx, cy + dy, cz + dz);
-                    int meta = world.getBlockMetadata(cx + dx, cy + dy, cz + dz);
-                    if (block != BlockLoader.ecalculatorBlocks || meta != BlockLoader.ECALC_META_CASING) {
-                        return false;
-                    }
+            for (int dx = -1; dx <= 1; dx++) {
+                // Side casings
+                if (dx != 0) {
+                    net.minecraft.block.Block b1 = base.getWorld()
+                        .getBlock(cx + dx, cy + dy, sz);
+                    int m1 = base.getWorld()
+                        .getBlockMetadata(cx + dx, cy + dy, sz);
+                    net.minecraft.block.Block b2 = base.getWorld()
+                        .getBlock(cx + dx, cy + dy, sz + 1);
+                    int m2 = base.getWorld()
+                        .getBlockMetadata(cx + dx, cy + dy, sz + 1);
+                    if (b1 != BlockLoader.ecalculatorBlocks || m1 != BlockLoader.ECALC_META_CASING) return false;
+                    if (b2 != BlockLoader.ecalculatorBlocks || m2 != BlockLoader.ECALC_META_CASING) return false;
+                    continue;
+                }
+                // Center column
+                net.minecraft.block.Block nearBlock = base.getWorld()
+                    .getBlock(cx, cy + dy, sz);
+                int nearMeta = base.getWorld()
+                    .getBlockMetadata(cx, cy + dy, sz);
+                net.minecraft.block.Block farBlock = base.getWorld()
+                    .getBlock(cx, cy + dy, sz + 1);
+                int farMeta = base.getWorld()
+                    .getBlockMetadata(cx, cy + dy, sz + 1);
+
+                if (nearBlock != BlockLoader.ecalculatorBlocks) return false;
+                if (farBlock != BlockLoader.ecalculatorBlocks) return false;
+
+                // Near: transmitter bus or cell drive
+                if (dy == 0) {
+                    if (nearMeta != BlockLoader.ECALC_META_TRANSMITTER_BUS) return false;
+                    installedTransmitterBuses++;
+                } else {
+                    if (nearMeta != BlockLoader.ECALC_META_CELL_DRIVE) return false;
+                    installedCellDrives++;
+                }
+                // Far: thread core or parallel proc
+                if (dy == 0) {
+                    if (farMeta == BlockLoader.ECALC_META_THREAD_CORE) installedThreadCores++;
+                    else if (farMeta == BlockLoader.ECALC_META_HYPER_THREAD) installedHyperThreads++;
+                    else return false;
+                } else {
+                    if (farMeta != BlockLoader.ECALC_META_PARALLEL_PROC) return false;
+                    installedParallelProcessors++;
                 }
             }
         }
-
         return true;
     }
 
-    /**
-     * Check and count components in a segment at the given position.
-     * Each segment is 3 high x 2 deep x 3 wide (with side casings).
-     *
-     * <p>
-     * Original JSON segment layout (center column, 3 high x 2 deep x 1 wide):
-     * 
-     * <pre>
-     * z=0: cell drive (y=0), transmitter bus (y=1), cell drive (y=2)
-     * z=1: parallel proc (y=0), thread/hyper (y=1), parallel proc (y=2)
-     * </pre>
-     *
-     * <p>
-     * The position (cx, cy, cz) is the near-depth, bottom-left corner of the segment.
-     * Side columns (dx=0 and dx=2) are casings; center column (dx=1) has components.
-     *
-     * @return true if the segment is valid
-     */
-    private boolean checkSegment(net.minecraft.world.World world, int cx, int cy, int cz) {
-        // Iterate over 3 wide x 3 high x 2 deep
-        for (int dy = 0; dy < 3; dy++) {
-            for (int dz = 0; dz < 2; dz++) {
-                for (int dx = 0; dx < 3; dx++) {
-                    int wx = cx + dx;
-                    int wy = cy + dy;
-                    int wz = cz + dz;
-
-                    net.minecraft.block.Block block = world.getBlock(wx, wy, wz);
-                    int meta = world.getBlockMetadata(wx, wy, wz);
-
-                    if (block != BlockLoader.ecalculatorBlocks) return false;
-
-                    // Side casings (dx=0 and dx=2)
-                    if (dx != 1) {
-                        if (meta != BlockLoader.ECALC_META_CASING) return false;
+    private boolean checkEndCap(IGregTechTileEntity base, int cx, int cy, int ez) {
+        // End cap: 3x3x2 with tail at center
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = ez; dz <= ez + 1; dz++) {
+                    if (dx == 0 && dy == 0 && dz == ez) {
+                        // Tail block
+                        net.minecraft.block.Block b = base.getWorld()
+                            .getBlock(cx, cy, dz);
+                        int m = base.getWorld()
+                            .getBlockMetadata(cx, cy, dz);
+                        if (b != BlockLoader.ecalculatorBlocks || m != BlockLoader.ECALC_META_TAIL) return false;
                         continue;
                     }
-
-                    // Center column (dx=1)
-                    if (dz == 0) {
-                        // Near depth (z=0): cell drive, transmitter bus, cell drive
-                        if (dy == 1) {
-                            // Transmitter bus at y=1
-                            if (meta != BlockLoader.ECALC_META_TRANSMITTER_BUS) return false;
-                            installedTransmitterBuses++;
-                        } else {
-                            // Cell drives at y=0 and y=2
-                            if (meta != BlockLoader.ECALC_META_CELL_DRIVE) return false;
-                            installedCellDrives++;
-                        }
-                    } else {
-                        // Far depth (z=1): parallel proc, thread/hyper, parallel proc
-                        if (dy == 1) {
-                            // Thread core or hyper-thread at y=1
-                            if (meta == BlockLoader.ECALC_META_THREAD_CORE) {
-                                installedThreadCores++;
-                            } else if (meta == BlockLoader.ECALC_META_HYPER_THREAD) {
-                                installedHyperThreads++;
-                            } else {
-                                return false;
-                            }
-                        } else {
-                            // Parallel processors at y=0 and y=2
-                            if (meta != BlockLoader.ECALC_META_PARALLEL_PROC) return false;
-                            installedParallelProcessors++;
-                        }
-                    }
+                    net.minecraft.block.Block b = base.getWorld()
+                        .getBlock(cx + dx, cy + dy, dz);
+                    int m = base.getWorld()
+                        .getBlockMetadata(cx + dx, cy + dy, dz);
+                    if (b != BlockLoader.ecalculatorBlocks || m != BlockLoader.ECALC_META_CASING) return false;
                 }
             }
         }
-
         return true;
     }
 
