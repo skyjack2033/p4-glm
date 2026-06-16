@@ -5,6 +5,7 @@ import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -184,40 +185,28 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     @Override
     public void construct(ItemStack stackSize, boolean hintsOnly) {
         // Build a minimal structure: fixed section + 1 segment + end cap
-        // The structure extends in the -X direction from the controller
-        int baseX = getBaseMetaTileEntity().getXCoord();
-        int baseY = getBaseMetaTileEntity().getYCoord();
-        int baseZ = getBaseMetaTileEntity().getZCoord();
+        // Controller is at corner of 2x3x2 fixed section
+        // Structure extends in the -X direction from the controller
+        int cx = getBaseMetaTileEntity().getXCoord();
+        int cy = getBaseMetaTileEntity().getYCoord();
+        int cz = getBaseMetaTileEntity().getZCoord();
 
-        // Build the 3x3x3 fixed section
-        buildFixedSection(baseX, baseY, baseZ, hintsOnly);
-
-        // Build 1 segment (3 high x 2 deep x 1 wide)
-        buildSegment(baseX - 3, baseY, baseZ, hintsOnly);
-
-        // Build the end cap (3 high x 2 deep x 1 wide, all casings)
-        buildEndCap(baseX - 5, baseY, baseZ, hintsOnly);
-    }
-
-    private void buildFixedSection(int cx, int cy, int cz, boolean hintsOnly) {
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    int wx = cx + dx;
-                    int wy = cy + dy;
-                    int wz = cz + dz;
-
+        // Build the 2x3x2 fixed section (controller at 0,0,0)
+        // x=0..1, y=-1..1, z=0..1
+        for (int dx = 0; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = 0; dz <= 1; dz++) {
                     // Controller position - skip
                     if (dx == 0 && dy == 0 && dz == 0) continue;
 
-                    // ME channel at (0, -1, 1) relative to controller
-                    if (dx == 0 && dy == -1 && dz == 1) {
+                    // ME channel at (1, -1, 1)
+                    if (dx == 1 && dy == -1 && dz == 1) {
                         if (!hintsOnly) {
                             getBaseMetaTileEntity().getWorld()
                                 .setBlock(
-                                    wx,
-                                    wy,
-                                    wz,
+                                    cx + dx,
+                                    cy + dy,
+                                    cz + dz,
                                     BlockLoader.estorageBlocks,
                                     BlockLoader.ESTORAGE_META_ME_CHANNEL,
                                     2);
@@ -228,42 +217,42 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
                     // All other positions: casings
                     if (!hintsOnly) {
                         getBaseMetaTileEntity().getWorld()
-                            .setBlock(wx, wy, wz, BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING, 2);
+                            .setBlock(
+                                cx + dx,
+                                cy + dy,
+                                cz + dz,
+                                BlockLoader.estorageBlocks,
+                                BlockLoader.ESTORAGE_META_CASING,
+                                2);
                     }
                 }
             }
         }
-    }
 
-    private void buildSegment(int ox, int oy, int oz, boolean hintsOnly) {
-        // Segment: 3 high x 2 deep x 1 wide
-        // Near depth (dx=0): cell drives at y=0,2; cell drive at y=1
-        // Far depth (dx=1): energy cells at y=0,2; vent at y=1
+        // Build 1 segment at x=-2..-1, y=-1..1, z=0..1
+        // Near (x=-1): cell drives at y=-1,0,1
+        // Far (x=-2): energy cells at y=-1,1; vent at y=0
         for (int dy = -1; dy <= 1; dy++) {
-            // Near depth
             if (!hintsOnly) {
                 getBaseMetaTileEntity().getWorld()
-                    .setBlock(ox, oy + dy, oz, BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CELL_DRIVE, 2);
+                    .setBlock(cx - 1, cy + dy, cz, BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CELL_DRIVE, 2);
             }
-            // Far depth
             int meta = (dy == 0) ? BlockLoader.ESTORAGE_META_VENT : BlockLoader.ESTORAGE_META_ENERGY_CELL;
             if (!hintsOnly) {
                 getBaseMetaTileEntity().getWorld()
-                    .setBlock(ox - 1, oy + dy, oz, BlockLoader.estorageBlocks, meta, 2);
+                    .setBlock(cx - 2, cy + dy, cz, BlockLoader.estorageBlocks, meta, 2);
             }
         }
-    }
 
-    private void buildEndCap(int ox, int oy, int oz, boolean hintsOnly) {
-        // End cap: 3 high x 2 deep x 1 wide, all casings
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dd = 0; dd < 2; dd++) {
+        // Build end cap at x=-3..-4, y=-1..1, z=0..1 (all casings)
+        for (int dx = -3; dx >= -4; dx--) {
+            for (int dy = -1; dy <= 1; dy++) {
                 if (!hintsOnly) {
                     getBaseMetaTileEntity().getWorld()
                         .setBlock(
-                            ox - dd,
-                            oy + dy,
-                            oz,
+                            cx + dx,
+                            cy + dy,
+                            cz,
                             BlockLoader.estorageBlocks,
                             BlockLoader.ESTORAGE_META_CASING,
                             2);
@@ -288,49 +277,68 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             return false;
         }
 
-        int controllerX = aBaseMetaTileEntity.getXCoord();
-        int controllerY = aBaseMetaTileEntity.getYCoord();
-        int controllerZ = aBaseMetaTileEntity.getZCoord();
+        int cx = aBaseMetaTileEntity.getXCoord();
+        int cy = aBaseMetaTileEntity.getYCoord();
+        int cz = aBaseMetaTileEntity.getZCoord();
 
-        // Step 1: Validate the fixed 3x3x3 section.
-        // The controller is at local (1,1,1) of the 3x3x3 section, so origin is always -1.
-        int fixedX = controllerX - 1;
-        int fixedY = controllerY - 1;
-        int fixedZ = controllerZ - 1;
+        // Step 1: Validate the fixed 2x3x2 section.
+        // Controller is at (0,0,0), section spans x=0..1, y=-1..1, z=0..1
+        // ME channel at (1,-1,1), all others are casings
+        for (int dx = 0; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = 0; dz <= 1; dz++) {
+                    // Controller position - skip
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
 
-        // Segments extend opposite to the controller's front facing direction.
-        // If controller faces NORTH, segments extend SOUTH (behind the controller).
-        ForgeDirection scanDir = aBaseMetaTileEntity.getFrontFacing()
-            .getOpposite();
+                    Block block = aBaseMetaTileEntity.getWorld()
+                        .getBlock(cx + dx, cy + dy, cz + dz);
+                    int meta = aBaseMetaTileEntity.getWorld()
+                        .getBlockMetadata(cx + dx, cy + dy, cz + dz);
 
-        if (!validateFixedSection(aBaseMetaTileEntity, fixedX, fixedY, fixedZ, scanDir)) {
+                    // ME channel at (1, -1, 1)
+                    if (dx == 1 && dy == -1 && dz == 1) {
+                        if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_ME_CHANNEL) {
+                            return false;
+                        }
+                        continue;
+                    }
+
+                    // All other positions: casings
+                    if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_CASING) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // Step 2: Scan for segments extending in -X direction
+        // Segments start at x=-1 (adjacent to fixed section)
+        int segX = cx - 1;
+        int count = 0;
+
+        while (count < MAX_SEGMENTS) {
+            // Check if this is a valid segment (3 high x 1 wide x 1 deep)
+            if (!validateSegment(aBaseMetaTileEntity, segX, cy, cz)) {
+                break;
+            }
+            count++;
+            segX -= 1; // Each segment is 1 block deep
+        }
+
+        if (count < MIN_SEGMENTS) {
             return false;
         }
 
-        // Step 2: Scan outward from the fixed section for repeating segments.
-        // Segments start one block past the front face of the fixed section.
-        // The fixed section is 3x3x3, so front face is at origin + 3 in the scan direction.
-        // Segments start at origin + 3 (for positive) or origin - 1 (for negative).
-        int segmentEdgeX = fixedX + (scanDir.offsetX > 0 ? 3 : (scanDir.offsetX < 0 ? -1 : 1));
-        int segmentEdgeY = fixedY + (scanDir.offsetY > 0 ? 3 : (scanDir.offsetY < 0 ? -1 : 1));
-        int segmentEdgeZ = fixedZ + (scanDir.offsetZ > 0 ? 3 : (scanDir.offsetZ < 0 ? -1 : 1));
+        segmentCount = count;
 
-        ScanResult result = scanSegments(aBaseMetaTileEntity, segmentEdgeX, segmentEdgeY, segmentEdgeZ, scanDir);
-
-        if (!result.valid || result.count < MIN_SEGMENTS) {
-            return false;
-        }
-
-        segmentCount = result.count;
-
-        // Step 3: Validate the end cap after the last segment
-        if (!validateEndCap(aBaseMetaTileEntity, result.endX, result.endY, result.endZ, scanDir)) {
+        // Step 3: Validate end cap (3 high x 2 deep x 1 wide, all casings)
+        if (!validateEndCap(aBaseMetaTileEntity, segX, cy, cz)) {
             return false;
         }
 
         // Ensure cellStacks list has entries for all installed cell drives
         while (cellStacks.size() < installedCellDrives) {
-            cellStacks.add(null); // Placeholder - players insert cells via GUI
+            cellStacks.add(null);
         }
         while (cellStacks.size() > installedCellDrives) {
             cellStacks.remove(cellStacks.size() - 1);
@@ -341,249 +349,41 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         return true;
     }
 
-    // =========================================================================
-    // Structure Validation - Fixed Section
-    // =========================================================================
-
     /**
-     * Validate the fixed 3x3x3 section at the given origin. The scan direction determines which
-     * face is the "front" (where segments will extend from) and which corner gets the ME channel.
-     *
-     * <p>
-     * Layout (relative to origin, with scanDir as "front"):
-     * 
-     * <pre>
-     * Layer y=0 (bottom): CCC / ... / CMC   M = ME channel at front-right corner
-     * Layer y=1 (middle): CCC / CEC / CCC   E = controller at center
-     * Layer y=2 (top):    CCC / CCC / CCC
-     * </pre>
-     *
-     * @return true if the section is valid
+     * Validate a single segment at the given position.
+     * Segment is 3 high (y=-1..1) x 1 wide (z=0) x 1 deep (x=segX)
+     * Cell drives at y=-1,1; cell drive at y=0
      */
-    private boolean validateFixedSection(IGregTechTileEntity base, int ox, int oy, int oz, ForgeDirection scanDir) {
+    private boolean validateSegment(IGregTechTileEntity base, int sx, int cy, int cz) {
+        for (int dy = -1; dy <= 1; dy++) {
+            Block block = base.getWorld()
+                .getBlock(sx, cy + dy, cz);
+            int meta = base.getWorld()
+                .getBlockMetadata(sx, cy + dy, cz);
 
-        if (base.getWorld() == null) return false;
-
-        // Calculate the local coordinates for the front face and right face.
-        // Front face: the face at the maximum offset in the scan direction.
-        // Right face: perpendicular to front, on the right when looking at the front face.
-        int frontLocal = (scanDir.offsetX + scanDir.offsetZ) > 0 ? 2 : 0;
-        ForgeDirection rightDir = getRightDirection(scanDir);
-        int rightLocal = (rightDir.offsetX + rightDir.offsetZ) > 0 ? 2 : 0;
-
-        // Validate all 27 positions in the 3x3x3 section
-        for (int dy = 0; dy < 3; dy++) {
-            for (int dz = 0; dz < 3; dz++) {
-                for (int dx = 0; dx < 3; dx++) {
-                    int wx = ox + dx;
-                    int wy = oy + dy;
-                    int wz = oz + dz;
-
-                    // Layer y=1, center position: controller
-                    if (dy == 1 && dz == 1 && dx == 1) {
-                        if (!isControllerBlock(base, wx, wy, wz)) {
-                            return false;
-                        }
-                        continue;
-                    }
-
-                    // Layer y=0, front-right corner: ME channel
-                    // Front face is at frontLocal in the scan axis.
-                    // Right face is at rightLocal in the perpendicular axis.
-                    boolean onFrontFace = isOnFace(dx, dz, scanDir, frontLocal);
-                    boolean onRightFace = isOnFace(dx, dz, rightDir, rightLocal);
-                    if (dy == 0 && onFrontFace && onRightFace) {
-                        if (!isMEChannelBlock(base, wx, wy, wz)) {
-                            return false;
-                        }
-                        continue;
-                    }
-
-                    // All other positions: casings
-                    if (!isCasingBlock(base, wx, wy, wz)) {
-                        return false;
-                    }
-                }
-            }
+            if (block != BlockLoader.estorageBlocks) return false;
+            if (meta != BlockLoader.ESTORAGE_META_CELL_DRIVE) return false;
+            installedCellDrives++;
         }
-
         return true;
     }
-
-    /**
-     * Check if the local (dx, dz) position is on the face defined by the given direction at the
-     * specified local offset.
-     */
-    private boolean isOnFace(int dx, int dz, ForgeDirection dir, int localOffset) {
-        if (dir.offsetX != 0) {
-            return dx == localOffset;
-        } else if (dir.offsetZ != 0) {
-            return dz == localOffset;
-        }
-        return false;
-    }
-
-    // =========================================================================
-    // Structure Validation - Repeating Segments
-    // =========================================================================
-
-    /**
-     * Scan outward from the segment edge for repeating segments.
-     *
-     * <p>
-     * Each segment is 3 high x 2 deep x 1 wide, positioned at the center column of the
-     * fixed section's cross-section:
-     * 
-     * <pre>
-     * Near depth: .E. / .D. / .E.   (energy cells at y=0,y=2; cell drive at y=1)
-     * Far depth:  .D. / .V. / .D.   (cell drives at y=0,y=2; vent at y=1)
-     * </pre>
-     *
-     * @return A ScanResult containing validity, count, and end position
-     */
-    private ScanResult scanSegments(IGregTechTileEntity base, int startX, int startY, int startZ,
-        ForgeDirection scanDir) {
-
-        int count = 0;
-        int currentX = startX;
-        int currentY = startY;
-        int currentZ = startZ;
-
-        while (count < MAX_SEGMENTS) {
-            if (!validateSegment(base, currentX, currentY, currentZ, scanDir)) {
-                break;
-            }
-            count++;
-            // Advance to the next segment position (2 blocks deep in scan direction)
-            currentX += scanDir.offsetX * 2;
-            currentY += scanDir.offsetY * 2;
-            currentZ += scanDir.offsetZ * 2;
-        }
-
-        return new ScanResult(count >= MIN_SEGMENTS, count, currentX, currentY, currentZ);
-    }
-
-    /**
-     * Validate a single repeating segment at the given position.
-     *
-     * @return true if the segment is valid
-     */
-    private boolean validateSegment(IGregTechTileEntity base, int ox, int oy, int oz, ForgeDirection scanDir) {
-
-        if (base.getWorld() == null) return false;
-
-        // Near depth block (first position in scan direction)
-        int nearX = ox;
-        int nearY = oy;
-        int nearZ = oz;
-
-        // Far depth block (second position in scan direction)
-        int farX = ox + scanDir.offsetX;
-        int farY = oy + scanDir.offsetY;
-        int farZ = oz + scanDir.offsetZ;
-
-        // Validate near depth column (z=0, 3 high)
-        // y=0: cell drive
-        if (!isCellDriveBlock(base, nearX, nearY, nearZ)) return false;
-        installedCellDrives++;
-
-        // y=1: cell drive
-        if (!isCellDriveBlock(base, nearX, nearY + 1, nearZ)) return false;
-        installedCellDrives++;
-
-        // y=2: cell drive
-        if (!isCellDriveBlock(base, nearX, nearY + 2, nearZ)) return false;
-        installedCellDrives++;
-
-        // Validate far depth column (z=1, 3 high)
-        // y=0: energy cell
-        if (!isEnergyCellBlock(base, farX, farY, farZ)) return false;
-        installedEnergyCells++;
-
-        // y=1: vent
-        if (!isVentBlock(base, farX, farY + 1, farZ)) return false;
-        installedVents++;
-
-        // y=2: energy cell
-        if (!isEnergyCellBlock(base, farX, farY + 2, farZ)) return false;
-        installedEnergyCells++;
-
-        return true;
-    }
-
-    // =========================================================================
-    // Structure Validation - End Cap
-    // =========================================================================
 
     /**
      * Validate the end cap (3 high x 2 deep x 1 wide, all casings).
-     * The depth direction follows the scan direction.
-     *
-     * @return true if the end cap is valid
      */
-    private boolean validateEndCap(IGregTechTileEntity base, int ox, int oy, int oz, ForgeDirection scanDir) {
-
-        if (base.getWorld() == null) return false;
-
-        // End cap is 1 wide x 2 deep x 3 high, all casings
-        for (int dy = 0; dy < 3; dy++) {
-            for (int dd = 0; dd < 2; dd++) {
-                int wx = ox + scanDir.offsetX * dd;
-                int wy = oy + dy;
-                int wz = oz + scanDir.offsetZ * dd;
-                if (!isCasingBlock(base, wx, wy, wz)) {
+    private boolean validateEndCap(IGregTechTileEntity base, int ox, int cy, int cz) {
+        for (int dx = 0; dx >= -1; dx--) {
+            for (int dy = -1; dy <= 1; dy++) {
+                Block block = base.getWorld()
+                    .getBlock(ox + dx, cy + dy, cz);
+                int meta = base.getWorld()
+                    .getBlockMetadata(ox + dx, cy + dy, cz);
+                if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_CASING) {
                     return false;
                 }
             }
         }
-
         return true;
-    }
-
-    // =========================================================================
-    // Block Type Checkers (using BlockLoader references)
-    // =========================================================================
-
-    private boolean isControllerBlock(IGregTechTileEntity base, int x, int y, int z) {
-        // The controller position is validated by the structure scan itself.
-        // Just verify the block at that position is not air.
-        return base.getWorld()
-            .getBlock(x, y, z) != net.minecraft.init.Blocks.air;
-    }
-
-    private boolean isCasingBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld()
-                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CASING;
-    }
-
-    private boolean isCellDriveBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld()
-                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_CELL_DRIVE;
-    }
-
-    private boolean isEnergyCellBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld()
-                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ENERGY_CELL;
-    }
-
-    private boolean isVentBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld()
-                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_VENT;
-    }
-
-    private boolean isMEChannelBlock(IGregTechTileEntity base, int x, int y, int z) {
-        return base.getWorld()
-            .getBlock(x, y, z) == BlockLoader.estorageBlocks
-            && base.getWorld()
-                .getBlockMetadata(x, y, z) == BlockLoader.ESTORAGE_META_ME_CHANNEL;
     }
 
     // =========================================================================
@@ -1034,27 +834,4 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         return bytes + "B";
     }
 
-    // =========================================================================
-    // Inner Classes
-    // =========================================================================
-
-    /**
-     * Result of scanning for repeating segments.
-     */
-    private static class ScanResult {
-
-        final boolean valid;
-        final int count;
-        final int endX;
-        final int endY;
-        final int endZ;
-
-        ScanResult(boolean valid, int count, int endX, int endY, int endZ) {
-            this.valid = valid;
-            this.count = count;
-            this.endX = endX;
-            this.endY = endY;
-            this.endZ = endZ;
-        }
-    }
 }
