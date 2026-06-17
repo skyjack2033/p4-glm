@@ -57,11 +57,19 @@ public class ECalculatorCraftingHandler {
     public void processCraftingTick() {
         if (!active) return;
         if (controller == null) return;
+        if (!controller.isVCPUActive()) return;
 
         // The crafting acceleration is handled by the controller's
         // ICraftingCPU implementation (processCraftingJobs in onPostTick).
         // This handler provides the interface for future expansion
         // (e.g., custom acceleration modes, coolant-based boosts).
+        int activeJobs = controller.getActiveJobCount();
+        if (activeJobs > 0) {
+            ECOAEExtension.LOG.debug(
+                "ECalculator crafting handler: {} active jobs, parallel={}",
+                activeJobs,
+                getParallelCraftingCount());
+        }
     }
 
     /**
