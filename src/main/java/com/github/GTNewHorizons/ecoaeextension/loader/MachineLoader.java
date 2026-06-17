@@ -1,6 +1,8 @@
 package com.github.GTNewHorizons.ecoaeextension.loader;
 
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
+import com.github.GTNewHorizons.ecoaeextension.machine.HatchAEPatternProvider;
+import com.github.GTNewHorizons.ecoaeextension.machine.HatchAEStorageBus;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.ecalculator.ECalculatorController;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.efabricator.EFabricatorController;
 import com.github.GTNewHorizons.ecoaeextension.multiblock.estorage.EStorageController;
@@ -57,10 +59,12 @@ public class MachineLoader {
         new EFabricatorController(ID_EFABRICATOR_CONTROLLER_L6, "ECOAE_EFabricator_L6", "EFabricator Controller L6");
         new EFabricatorController(ID_EFABRICATOR_CONTROLLER_L9, "ECOAE_EFabricator_L9", "EFabricator Controller L9");
 
-        // Custom AE2 hatches - TODO: implement after base multiblocks are working
-        // new HatchAEStorageBus(ID_HATCH_AE_STORAGE_BUS, "ECOAE_AE_Storage_Bus", "AE Storage Bus Hatch");
-        // new HatchAEPatternProvider(ID_HATCH_AE_PATTERN_PROVIDER, "ECOAE_AE_Pattern_Provider", "AE Pattern Provider
-        // Hatch");
+        // Custom AE2 hatches
+        new HatchAEStorageBus(ID_HATCH_AE_STORAGE_BUS, "ECOAE_AE_Storage_Bus", "AE Storage Bus Hatch");
+        new HatchAEPatternProvider(
+            ID_HATCH_AE_PATTERN_PROVIDER,
+            "ECOAE_AE_Pattern_Provider",
+            "AE Pattern Provider Hatch");
 
         ECOAEExtension.LOG.info("ECOAE Extension machines registered.");
     }

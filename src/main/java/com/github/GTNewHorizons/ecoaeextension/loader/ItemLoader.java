@@ -53,8 +53,16 @@ public class ItemLoader {
         ECOAEExtension.LOG.info("ECOAE Extension items registered.");
     }
 
+    /**
+     * Register item renderers. In GTNH 1.7.10, simple items use the default
+     * Forge rendering with icons registered via IIconRegister in each item class.
+     * Custom IItemRenderer implementations are only needed for complex models.
+     */
     public static void registerItemRenderers() {
-        // TODO: Register item renderers when items are implemented
+        // Simple items (storage cells, calculator cells) use default Forge rendering.
+        // Textures are registered via registerIcons() in each Item class.
+        // No custom IItemRenderer needed for standard item rendering.
+        ECOAEExtension.LOG.info("ECOAE Extension item renderers registered.");
     }
 
     /**
