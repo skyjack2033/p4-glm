@@ -92,7 +92,11 @@ This document tracks the migration of **NovaEngineering-ECOAEExtension** from Mi
 - 19 block textures (PNG) across 3 subsystems
 - 3 GUI background textures
 
-**Total: 25 Java source files + resources**
+### Custom Hatches (2 files)
+- `machine/HatchAEStorageBus.java` - AE2 Storage Bus hatch (IGridProxyable, wire cutter, NBT persistence)
+- `machine/HatchAEPatternProvider.java` - AE2 Pattern Provider hatch (ICraftingProvider, pattern management)
+
+**Total: 27 Java source files + resources**
 
 ---
 
@@ -161,8 +165,6 @@ dependencies {
 
 ### Remaining (Polish & Testing)
 - [ ] Actual in-game testing with GTNH dev environment
-- [ ] Custom AE2 hatches (HatchAEStorageBus, HatchAEPatternProvider)
-- [ ] Item renderer registration
 - [ ] Custom block textures (optional - currently using GT5 defaults)
 
 ---

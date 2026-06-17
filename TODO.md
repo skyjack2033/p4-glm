@@ -20,10 +20,12 @@
 - [x] RecipeLoader with 19 assembler recipes
 
 ### AE2 Integration
-- [x] AE2StorageHelper with GTNH AE2 rv1 API
+- [x] AE2StorageHelper with GTNH AE2 rv3 API
 - [x] EStorageCellHandler with proper ICellHandler signatures
 - [x] EStorageCellInventory - full ICellInventory implementation (NBT-backed, byte accounting)
 - [x] EFabricatorPatternHandler - full ICraftingProvider implementation (pattern execution pipeline)
+- [x] HatchAEStorageBus - AE2 Storage Bus hatch for EStorage (IGridProxyable, wire cutter support)
+- [x] HatchAEPatternProvider - AE2 Pattern Provider hatch for EFabricator (ICraftingProvider, pattern management)
 
 ### GUI System
 - [x] ECOAEGuiHandler with MetaTileEntity cast pattern
