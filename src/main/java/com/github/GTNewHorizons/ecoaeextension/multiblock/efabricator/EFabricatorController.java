@@ -51,6 +51,7 @@ import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
  * Structure extends opposite to the controller's front face. Segments are added linearly
  * until an end cap of solid casings is found.
  */
+@SuppressWarnings("deprecation")
 public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFabricatorController> {
 
     // =========================================================================

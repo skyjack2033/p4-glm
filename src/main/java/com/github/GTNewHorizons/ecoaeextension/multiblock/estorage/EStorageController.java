@@ -53,6 +53,7 @@ import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
  * <li>Storage capacity scales with energy hatch voltage and stackable layer count</li>
  * </ul>
  */
+@SuppressWarnings("deprecation")
 public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorageController>
     implements ICellProvider, appeng.api.storage.ISaveProvider {
 

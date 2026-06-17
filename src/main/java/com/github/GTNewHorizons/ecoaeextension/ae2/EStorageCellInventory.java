@@ -27,6 +27,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 /**
  * NBT-backed cell inventory for ECOAE storage cells.
  *

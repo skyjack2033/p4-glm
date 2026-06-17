@@ -49,6 +49,7 @@ import appeng.me.helpers.AENetworkProxy;
  * <li>OC III: 8x speed (drains 4x energy per tick)</li>
  * </ul>
  */
+@SuppressWarnings("deprecation")
 public class EFabricatorPatternHandler implements ICraftingProvider {
 
     private static final String NBT_ACTIVE_JOBS = "EF_ActiveJobs";
