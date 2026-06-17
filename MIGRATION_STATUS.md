@@ -130,7 +130,7 @@ dependencies {
 | 19500-19502 | EStorage Controllers (L4/L6/L9) |
 | 19510-19512 | ECalculator Controllers (L4/L6/L9) |
 | 19520-19522 | EFabricator Controllers (L4/L6/L9) |
-| 19530-19531 | Custom AE2 Hatches (reserved, not yet implemented) |
+| 19530-19531 | Custom AE2 Hatches (HatchAEStorageBus, HatchAEPatternProvider) |
 
 ---
 
@@ -163,9 +163,22 @@ dependencies {
 - [x] Config.java proper long value loading for cell drive capacities
 - [x] All 66 unit tests passing
 
-### Remaining (Polish & Testing)
-- [ ] Actual in-game testing with GTNH dev environment
-- [ ] Custom block textures (optional - currently using GT5 defaults)
+### Known Design Limitations
+- ECalculator and EFabricator use fixed 3x3x3 structures (not stackable like EStorage)
+- Component counts (thread cores, cell drives, pattern buses, etc.) are based on fixed structure defaults
+- Original 1.12.2 mod may have had more complex structures with dedicated component positions
+- Item textures are patterned placeholders (functional but not final artwork)
+
+### Remaining (Requires In-Game Testing)
+- [ ] Verify mod loads without crash in GTNH 1.7.10
+- [ ] Test EStorage 2x2xN stackable structure formation
+- [ ] Test ECalculator 3x3x3 fixed structure formation
+- [ ] Test EFabricator 3x3x3 fixed structure formation
+- [ ] Test AE2 network connectivity and cell operations
+- [ ] Test recipe registration in NEI/assembler
+- [ ] Test GT5U hatch integration (energy, maintenance, debug)
+- [ ] Verify tier detection from energy hatches
+- [ ] Test storage capacity scaling with segments/tier
 
 ---
 
