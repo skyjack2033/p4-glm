@@ -159,9 +159,10 @@ ecoaeext.tooltip.virtual_cpus=为AE2合成提供虚拟CPU
 
 ecoaeext.tooltip.estorage_controller=EStorage 控制器
 ecoaeext.tooltip.estorage_desc=可扩展的AE2集成存储系统
-ecoaeext.tooltip.estorage_tier_l4=L4（HV）：%s，%s个驱动器
-ecoaeext.tooltip.estorage_tier_l6=L6（IV）：%s，%s个驱动器
-ecoaeext.tooltip.estorage_tier_l9=L9（LuV）：%s，%s个驱动器
+ecoaeext.tooltip.estorage_capacity_scaling=存储容量随能量仓电压和堆叠层数提升
+ecoaeext.tooltip.estorage_tier_l4=L4（HV）：每层%s，最多%s个驱动器
+ecoaeext.tooltip.estorage_tier_l6=L6（IV）：每层%s，最多%s个驱动器
+ecoaeext.tooltip.estorage_tier_l9=L9（LuV）：每层%s，最多%s个驱动器
 
 # ============================================================================
 # 提示信息 - ECalculator 控制器
@@ -200,11 +201,12 @@ ecoaeext.tooltip.oc_mode3=  超频III：%s速度，%s EU
 # ============================================================================
 
 ecoaeext.tooltip.structure.estorage_title=EStorage多方块结构：
-ecoaeext.tooltip.structure.estorage_fixed=- 3x3x3固定区域，包含控制器和ME通道
-ecoaeext.tooltip.structure.estorage_segments=- 重复段（最少%s，最多%s）：
-ecoaeext.tooltip.structure.estorage_segment_info=  每段包含：单元驱动器、能量单元和通风口
-ecoaeext.tooltip.structure.estorage_endcap=- 远端为外壳端盖
-ecoaeext.tooltip.structure.estorage_tier=- 等级由能量仓电压决定（L4/L6/L9）
+ecoaeext.tooltip.structure.estorage_fixed=- 底层（2x2）：控制器 + ME通道 + 外壳
+ecoaeext.tooltip.structure.estorage_segments=- 可堆叠层（最少%s，最多%s层）：
+ecoaeext.tooltip.structure.estorage_segment_info=  每层（2x2）：单元驱动器、能量单元、通风口或外壳
+ecoaeext.tooltip.structure.estorage_endcap=- 顶层（2x2）：外壳端盖
+ecoaeext.tooltip.structure.estorage_tier=- 等级由能量仓电压决定（L4/L6/L9），容量随层数提升
+ecoaeext.tooltip.structure.estorage_hatch=- 支持GT5U能量仓、维护仓等（替换外壳位置）
 
 # ============================================================================
 # 聊天消息

@@ -318,9 +318,9 @@ public class StructureValidationTest {
 
     @Test
     public void testECalculatorThreadLimit_L9() {
-        int baseThreadCores = Config.eCalculatorThreadsPerCoreL9; // 16
+        int baseThreadCores = Config.eCalculatorThreadsPerCoreL9; // 4
         int maxThreads = baseThreadCores * 2;
-        assertEquals(32, maxThreads);
+        assertEquals(8, maxThreads);
     }
 
     @Test
@@ -423,9 +423,10 @@ public class StructureValidationTest {
 
     @Test
     public void testConfigEStorageCapacity() {
-        assertEquals("L4 capacity", 1_000_000L, Config.eStorageEnergyCellCapacityL4);
-        assertEquals("L6 capacity", 16_000_000L, Config.eStorageEnergyCellCapacityL6);
-        assertEquals("L9 capacity", 256_000_000L, Config.eStorageEnergyCellCapacityL9);
+        // Energy cell capacity per segment (EU) - scales with tier
+        assertEquals("L4 capacity", 2_500_000L, Config.eStorageEnergyCellCapacityL4);
+        assertEquals("L6 capacity", 25_000_000L, Config.eStorageEnergyCellCapacityL6);
+        assertEquals("L9 capacity", 250_000_000L, Config.eStorageEnergyCellCapacityL9);
 
         // Each tier should have strictly more capacity
         assertTrue(Config.eStorageEnergyCellCapacityL4 < Config.eStorageEnergyCellCapacityL6);
@@ -433,12 +434,13 @@ public class StructureValidationTest {
     }
 
     @Test
-    public void testConfigEStorageMaxCellDrives() {
-        assertEquals("L4 max drives", 4, Config.eStorageCellDriveCapacityL4);
-        assertEquals("L6 max drives", 8, Config.eStorageCellDriveCapacityL6);
-        assertEquals("L9 max drives", 16, Config.eStorageCellDriveCapacityL9);
+    public void testConfigEStorageCellDriveCapacity() {
+        // Cell drive capacity in bytes - determines max storage per drive
+        assertEquals("L4 cell drive bytes", 65_536_000L, Config.eStorageCellDriveCapacityL4);
+        assertEquals("L6 cell drive bytes", 1_048_576_000L, Config.eStorageCellDriveCapacityL6);
+        assertEquals("L9 cell drive bytes", 16_777_216_000L, Config.eStorageCellDriveCapacityL9);
 
-        // Each tier should allow more cell drives
+        // Each tier should allow more storage per drive
         assertTrue(Config.eStorageCellDriveCapacityL4 < Config.eStorageCellDriveCapacityL6);
         assertTrue(Config.eStorageCellDriveCapacityL6 < Config.eStorageCellDriveCapacityL9);
     }
@@ -824,18 +826,18 @@ public class StructureValidationTest {
     @Test
     public void testTierConfigDelegateToCorrectValues() {
         // L4 tier should use L4 config values
-        assertEquals(Config.eStorageCellDriveCapacityL4, ECOAETier.L4.getEnergyCellCapacity());
-        assertEquals(Config.eCalculatorThreadsPerCoreL4, ECOAETier.L4.getCalculatorParallelProc());
+        assertEquals(Config.eStorageEnergyCellCapacityL4, ECOAETier.L4.getEnergyCellCapacity());
+        assertEquals(Config.eCalculatorParallelProcL4, ECOAETier.L4.getCalculatorParallelProc());
         assertEquals(Config.eFabricatorParallelProcL4, ECOAETier.L4.getFabricatorParallelProc());
 
         // L6 tier should use L6 config values
-        assertEquals(Config.eStorageCellDriveCapacityL6, ECOAETier.L6.getEnergyCellCapacity());
-        assertEquals(Config.eCalculatorThreadsPerCoreL6, ECOAETier.L6.getCalculatorParallelProc());
+        assertEquals(Config.eStorageEnergyCellCapacityL6, ECOAETier.L6.getEnergyCellCapacity());
+        assertEquals(Config.eCalculatorParallelProcL6, ECOAETier.L6.getCalculatorParallelProc());
         assertEquals(Config.eFabricatorParallelProcL6, ECOAETier.L6.getFabricatorParallelProc());
 
         // L9 tier should use L9 config values
-        assertEquals(Config.eStorageCellDriveCapacityL9, ECOAETier.L9.getEnergyCellCapacity());
-        assertEquals(Config.eCalculatorThreadsPerCoreL9, ECOAETier.L9.getCalculatorParallelProc());
+        assertEquals(Config.eStorageEnergyCellCapacityL9, ECOAETier.L9.getEnergyCellCapacity());
+        assertEquals(Config.eCalculatorParallelProcL9, ECOAETier.L9.getCalculatorParallelProc());
         assertEquals(Config.eFabricatorParallelProcL9, ECOAETier.L9.getFabricatorParallelProc());
     }
 

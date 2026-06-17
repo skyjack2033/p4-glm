@@ -42,7 +42,7 @@ public class Config {
         debugMode = configuration
             .getBoolean("debugMode", Configuration.CATEGORY_GENERAL, debugMode, "Enable debug logging");
 
-        // EStorage
+        // EStorage - energy cell capacity per segment (EU). Values fit in int range.
         eStorageEnergyCellCapacityL4 = configuration
             .get(
                 "EStorage",
@@ -64,6 +64,32 @@ public class Config {
                 (int) eStorageEnergyCellCapacityL9,
                 "Energy cell capacity for L9 tier (EU)")
             .getInt();
+
+        // EStorage - cell drive capacity in bytes. These are long values stored as string.
+        eStorageCellDriveCapacityL4 = Long.parseLong(
+            configuration
+                .get(
+                    "EStorage",
+                    "eStorageCellDriveCapacityL4",
+                    String.valueOf(eStorageCellDriveCapacityL4),
+                    "Cell drive capacity for L4 tier (bytes)")
+                .getString());
+        eStorageCellDriveCapacityL6 = Long.parseLong(
+            configuration
+                .get(
+                    "EStorage",
+                    "eStorageCellDriveCapacityL6",
+                    String.valueOf(eStorageCellDriveCapacityL6),
+                    "Cell drive capacity for L6 tier (bytes)")
+                .getString());
+        eStorageCellDriveCapacityL9 = Long.parseLong(
+            configuration
+                .get(
+                    "EStorage",
+                    "eStorageCellDriveCapacityL9",
+                    String.valueOf(eStorageCellDriveCapacityL9),
+                    "Cell drive capacity for L9 tier (bytes)")
+                .getString());
 
         // ECalculator
         eCalculatorParallelProcL4 = configuration.getInt(

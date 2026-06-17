@@ -159,9 +159,10 @@ ecoaeext.tooltip.virtual_cpus=Provides virtual CPUs for AE2 crafting
 
 ecoaeext.tooltip.estorage_controller=EStorage Controller
 ecoaeext.tooltip.estorage_desc=Extendable AE2-integrated storage system
-ecoaeext.tooltip.estorage_tier_l4=L4 (HV): %s, %s drives
-ecoaeext.tooltip.estorage_tier_l6=L6 (IV): %s, %s drives
-ecoaeext.tooltip.estorage_tier_l9=L9 (LuV): %s, %s drives
+ecoaeext.tooltip.estorage_capacity_scaling=Storage capacity scales with energy hatch voltage and stackable layers
+ecoaeext.tooltip.estorage_tier_l4=L4 (HV): %s per layer, up to %s drives
+ecoaeext.tooltip.estorage_tier_l6=L6 (IV): %s per layer, up to %s drives
+ecoaeext.tooltip.estorage_tier_l9=L9 (LuV): %s per layer, up to %s drives
 
 # ============================================================================
 # Tooltip - ECalculator Controller
@@ -200,11 +201,12 @@ ecoaeext.tooltip.oc_mode3=  OC III: %s speed, %s EU
 # ============================================================================
 
 ecoaeext.tooltip.structure.estorage_title=EStorage Multiblock Structure:
-ecoaeext.tooltip.structure.estorage_fixed=- 3x3x3 fixed section with controller and ME channel
-ecoaeext.tooltip.structure.estorage_segments=- Repeating segments (min %s, max %s):
-ecoaeext.tooltip.structure.estorage_segment_info=  Each segment: cell drives, energy cells, and vents
-ecoaeext.tooltip.structure.estorage_endcap=- End cap of casings at the far end
-ecoaeext.tooltip.structure.estorage_tier=- Tier determined by energy hatch voltage (L4/L6/L9)
+ecoaeext.tooltip.structure.estorage_fixed=- Base layer (2x2): controller + ME channel + casings
+ecoaeext.tooltip.structure.estorage_segments=- Stackable layers (min %s, max %s):
+ecoaeext.tooltip.structure.estorage_segment_info=  Each layer (2x2): cell drives, energy cells, vents, or casings
+ecoaeext.tooltip.structure.estorage_endcap=- Top layer (2x2): casing end cap
+ecoaeext.tooltip.structure.estorage_tier=- Tier by energy hatch voltage (L4/L6/L9), capacity scales with layers
+ecoaeext.tooltip.structure.estorage_hatch=- Supports GT5U energy/maintenance hatches (replace casing positions)
 
 # ============================================================================
 # Chat Messages

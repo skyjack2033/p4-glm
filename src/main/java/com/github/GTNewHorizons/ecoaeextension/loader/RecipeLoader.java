@@ -36,9 +36,9 @@ public class RecipeLoader {
     private static void registerEStorageRecipes() {
         ItemStack casing = BlockLoader.getEStorageBlock(BlockLoader.ESTORAGE_META_CASING, 1);
 
-        // EStorage Casing: Steel plates (6) + HV Circuit + Emitter (HV)
+        // EStorage Casing: Stainless Steel plates (6) + HV Circuit + Emitter (HV)
         GTValues.RA.stdBuilder()
-            .itemInputs(getPlateStack(Materials.Steel, 6), getHVChip(), ItemList.Emitter_HV.get(1))
+            .itemInputs(getPlateStack(Materials.StainlessSteel, 6), getHVChip(), ItemList.Emitter_HV.get(1))
             .itemOutputs(casing)
             .eut(480)
             .duration(200)

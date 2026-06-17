@@ -24,6 +24,7 @@ import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
 import appeng.api.networking.IGrid;
+import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingMedium;
@@ -568,16 +569,17 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     /**
      * Recalculate total crafting storage from installed calculator cells.
      * Called when the structure forms or cells are changed.
+     *
+     * <p>Storage is estimated based on installed cell drives and tier.
+     * Each cell drive contributes storage bytes based on the tier's cell size.
+     * The actual cell items are not tracked individually (unlike EStorage).</p>
      */
     private void recalculateStorage() {
         totalStorageBytes = 0;
 
-        // Sum storage from all installed calculator cells in cell drives.
-        // TODO: Iterate over cell drive inventories and sum ItemCalculatorCell bytes.
-        // For now, estimate based on installed cell drives with default cell size.
-        //
-        // Each cell drive can hold one calculator cell.
-        // Default cell size depends on tier:
+        // Estimate storage based on installed cell drives and tier.
+        // Each cell drive contributes tier-appropriate storage bytes.
+        // Cell sizes by tier:
         // L4: 64M bytes per cell
         // L6: 1024M bytes per cell
         // L9: 16384M bytes per cell
@@ -659,6 +661,8 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     /**
      * Notify listeners that a crafting job has completed.
+     * Posts an MENetworkCraftingCpuChange event to the AE2 grid so that
+     * crafting monitors and terminals update their status.
      */
     private void notifyJobComplete(ActiveCraftingJob job) {
         ECOAEExtension.LOG.debug(
@@ -667,15 +671,18 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                 .getPattern()
                 .getDisplayName());
 
-        // Notify AE2 crafting monitors
-        @SuppressWarnings("rawtypes")
-        List<IMEMonitorHandlerReceiver> snapshot = listeners;
-        for (IMEMonitorHandlerReceiver listener : snapshot) {
+        // Notify AE2 grid about CPU state change
+        if (aeProxy != null && ae2Connected) {
             try {
-                // The listener interface uses postChange for updates
-                // TODO: Call the appropriate notification method on the listener
+                IGridNode node = aeProxy.getNode();
+                if (node != null) {
+                    IGrid grid = node.getGrid();
+                    if (grid != null) {
+                        grid.postEvent(new MENetworkCraftingCpuChange(node));
+                    }
+                }
             } catch (Exception e) {
-                ECOAEExtension.LOG.debug("Failed to notify crafting listener", e);
+                ECOAEExtension.LOG.debug("Failed to notify AE2 of job completion", e);
             }
         }
     }
