@@ -117,8 +117,8 @@ ecoaeext.overclock.name.mode3=超频III
 # ============================================================================
 
 ecoaeext.tier.l4=L4（HV - 512 EU/t）
-ecoaeext.tier.l6=L6（IV - 2048 EU/t）
-ecoaeext.tier.l9=L9（LuV - 8192 EU/t）
+ecoaeext.tier.l6=L6（IV - 8192 EU/t）
+ecoaeext.tier.l9=L9（LuV - 32768 EU/t）
 
 # ============================================================================
 # 配置

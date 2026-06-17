@@ -314,6 +314,7 @@ public class EFabricatorPatternHandler implements ICraftingProvider {
 
     @Override
     public ItemStack getCrafterIcon() {
+        if (controller.getBaseMetaTileEntity() == null) return null;
         gregtech.api.interfaces.metatileentity.IMetaTileEntity mte = controller.getBaseMetaTileEntity()
             .getMetaTileEntity();
         return mte != null ? mte.getStackForm(1) : null;

@@ -151,16 +151,16 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         switch (currentTier) {
             case L9:
                 baseCapacity = Config.eStorageEnergyCellCapacityL9;
-                maxCellDrives = (int) Config.eStorageCellDriveCapacityL9;
+                maxCellDrives = Config.eStorageMaxCellDrivesL9;
                 break;
             case L6:
                 baseCapacity = Config.eStorageEnergyCellCapacityL6;
-                maxCellDrives = (int) Config.eStorageCellDriveCapacityL6;
+                maxCellDrives = Config.eStorageMaxCellDrivesL6;
                 break;
             case L4:
             default:
                 baseCapacity = Config.eStorageEnergyCellCapacityL4;
-                maxCellDrives = (int) Config.eStorageCellDriveCapacityL4;
+                maxCellDrives = Config.eStorageMaxCellDrivesL4;
                 break;
         }
 

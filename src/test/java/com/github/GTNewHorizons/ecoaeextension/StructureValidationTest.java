@@ -72,19 +72,19 @@ public class StructureValidationTest {
     public void testFromVoltage_L4() {
         assertEquals(ECOAETier.L4, ECOAETier.fromVoltage(0));
         assertEquals(ECOAETier.L4, ECOAETier.fromVoltage(512));
-        assertEquals(ECOAETier.L4, ECOAETier.fromVoltage(2047));
+        assertEquals(ECOAETier.L4, ECOAETier.fromVoltage(8191));
     }
 
     @Test
     public void testFromVoltage_L6() {
-        assertEquals(ECOAETier.L6, ECOAETier.fromVoltage(2048));
-        assertEquals(ECOAETier.L6, ECOAETier.fromVoltage(4096));
-        assertEquals(ECOAETier.L6, ECOAETier.fromVoltage(8191));
+        assertEquals(ECOAETier.L6, ECOAETier.fromVoltage(8192));
+        assertEquals(ECOAETier.L6, ECOAETier.fromVoltage(16384));
+        assertEquals(ECOAETier.L6, ECOAETier.fromVoltage(32767));
     }
 
     @Test
     public void testFromVoltage_L9() {
-        assertEquals(ECOAETier.L9, ECOAETier.fromVoltage(8192));
+        assertEquals(ECOAETier.L9, ECOAETier.fromVoltage(32768));
         assertEquals(ECOAETier.L9, ECOAETier.fromVoltage(100000));
     }
 
@@ -95,8 +95,8 @@ public class StructureValidationTest {
     @Test
     public void testTierVoltageValues() {
         assertEquals("L4 voltage", 512L, ECOAETier.L4.voltage);
-        assertEquals("L6 voltage", 2048L, ECOAETier.L6.voltage);
-        assertEquals("L9 voltage", 8192L, ECOAETier.L9.voltage);
+        assertEquals("L6 voltage", 8192L, ECOAETier.L6.voltage);
+        assertEquals("L9 voltage", 32768L, ECOAETier.L9.voltage);
     }
 
     @Test
@@ -123,8 +123,8 @@ public class StructureValidationTest {
     @Test
     public void testTierVoltageForDisplay() {
         assertEquals("512 EU/t", ECOAETier.L4.getVoltageForDisplay());
-        assertEquals("2048 EU/t", ECOAETier.L6.getVoltageForDisplay());
-        assertEquals("8192 EU/t", ECOAETier.L9.getVoltageForDisplay());
+        assertEquals("8192 EU/t", ECOAETier.L6.getVoltageForDisplay());
+        assertEquals("32768 EU/t", ECOAETier.L9.getVoltageForDisplay());
     }
 
     @Test

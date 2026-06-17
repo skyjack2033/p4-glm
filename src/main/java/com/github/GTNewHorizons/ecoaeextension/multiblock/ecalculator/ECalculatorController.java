@@ -283,6 +283,12 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             return false;
         }
 
+        // Fixed 3x3x3 structure provides base component counts.
+        // Thread cores and cell drives are derived from the structure size.
+        installedThreadCores = Math.max(1, baseThreadCores);
+        installedCellDrives = Math.max(1, 4); // 4 cell drives in the fixed structure
+        installedParallelProcessors = Math.max(1, 2); // 2 parallel processors
+
         onStructureFormed();
         return true;
     }
@@ -443,7 +449,7 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     @Override
     public ItemStack getCrafterIcon() {
-        // Return the controller's item stack form as the crafter icon
+        if (getBaseMetaTileEntity() == null) return null;
         IMetaTileEntity mte = getBaseMetaTileEntity().getMetaTileEntity();
         if (mte != null) {
             return mte.getStackForm(1);
@@ -667,11 +673,16 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * crafting monitors and terminals update their status.
      */
     private void notifyJobComplete(ActiveCraftingJob job) {
-        ECOAEExtension.LOG.debug(
-            "ECalculator crafting job completed: {}",
-            job.getPattern()
-                .getPattern()
-                .getDisplayName());
+        if (job.getPattern() != null && job.getPattern()
+            .getPattern() != null) {
+            ECOAEExtension.LOG.debug(
+                "ECalculator crafting job completed: {}",
+                job.getPattern()
+                    .getPattern()
+                    .getDisplayName());
+        } else {
+            ECOAEExtension.LOG.debug("ECalculator crafting job completed (restored from save)");
+        }
 
         // Notify AE2 grid about CPU state change
         if (aeProxy != null && ae2Connected) {

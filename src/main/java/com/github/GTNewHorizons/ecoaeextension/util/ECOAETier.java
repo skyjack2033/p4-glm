@@ -8,9 +8,9 @@ import com.github.GTNewHorizons.ecoaeextension.Config;
  */
 public enum ECOAETier {
 
-    L4("L4", 3, 512, 1),
-    L6("L6", 5, 2048, 4),
-    L9("L9", 6, 8192, 16);
+    L4("L4", 3, 512, 1), // HV = 512 EU/t
+    L6("L6", 5, 8192, 4), // IV = 8192 EU/t
+    L9("L9", 6, 32768, 16); // LuV = 32768 EU/t
 
     public final String name;
     public final int voltageTier;
@@ -43,8 +43,8 @@ public enum ECOAETier {
      * @return The corresponding ECOAETier
      */
     public static ECOAETier fromVoltage(long voltage) {
-        if (voltage >= 8192) return L9;
-        if (voltage >= 2048) return L6;
+        if (voltage >= 32768) return L9; // LuV
+        if (voltage >= 8192) return L6; // IV
         return L4;
     }
 

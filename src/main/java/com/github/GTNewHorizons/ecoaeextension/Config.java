@@ -9,13 +9,18 @@ public class Config {
     // General
     public static boolean debugMode = false;
 
-    // EStorage - energy cell capacity per segment (RF -> EU, 1 EU = 4 RF)
-    public static long eStorageEnergyCellCapacityL4 = 2_500_000; // 10M RF / 4
-    public static long eStorageEnergyCellCapacityL6 = 25_000_000; // 100M RF / 4
-    public static long eStorageEnergyCellCapacityL9 = 250_000_000; // 1B RF / 4
-    public static long eStorageCellDriveCapacityL4 = 65_536_000L; // 64M * 1024 bytes
-    public static long eStorageCellDriveCapacityL6 = 1_048_576_000L; // 1024M * 1024 bytes
-    public static long eStorageCellDriveCapacityL9 = 16_777_216_000L; // 16384M * 1024 bytes
+    // EStorage - energy cell capacity per segment (EU)
+    public static long eStorageEnergyCellCapacityL4 = 2_500_000;
+    public static long eStorageEnergyCellCapacityL6 = 25_000_000;
+    public static long eStorageEnergyCellCapacityL9 = 250_000_000;
+    // EStorage - cell drive capacity in bytes (storage per cell)
+    public static long eStorageCellDriveCapacityL4 = 65_536_000L;
+    public static long eStorageCellDriveCapacityL6 = 1_048_576_000L;
+    public static long eStorageCellDriveCapacityL9 = 16_777_216_000L;
+    // EStorage - max cell drive blocks allowed in structure
+    public static int eStorageMaxCellDrivesL4 = 4;
+    public static int eStorageMaxCellDrivesL6 = 8;
+    public static int eStorageMaxCellDrivesL9 = 16;
 
     // ECalculator - parallel proc values per block
     public static int eCalculatorParallelProcL4 = 256;

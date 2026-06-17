@@ -418,6 +418,11 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
             return false;
         }
 
+        // Fixed 3x3x3 structure provides base component counts.
+        installedPatternBuses = Math.max(1, 2); // 2 pattern buses
+        installedWorkers = Math.max(1, 1); // 1 worker core
+        installedProcessors = Math.max(1, 2); // 2 parallel processors
+
         // Structure is valid
         boolean wasFormed = structureFormed;
         structureFormed = true;
