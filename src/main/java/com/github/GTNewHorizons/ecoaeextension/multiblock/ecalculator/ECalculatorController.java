@@ -229,28 +229,34 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
     @Override
     public IStructureDefinition<ECalculatorController> getStructureDefinition() {
         return StructureDefinition.<ECalculatorController>builder()
-            .addShape(STRUCTURE_PIECE_MAIN, com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(shape))
+            .addShape(
+                STRUCTURE_PIECE_MAIN,
+                com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(STRUCTURE_SHAPE))
             .addElement('C', ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING))
             .addElement('M', ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_ME_CHANNEL))
             .build();
     }
 
     // Structure offsets: controller position in the shape array
+    // Controller is at (1, 1, 1) in a 3x3x3 structure
     private static final int HORIZONTAL_OFF_SET = 1;
     private static final int VERTICAL_OFF_SET = 1;
-    private static final int DEPTH_OFF_SET = 0;
+    private static final int DEPTH_OFF_SET = 1;
     private static final String STRUCTURE_PIECE_MAIN = "main";
 
     // Shape definition: [y][z][x] convention
-    // 3x3x2 fixed section with controller at center
-    private static final String[][] shape = new String[][] { { "CCC", "CCC" }, // y=0 (bottom)
-        { "C~C", "CMC" }, // y=1 (middle, ~ = controller, M = ME channel)
-        { "CCC", "CCC" } // y=2 (top)
+    // 3x3x3 fixed section with controller at center (1,1,1)
+    // y=0 (bottom): 3x3 casings
+    // y=1 (middle): casings + controller at center + ME channel
+    // y=2 (top): 3x3 casings
+    private static final String[][] STRUCTURE_SHAPE = new String[][] { { "CCC", "CCC", "CCC" }, // y=0 (bottom)
+        { "CCC", "C~C", "CMC" }, // y=1 (middle, ~ = controller at (1,1,1), M = ME channel at (1,1,2))
+        { "CCC", "CCC", "CCC" } // y=2 (top)
     };
 
     @Override
     public String[][] getStructurePattern() {
-        return shape;
+        return STRUCTURE_SHAPE;
     }
 
     @Override

@@ -350,44 +350,40 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     @Override
     public IStructureDefinition<EFabricatorController> getStructureDefinition() {
-        // NOTE: The 'E' element (controller position) maps to ofBlock(CASING_BLOCK, CASING_META)
-        // so that StructureLib's construct() helper fills the position with a casing block.
-        // Manual building is required -- the player must place the controller block at the 'E'
-        // position themselves. The construct() helper will incorrectly place a casing there,
-        // but checkMachine() skips validation of the controller position (sx=1, sz=0 in the
-        // middle layer), so the structure still validates correctly after manual correction.
         if (structureDefinition == null) {
             structureDefinition = StructureDefinition.<EFabricatorController>builder()
                 .addShape(
-                    "main",
-                    new String[][] { { "CCC", "CMC", "CCC" }, { "CCC", "EKC", "CCC" }, { "CCC", "CFC", "CCC" } })
+                    STRUCTURE_PIECE_MAIN,
+                    com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(STRUCTURE_SHAPE))
                 .addElement('C', ofBlock(CASING_BLOCK, CASING_META))
                 .addElement('M', ofBlock(ME_CHANNEL_BLOCK, ME_CHANNEL_META))
                 .addElement('K', ofBlock(VENT_BLOCK, VENT_META))
-                .addElement('F', ofBlock(CASING_BLOCK, CASING_META))
-                .addElement('E', ofBlock(CASING_BLOCK, CASING_META))
                 .build();
         }
         return structureDefinition;
     }
 
     // Structure offsets: controller position in the shape array
+    // Controller is at (1, 1, 1) in a 3x3x3 structure
     private static final int HORIZONTAL_OFF_SET = 1;
     private static final int VERTICAL_OFF_SET = 1;
-    private static final int DEPTH_OFF_SET = 0;
+    private static final int DEPTH_OFF_SET = 1;
     private static final String STRUCTURE_PIECE_MAIN = "main";
 
     // Shape definition: [y][z][x] convention
-    // 3x3x2 fixed section with controller at center
-    private static final String[][] shape = new String[][] { { "C~C", "CMC" }, // y=0 (bottom, ~ = controller, M = ME
-                                                                               // channel)
-        { "CCC", "CKC" }, // y=1 (middle, K = vent)
-        { "CCC", "CCC" } // y=2 (top)
+    // 3x3x3 fixed section with controller at center (1,1,1)
+    // y=0 (bottom): 3x3 casings with ME channel at (1,0,1)
+    // y=1 (middle): casings + controller at center + vent
+    // y=2 (top): 3x3 casings
+    private static final String[][] STRUCTURE_SHAPE = new String[][] { { "CCC", "CMC", "CCC" }, // y=0 (bottom, M = ME
+                                                                                                // channel at (1,0,1))
+        { "CCC", "C~C", "CKC" }, // y=1 (middle, ~ = controller at (1,1,1), K = vent at (1,1,2))
+        { "CCC", "CCC", "CCC" } // y=2 (top)
     };
 
     @Override
     public String[][] getStructurePattern() {
-        return shape;
+        return STRUCTURE_SHAPE;
     }
 
     @Override

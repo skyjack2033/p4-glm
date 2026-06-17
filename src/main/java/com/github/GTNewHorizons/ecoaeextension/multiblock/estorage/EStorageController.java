@@ -9,10 +9,8 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.GTNewHorizons.ecoaeextension.Config;
 import com.github.GTNewHorizons.ecoaeextension.ECOAEExtension;
@@ -23,6 +21,7 @@ import com.github.GTNewHorizons.ecoaeextension.multiblock.ECOAEExtendedPowerMult
 import com.github.GTNewHorizons.ecoaeextension.util.ECOAETier;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.StructureDefinition;
+import com.gtnewhorizon.structurelib.structure.StructureUtility;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.storage.IStorageGrid;
@@ -41,17 +40,6 @@ import gregtech.common.gui.modularui.multiblock.base.MTEMultiBlockBaseGui;
  * and ME channel, repeating stackable layers with cell drives, energy cells, vents, or casings
  * (1-16 layers), and a top end cap of casings. GT5U hatches (energy, maintenance, including
  * debug variants) are accepted at casing positions in all layers.
- *
- * <p>
- * Features:
- * <ul>
- * <li>Custom storage cells for items, fluids, and gases (Mekanism)</li>
- * <li>Energy cells for AE2 power management</li>
- * <li>Cell drives for holding storage cells</li>
- * <li>ME network connectivity via dedicated channel blocks</li>
- * <li>Three tiers: L4 (HV), L6 (IV), L9 (LuV) affecting capacity and cell count</li>
- * <li>Storage capacity scales with energy hatch voltage and stackable layer count</li>
- * </ul>
  */
 @SuppressWarnings("deprecation")
 public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorageController>
@@ -170,33 +158,33 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     }
 
     // =========================================================================
-    // Structure Definition - Layered/Stackable Design
+    // Structure Definition - Layered/Stackable Design (Distillation Tower pattern)
     // =========================================================================
 
-    // Structure offsets: controller position in the shape array
-    private static final int HORIZONTAL_OFF_SET = 0;
-    private static final int VERTICAL_OFF_SET = 0;
-    private static final int DEPTH_OFF_SET = 0;
-    private static final String STRUCTURE_PIECE_MAIN = "main";
+    // Structure piece names
+    private static final String STRUCTURE_PIECE_BASE = "base";
+    private static final String STRUCTURE_PIECE_LAYER = "layer";
+    private static final String STRUCTURE_PIECE_TOP = "top";
 
-    // Base layer: Controller + ME channel + Casings
-    // Stackable layers: Cell drives + Energy cells + Casings
-    // Top layer: End cap casings
-    //
-    // Shape definition: [y][z][x] convention
-    // y=0 (base): ~C / CM (~ = controller, M = ME channel)
-    // y=1+ (stackable): CC / CC (cell drives or casings)
-    // y=top: CC / CC (end cap)
-    private static final String[][] baseShape = new String[][] { { "~C", "CM" }, // y=0 (base layer)
-        { "CC", "CC" } // y=1 (first stackable layer)
+    // Shape definitions using [y][z][x] convention
+    // Base layer: Controller at (0,0,0), ME channel at (1,0,1), casings elsewhere
+    private static final String[][] BASE_SHAPE = new String[][] { { "~C", "CM" } // y=0: z=0: "~C", z=1: "CM"
+    };
+
+    // Stackable layer: 2x2 of casings (cell drives, energy cells, vents accepted)
+    private static final String[][] LAYER_SHAPE = new String[][] { { "CC", "CC" } // y=0: z=0: "CC", z=1: "CC"
+    };
+
+    // Top layer: 2x2 of casings (end cap)
+    private static final String[][] TOP_SHAPE = new String[][] { { "CC", "CC" } // y=0: z=0: "CC", z=1: "CC"
     };
 
     @Override
     public IStructureDefinition<EStorageController> getStructureDefinition() {
         return StructureDefinition.<EStorageController>builder()
-            .addShape(
-                STRUCTURE_PIECE_MAIN,
-                com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(baseShape))
+            .addShape(STRUCTURE_PIECE_BASE, StructureUtility.transpose(BASE_SHAPE))
+            .addShape(STRUCTURE_PIECE_LAYER, StructureUtility.transpose(LAYER_SHAPE))
+            .addShape(STRUCTURE_PIECE_TOP, StructureUtility.transpose(TOP_SHAPE))
             .addElement('C', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING))
             .addElement('M', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_ME_CHANNEL))
             .build();
@@ -204,23 +192,21 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
 
     @Override
     public String[][] getStructurePattern() {
-        return baseShape;
+        return BASE_SHAPE;
     }
 
     @Override
     public void construct(ItemStack stackSize, boolean hintsOnly) {
-        // Build base structure with 1 stackable layer
-        this.buildPiece(
-            STRUCTURE_PIECE_MAIN,
-            stackSize,
-            hintsOnly,
-            HORIZONTAL_OFF_SET,
-            VERTICAL_OFF_SET,
-            DEPTH_OFF_SET);
+        // Build base layer
+        this.buildPiece(STRUCTURE_PIECE_BASE, stackSize, hintsOnly, 0, 0, 0);
+        // Build one stackable layer
+        this.buildPiece(STRUCTURE_PIECE_LAYER, stackSize, hintsOnly, 0, 1, 0);
+        // Build top layer
+        this.buildPiece(STRUCTURE_PIECE_TOP, stackSize, hintsOnly, 0, 2, 0);
     }
 
     // =========================================================================
-    // Structure Validation - checkMachine()
+    // Structure Validation - checkMachine() using Distillation Tower pattern
     // =========================================================================
 
     @Override
@@ -231,29 +217,18 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         installedVents = 0;
         segmentCount = 0;
 
-        if (aBaseMetaTileEntity == null || aBaseMetaTileEntity.getWorld() == null) {
-            return false;
-        }
-
-        int cx = aBaseMetaTileEntity.getXCoord();
-        int cy = aBaseMetaTileEntity.getYCoord();
-        int cz = aBaseMetaTileEntity.getZCoord();
-
-        // Validate base layer (y=0): Controller at (0,0,0), Casings, ME channel at (1,0,1)
-        if (!validateBaseLayer(aBaseMetaTileEntity, cx, cy, cz)) {
+        // Validate base layer
+        if (!checkPiece(STRUCTURE_PIECE_BASE, 0, 0, 0)) {
             return false;
         }
 
         // Scan for stackable layers above the base
         int layerCount = 0;
-        int currentY = cy + 1;
-
         while (layerCount < MAX_SEGMENTS) {
-            if (!validateStackableLayer(aBaseMetaTileEntity, cx, currentY, cz)) {
+            if (!checkPiece(STRUCTURE_PIECE_LAYER, 0, layerCount + 1, 0)) {
                 break;
             }
             layerCount++;
-            currentY++;
         }
 
         if (layerCount < MIN_SEGMENTS) {
@@ -263,9 +238,12 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         segmentCount = layerCount;
 
         // Validate top layer (end cap)
-        if (!validateTopLayer(aBaseMetaTileEntity, cx, currentY, cz)) {
+        if (!checkPiece(STRUCTURE_PIECE_TOP, 0, segmentCount + 1, 0)) {
             return false;
         }
+
+        // Count components in stackable layers by scanning the world
+        countComponents(aBaseMetaTileEntity);
 
         // Ensure cellStacks list has entries for all installed cell drives
         while (cellStacks.size() < installedCellDrives) {
@@ -281,142 +259,34 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     }
 
     /**
-     * Validate base layer: Controller at (0,0,0), Casings or GT5U hatches, ME channel at (1,0,1)
-     *
-     * <p>
-     * Casing positions accept GT5U hatches (energy, maintenance, including debug variants)
-     * in addition to EStorage casings.
-     * </p>
+     * Count components in the stackable layers by scanning the world.
      */
-    private boolean validateBaseLayer(IGregTechTileEntity base, int cx, int cy, int cz) {
-        // Check controller position (0,0,0) - should be the controller itself
-        // Check ME channel at (1,0,1)
-        Block meBlock = base.getWorld()
-            .getBlock(cx + 1, cy, cz + 1);
-        int meMeta = base.getWorld()
-            .getBlockMetadata(cx + 1, cy, cz + 1);
-        if (meBlock != BlockLoader.estorageBlocks || meMeta != BlockLoader.ESTORAGE_META_ME_CHANNEL) {
-            return false;
-        }
+    private void countComponents(IGregTechTileEntity base) {
+        int cx = base.getXCoord();
+        int cy = base.getYCoord();
+        int cz = base.getZCoord();
 
-        // Check casings or hatches at other positions
-        for (int dx = 0; dx <= 1; dx++) {
-            for (int dz = 0; dz <= 1; dz++) {
-                if (dx == 0 && dz == 0) continue; // Controller position
-                if (dx == 1 && dz == 1) continue; // ME channel
+        // Scan each stackable layer (y=1 to y=segmentCount)
+        for (int layer = 1; layer <= segmentCount; layer++) {
+            int currentY = cy + layer;
+            for (int dx = 0; dx <= 1; dx++) {
+                for (int dz = 0; dz <= 1; dz++) {
+                    Block block = base.getWorld()
+                        .getBlock(cx + dx, currentY, cz + dz);
+                    int meta = base.getWorld()
+                        .getBlockMetadata(cx + dx, currentY, cz + dz);
 
-                Block block = base.getWorld()
-                    .getBlock(cx + dx, cy, cz + dz);
-                int meta = base.getWorld()
-                    .getBlockMetadata(cx + dx, cy, cz + dz);
-
-                // Check for GT5U hatch first
-                TileEntity te = base.getWorld()
-                    .getTileEntity(cx + dx, cy, cz + dz);
-                if (te instanceof IGregTechTileEntity) {
-                    IGregTechTileEntity gtte = (IGregTechTileEntity) te;
-                    if (gtte.getMetaTileEntity() != null && addToMachineList(gtte, meta)) {
-                        continue; // Valid hatch
+                    if (block == BlockLoader.estorageBlocks) {
+                        if (meta == BlockLoader.ESTORAGE_META_CELL_DRIVE) {
+                            installedCellDrives++;
+                        } else if (meta == BlockLoader.ESTORAGE_META_ENERGY_CELL) {
+                            installedEnergyCells++;
+                        } else if (meta == BlockLoader.ESTORAGE_META_VENT) {
+                            installedVents++;
+                        }
                     }
                 }
-
-                // Must be an EStorage casing
-                if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_CASING) {
-                    return false;
-                }
             }
-        }
-
-        return true;
-    }
-
-    /**
-     * Validate stackable layer: Cell drives, casings, or GT5U hatches (energy, maintenance, etc.)
-     * Each layer is 2x2 blocks at (cx, y, cz) to (cx+1, y, cz+1)
-     *
-     * <p>
-     * GT5U hatches (including debug variants) are accepted at any position and registered
-     * via addToMachineList(). This allows players to use debug maintenance hatches, debug
-     * energy hatches, and other GT5U utility blocks within the structure.
-     * </p>
-     */
-    private boolean validateStackableLayer(IGregTechTileEntity base, int cx, int cy, int cz) {
-        for (int dx = 0; dx <= 1; dx++) {
-            for (int dz = 0; dz <= 1; dz++) {
-                Block block = base.getWorld()
-                    .getBlock(cx + dx, cy, cz + dz);
-                int meta = base.getWorld()
-                    .getBlockMetadata(cx + dx, cy, cz + dz);
-
-                // First check if this position has a GT5U hatch (energy, maintenance, etc.)
-                // GT5U hatches are MetaTileEntities on vanilla GT blocks, not our custom blocks.
-                // This includes debug hatches (infinite energy, debug maintenance, etc.)
-                TileEntity te = base.getWorld()
-                    .getTileEntity(cx + dx, cy, cz + dz);
-                if (te instanceof IGregTechTileEntity) {
-                    IGregTechTileEntity gtte = (IGregTechTileEntity) te;
-                    if (gtte.getMetaTileEntity() != null && addToMachineList(gtte, meta)) {
-                        // Valid GT5U hatch - registered with the multiblock
-                        continue;
-                    }
-                }
-
-                // Not a hatch - must be an EStorage block
-                if (block != BlockLoader.estorageBlocks) return false;
-
-                // Count components based on meta
-                if (meta == BlockLoader.ESTORAGE_META_CELL_DRIVE) {
-                    installedCellDrives++;
-                } else if (meta == BlockLoader.ESTORAGE_META_ENERGY_CELL) {
-                    installedEnergyCells++;
-                } else if (meta == BlockLoader.ESTORAGE_META_VENT) {
-                    installedVents++;
-                } else if (meta != BlockLoader.ESTORAGE_META_CASING) {
-                    return false; // Invalid block type
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Validate top layer: All casings (end cap)
-     */
-    private boolean validateTopLayer(IGregTechTileEntity base, int cx, int cy, int cz) {
-        for (int dx = 0; dx <= 1; dx++) {
-            for (int dz = 0; dz <= 1; dz++) {
-                Block block = base.getWorld()
-                    .getBlock(cx + dx, cy, cz + dz);
-                int meta = base.getWorld()
-                    .getBlockMetadata(cx + dx, cy, cz + dz);
-                if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_CASING) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    // =========================================================================
-    // Direction Utilities
-    // =========================================================================
-
-    /**
-     * Get the "right" direction relative to the given front direction. Uses the cross product of
-     * UP x FRONT to determine the right-hand direction.
-     */
-    private ForgeDirection getRightDirection(ForgeDirection front) {
-        switch (front) {
-            case NORTH:
-                return ForgeDirection.EAST;
-            case EAST:
-                return ForgeDirection.SOUTH;
-            case SOUTH:
-                return ForgeDirection.WEST;
-            case WEST:
-                return ForgeDirection.NORTH;
-            default:
-                return ForgeDirection.EAST;
         }
     }
 
@@ -453,8 +323,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
 
     @Override
     public void saveChanges(appeng.api.storage.IMEInventory inventory) {
-        // Called by EStorageCellInventory when cell data changes.
-        // Mark the controller as needing to save its NBT data.
         if (getBaseMetaTileEntity() != null) {
             getBaseMetaTileEntity().markDirty();
         }
@@ -467,26 +335,16 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
 
     @Override
     protected void connectToAE2Network() {
-        // Call base class to set up the proxy
         super.connectToAE2Network();
-
-        // Register as a cell provider with the AE2 storage grid
         registerCellProvider();
     }
 
     @Override
     protected void disconnectFromAE2Network() {
-        // Unregister cell provider before disconnecting
         unregisterCellProvider();
-
-        // Call base class to tear down the proxy
         super.disconnectFromAE2Network();
     }
 
-    /**
-     * Register this controller as an AE2 cell provider, exposing cell drive inventories to the
-     * network.
-     */
     private void registerCellProvider() {
         if (cellProviderRegistered) return;
         if (aeProxy == null || !aeProxy.isActive()) return;
@@ -506,9 +364,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         }
     }
 
-    /**
-     * Unregister this controller from the AE2 storage grid.
-     */
     private void unregisterCellProvider() {
         if (!cellProviderRegistered) return;
         if (aeProxy == null) return;
@@ -533,10 +388,8 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
 
     @Override
     protected void onStructureInvalidated() {
-        // Unregister cell provider before disconnecting
         unregisterCellProvider();
 
-        // Reset component counters
         installedCellDrives = 0;
         installedEnergyCells = 0;
         installedVents = 0;
@@ -564,19 +417,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         }
     }
 
-    /**
-     * Perform periodic updates: AE2 power usage and energy cell distribution.
-     */
     private void processPeriodicUpdate() {
         if (!ae2Connected) return;
-
-        // Distribute power across energy cells
-        // Each segment contributes energy cells that power the AE2 network
-        if (installedEnergyCells > 0) {
-            // Power management is handled by the AE2 proxy and energy hatches.
-            // Energy cells in the structure contribute to the overall power buffer.
-            // The actual power draw is managed by AE2's network power system.
-        }
+        // Power management is handled by AE2's network power system
     }
 
     // =========================================================================
@@ -591,7 +434,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         aNBT.setInteger(NBT_INSTALLED_VENTS, installedVents);
         aNBT.setInteger(NBT_SEGMENT_COUNT, segmentCount);
 
-        // Save cell ItemStacks
         net.minecraft.nbt.NBTTagList cellList = new net.minecraft.nbt.NBTTagList();
         for (int i = 0; i < cellStacks.size(); i++) {
             if (cellStacks.get(i) != null) {
@@ -612,7 +454,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         installedVents = aNBT.getInteger(NBT_INSTALLED_VENTS);
         segmentCount = aNBT.getInteger(NBT_SEGMENT_COUNT);
 
-        // Load cell ItemStacks
         cellStacks.clear();
         if (aNBT.hasKey("ecoae_cells")) {
             net.minecraft.nbt.NBTTagList cellList = aNBT.getTagList("ecoae_cells", 10);
@@ -626,44 +467,26 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     // Getters
     // =========================================================================
 
-    /**
-     * Get the total storage capacity accounting for parallel multiplier from tier.
-     */
     public long getStorageCapacity() {
         return storageCapacity * getParallelCount();
     }
 
-    /**
-     * Get the maximum number of cell drives allowed by the current tier.
-     */
     public int getEnergyCellCapacity() {
         return maxCellDrives;
     }
 
-    /**
-     * Get the number of cell drives found in the current structure.
-     */
     public int getInstalledCellDrives() {
         return installedCellDrives;
     }
 
-    /**
-     * Get the number of energy cells found in the current structure.
-     */
     public int getInstalledEnergyCells() {
         return installedEnergyCells;
     }
 
-    /**
-     * Get the number of cooling vents found in the current structure.
-     */
     public int getInstalledVents() {
         return installedVents;
     }
 
-    /**
-     * Get the number of repeating segments found in the current structure.
-     */
     public int getSegmentCount() {
         return segmentCount;
     }
@@ -672,33 +495,20 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     // Cell Management
     // =========================================================================
 
-    /**
-     * Insert a storage cell into the first available slot.
-     *
-     * @param cellStack The cell ItemStack to insert
-     * @return true if the cell was inserted successfully
-     */
     public boolean insertCell(ItemStack cellStack) {
         if (cellStack == null) return false;
         if (!(cellStack.getItem() instanceof com.github.GTNewHorizons.ecoaeextension.item.ItemStorageCell))
             return false;
 
-        // Find first null slot
         for (int i = 0; i < cellStacks.size(); i++) {
             if (cellStacks.get(i) == null) {
                 cellStacks.set(i, cellStack.copy());
                 return true;
             }
         }
-        return false; // No available slots
+        return false;
     }
 
-    /**
-     * Remove a storage cell from the given slot.
-     *
-     * @param slotIndex The slot index to remove from
-     * @return The removed cell ItemStack, or null if slot is empty/invalid
-     */
     public ItemStack removeCell(int slotIndex) {
         if (slotIndex < 0 || slotIndex >= cellStacks.size()) return null;
         ItemStack removed = cellStacks.get(slotIndex);
@@ -706,16 +516,10 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         return removed;
     }
 
-    /**
-     * Get the list of cell ItemStacks (for GUI display).
-     */
     public List<ItemStack> getCellStacks() {
         return cellStacks;
     }
 
-    /**
-     * Get the number of non-null cells installed.
-     */
     public int getActiveCellCount() {
         int count = 0;
         for (ItemStack stack : cellStacks) {
@@ -735,7 +539,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             return true;
         }
 
-        // Check if player is holding a storage cell - insert it
         ItemStack heldItem = aPlayer.getHeldItem();
         if (heldItem != null
             && heldItem.getItem() instanceof com.github.GTNewHorizons.ecoaeextension.item.ItemStorageCell) {
@@ -758,7 +561,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             }
         }
 
-        // Check if player is sneaking with empty hand - remove last cell
         if (aPlayer.isSneaking() && (heldItem == null)) {
             for (int i = cellStacks.size() - 1; i >= 0; i--) {
                 ItemStack removed = removeCell(i);
@@ -782,7 +584,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             return true;
         }
 
-        // Normal right-click opens GUI via GT5 MUI2 system
         openGui(aPlayer);
         return true;
     }
@@ -796,10 +597,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     // Display
     // =========================================================================
 
-    // getDescription() is final in MTETooltipMultiBlockBase and cannot be overridden.
-    // Static tooltip information is provided via createTooltip() in the base class,
-    // and dynamic runtime information is provided via addAdditionalTooltipInformation().
-
     @Override
     public void addAdditionalTooltipInformation(ItemStack stack, List<String> tooltip) {
         tooltip.add(EnumChatFormatting.AQUA + StatCollector.translateToLocal("ecoaeext.tooltip.estorage_controller"));
@@ -811,17 +608,17 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             EnumChatFormatting.YELLOW + String.format(
                 StatCollector.translateToLocal("ecoaeext.tooltip.estorage_tier_l4"),
                 formatBytes(Config.eStorageEnergyCellCapacityL4),
-                Config.eStorageCellDriveCapacityL4));
+                Config.eStorageMaxCellDrivesL4));
         tooltip.add(
             EnumChatFormatting.YELLOW + String.format(
                 StatCollector.translateToLocal("ecoaeext.tooltip.estorage_tier_l6"),
                 formatBytes(Config.eStorageEnergyCellCapacityL6),
-                Config.eStorageCellDriveCapacityL6));
+                Config.eStorageMaxCellDrivesL6));
         tooltip.add(
             EnumChatFormatting.YELLOW + String.format(
                 StatCollector.translateToLocal("ecoaeext.tooltip.estorage_tier_l9"),
                 formatBytes(Config.eStorageEnergyCellCapacityL9),
-                Config.eStorageCellDriveCapacityL9));
+                Config.eStorageMaxCellDrivesL9));
     }
 
     @Override
@@ -838,9 +635,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             StatCollector.translateToLocal("ecoaeext.tooltip.structure.estorage_hatch") };
     }
 
-    /**
-     * Format byte count to human-readable string.
-     */
     private String formatBytes(long bytes) {
         if (bytes >= 1_000_000_000) return (bytes / 1_000_000_000) + "B";
         if (bytes >= 1_000_000) return (bytes / 1_000_000) + "M";
