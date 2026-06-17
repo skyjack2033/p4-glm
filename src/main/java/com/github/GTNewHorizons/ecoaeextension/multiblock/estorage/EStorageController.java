@@ -7,9 +7,9 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -186,15 +186,16 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     // y=0 (base): ~C / CM (~ = controller, M = ME channel)
     // y=1+ (stackable): CC / CC (cell drives or casings)
     // y=top: CC / CC (end cap)
-    private static final String[][] baseShape = new String[][] {
-        { "~C", "CM" },  // y=0 (base layer)
-        { "CC", "CC" }   // y=1 (first stackable layer)
+    private static final String[][] baseShape = new String[][] { { "~C", "CM" }, // y=0 (base layer)
+        { "CC", "CC" } // y=1 (first stackable layer)
     };
 
     @Override
     public IStructureDefinition<EStorageController> getStructureDefinition() {
         return StructureDefinition.<EStorageController>builder()
-            .addShape(STRUCTURE_PIECE_MAIN, com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(baseShape))
+            .addShape(
+                STRUCTURE_PIECE_MAIN,
+                com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(baseShape))
             .addElement('C', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING))
             .addElement('M', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_ME_CHANNEL))
             .build();
@@ -208,7 +209,13 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     @Override
     public void construct(ItemStack stackSize, boolean hintsOnly) {
         // Build base structure with 1 stackable layer
-        this.buildPiece(STRUCTURE_PIECE_MAIN, stackSize, hintsOnly, HORIZONTAL_OFF_SET, VERTICAL_OFF_SET, DEPTH_OFF_SET);
+        this.buildPiece(
+            STRUCTURE_PIECE_MAIN,
+            stackSize,
+            hintsOnly,
+            HORIZONTAL_OFF_SET,
+            VERTICAL_OFF_SET,
+            DEPTH_OFF_SET);
     }
 
     // =========================================================================
@@ -275,14 +282,18 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     /**
      * Validate base layer: Controller at (0,0,0), Casings or GT5U hatches, ME channel at (1,0,1)
      *
-     * <p>Casing positions accept GT5U hatches (energy, maintenance, including debug variants)
-     * in addition to EStorage casings.</p>
+     * <p>
+     * Casing positions accept GT5U hatches (energy, maintenance, including debug variants)
+     * in addition to EStorage casings.
+     * </p>
      */
     private boolean validateBaseLayer(IGregTechTileEntity base, int cx, int cy, int cz) {
         // Check controller position (0,0,0) - should be the controller itself
         // Check ME channel at (1,0,1)
-        Block meBlock = base.getWorld().getBlock(cx + 1, cy, cz + 1);
-        int meMeta = base.getWorld().getBlockMetadata(cx + 1, cy, cz + 1);
+        Block meBlock = base.getWorld()
+            .getBlock(cx + 1, cy, cz + 1);
+        int meMeta = base.getWorld()
+            .getBlockMetadata(cx + 1, cy, cz + 1);
         if (meBlock != BlockLoader.estorageBlocks || meMeta != BlockLoader.ESTORAGE_META_ME_CHANNEL) {
             return false;
         }
@@ -293,11 +304,14 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
                 if (dx == 0 && dz == 0) continue; // Controller position
                 if (dx == 1 && dz == 1) continue; // ME channel
 
-                Block block = base.getWorld().getBlock(cx + dx, cy, cz + dz);
-                int meta = base.getWorld().getBlockMetadata(cx + dx, cy, cz + dz);
+                Block block = base.getWorld()
+                    .getBlock(cx + dx, cy, cz + dz);
+                int meta = base.getWorld()
+                    .getBlockMetadata(cx + dx, cy, cz + dz);
 
                 // Check for GT5U hatch first
-                TileEntity te = base.getWorld().getTileEntity(cx + dx, cy, cz + dz);
+                TileEntity te = base.getWorld()
+                    .getTileEntity(cx + dx, cy, cz + dz);
                 if (te instanceof IGregTechTileEntity) {
                     IGregTechTileEntity gtte = (IGregTechTileEntity) te;
                     if (gtte.getMetaTileEntity() != null && addToMachineList(gtte, meta)) {
@@ -319,20 +333,25 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
      * Validate stackable layer: Cell drives, casings, or GT5U hatches (energy, maintenance, etc.)
      * Each layer is 2x2 blocks at (cx, y, cz) to (cx+1, y, cz+1)
      *
-     * <p>GT5U hatches (including debug variants) are accepted at any position and registered
+     * <p>
+     * GT5U hatches (including debug variants) are accepted at any position and registered
      * via addToMachineList(). This allows players to use debug maintenance hatches, debug
-     * energy hatches, and other GT5U utility blocks within the structure.</p>
+     * energy hatches, and other GT5U utility blocks within the structure.
+     * </p>
      */
     private boolean validateStackableLayer(IGregTechTileEntity base, int cx, int cy, int cz) {
         for (int dx = 0; dx <= 1; dx++) {
             for (int dz = 0; dz <= 1; dz++) {
-                Block block = base.getWorld().getBlock(cx + dx, cy, cz + dz);
-                int meta = base.getWorld().getBlockMetadata(cx + dx, cy, cz + dz);
+                Block block = base.getWorld()
+                    .getBlock(cx + dx, cy, cz + dz);
+                int meta = base.getWorld()
+                    .getBlockMetadata(cx + dx, cy, cz + dz);
 
                 // First check if this position has a GT5U hatch (energy, maintenance, etc.)
                 // GT5U hatches are MetaTileEntities on vanilla GT blocks, not our custom blocks.
                 // This includes debug hatches (infinite energy, debug maintenance, etc.)
-                TileEntity te = base.getWorld().getTileEntity(cx + dx, cy, cz + dz);
+                TileEntity te = base.getWorld()
+                    .getTileEntity(cx + dx, cy, cz + dz);
                 if (te instanceof IGregTechTileEntity) {
                     IGregTechTileEntity gtte = (IGregTechTileEntity) te;
                     if (gtte.getMetaTileEntity() != null && addToMachineList(gtte, meta)) {
@@ -365,8 +384,10 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     private boolean validateTopLayer(IGregTechTileEntity base, int cx, int cy, int cz) {
         for (int dx = 0; dx <= 1; dx++) {
             for (int dz = 0; dz <= 1; dz++) {
-                Block block = base.getWorld().getBlock(cx + dx, cy, cz + dz);
-                int meta = base.getWorld().getBlockMetadata(cx + dx, cy, cz + dz);
+                Block block = base.getWorld()
+                    .getBlock(cx + dx, cy, cz + dz);
+                int meta = base.getWorld()
+                    .getBlockMetadata(cx + dx, cy, cz + dz);
                 if (block != BlockLoader.estorageBlocks || meta != BlockLoader.ESTORAGE_META_CASING) {
                     return false;
                 }

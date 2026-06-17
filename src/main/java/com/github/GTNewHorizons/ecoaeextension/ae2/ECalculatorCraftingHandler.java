@@ -6,13 +6,17 @@ import com.github.GTNewHorizons.ecoaeextension.multiblock.ecalculator.ECalculato
 /**
  * Manages crafting acceleration for the ECalculator multiblock.
  *
- * <p>The ECalculator provides virtual CPUs to the AE2 crafting network. This handler
+ * <p>
+ * The ECalculator provides virtual CPUs to the AE2 crafting network. This handler
  * coordinates the crafting acceleration logic, including parallel processing based on
- * thread cores and hyper-thread cores.</p>
+ * thread cores and hyper-thread cores.
+ * </p>
  *
- * <p>The actual AE2 crafting provider registration (ICraftingProvider, ICraftingCPU)
+ * <p>
+ * The actual AE2 crafting provider registration (ICraftingProvider, ICraftingCPU)
  * is handled directly by {@link ECalculatorController}. This handler manages the
- * acceleration pipeline and parallel execution.</p>
+ * acceleration pipeline and parallel execution.
+ * </p>
  */
 public class ECalculatorCraftingHandler {
 
@@ -45,8 +49,10 @@ public class ECalculatorCraftingHandler {
      * based on the total thread count (thread cores + hyper-thread cores) and
      * the tier's parallel multiplier.
      *
-     * <p>Crafting acceleration is handled by the controller's ICraftingCPU implementation
-     * which provides parallel processing via processCraftingJobs().</p>
+     * <p>
+     * Crafting acceleration is handled by the controller's ICraftingCPU implementation
+     * which provides parallel processing via processCraftingJobs().
+     * </p>
      */
     public void processCraftingTick() {
         if (!active) return;

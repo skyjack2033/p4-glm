@@ -570,9 +570,11 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
      * Recalculate total crafting storage from installed calculator cells.
      * Called when the structure forms or cells are changed.
      *
-     * <p>Storage is estimated based on installed cell drives and tier.
+     * <p>
+     * Storage is estimated based on installed cell drives and tier.
      * Each cell drive contributes storage bytes based on the tier's cell size.
-     * The actual cell items are not tracked individually (unlike EStorage).</p>
+     * The actual cell items are not tracked individually (unlike EStorage).
+     * </p>
      */
     private void recalculateStorage() {
         totalStorageBytes = 0;
