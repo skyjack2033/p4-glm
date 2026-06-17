@@ -32,6 +32,10 @@ public class Config {
     public static int eCalculatorHyperThreadsL4 = 2;
     public static int eCalculatorHyperThreadsL6 = 4;
     public static int eCalculatorHyperThreadsL9 = 8;
+    // ECalculator - component counts for fixed structure
+    public static int eCalculatorBaseCellDrives = 4;
+    public static int eCalculatorBaseParallelProcs = 2;
+    public static int eCalculatorBaseTransmitterBuses = 1;
 
     // EFabricator - parallel proc values per block
     public static int eFabricatorParallelProcL4 = 24;
@@ -39,6 +43,10 @@ public class Config {
     public static int eFabricatorParallelProcL9 = 256;
     public static int eFabricatorWorkerQueueDepth = 32;
     public static int eFabricatorWorkDelay = 20; // ticks
+    // EFabricator - component counts for fixed structure
+    public static int eFabricatorBasePatternBuses = 2;
+    public static int eFabricatorBaseWorkers = 1;
+    public static int eFabricatorBaseProcessors = 2;
 
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
@@ -118,6 +126,27 @@ public class Config {
             1,
             65536,
             "Parallel proc value per block L9");
+        eCalculatorBaseCellDrives = configuration.getInt(
+            "eCalculatorBaseCellDrives",
+            "ECalculator",
+            eCalculatorBaseCellDrives,
+            1,
+            64,
+            "Base cell drives in fixed structure");
+        eCalculatorBaseParallelProcs = configuration.getInt(
+            "eCalculatorBaseParallelProcs",
+            "ECalculator",
+            eCalculatorBaseParallelProcs,
+            1,
+            64,
+            "Base parallel processors in fixed structure");
+        eCalculatorBaseTransmitterBuses = configuration.getInt(
+            "eCalculatorBaseTransmitterBuses",
+            "ECalculator",
+            eCalculatorBaseTransmitterBuses,
+            0,
+            16,
+            "Base transmitter buses in fixed structure");
 
         // EFabricator
         eFabricatorParallelProcL4 = configuration.getInt(
@@ -150,6 +179,27 @@ public class Config {
             "Worker queue depth");
         eFabricatorWorkDelay = configuration
             .getInt("eFabricatorWorkDelay", "EFabricator", eFabricatorWorkDelay, 1, 100, "Work delay in ticks");
+        eFabricatorBasePatternBuses = configuration.getInt(
+            "eFabricatorBasePatternBuses",
+            "EFabricator",
+            eFabricatorBasePatternBuses,
+            1,
+            64,
+            "Base pattern buses in fixed structure");
+        eFabricatorBaseWorkers = configuration.getInt(
+            "eFabricatorBaseWorkers",
+            "EFabricator",
+            eFabricatorBaseWorkers,
+            1,
+            16,
+            "Base worker cores in fixed structure");
+        eFabricatorBaseProcessors = configuration.getInt(
+            "eFabricatorBaseProcessors",
+            "EFabricator",
+            eFabricatorBaseProcessors,
+            1,
+            64,
+            "Base parallel processors in fixed structure");
 
         if (configuration.hasChanged()) {
             configuration.save();

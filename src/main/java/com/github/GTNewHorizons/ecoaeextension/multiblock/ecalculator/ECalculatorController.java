@@ -284,10 +284,11 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
         }
 
         // Fixed 3x3x3 structure provides base component counts.
-        // Thread cores and cell drives are derived from the structure size.
+        // Component counts are configurable via Config.java.
         installedThreadCores = Math.max(1, baseThreadCores);
-        installedCellDrives = Math.max(1, 4); // 4 cell drives in the fixed structure
-        installedParallelProcessors = Math.max(1, 2); // 2 parallel processors
+        installedCellDrives = Config.eCalculatorBaseCellDrives;
+        installedParallelProcessors = Config.eCalculatorBaseParallelProcs;
+        installedTransmitterBuses = Config.eCalculatorBaseTransmitterBuses;
 
         onStructureFormed();
         return true;
