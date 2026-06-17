@@ -1,6 +1,13 @@
 package com.github.GTNewHorizons.ecoaeextension.multiblock.efabricator;
 
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
+import static gregtech.api.enums.HatchElement.Energy;
+import static gregtech.api.enums.HatchElement.InputBus;
+import static gregtech.api.enums.HatchElement.InputHatch;
+import static gregtech.api.enums.HatchElement.Maintenance;
+import static gregtech.api.enums.HatchElement.OutputBus;
+import static gregtech.api.enums.HatchElement.OutputHatch;
+import static gregtech.api.util.GTStructureUtility.buildHatchAdder;
 
 import java.util.List;
 
@@ -358,6 +365,14 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
                 .addElement('C', ofBlock(CASING_BLOCK, CASING_META))
                 .addElement('M', ofBlock(ME_CHANNEL_BLOCK, ME_CHANNEL_META))
                 .addElement('K', ofBlock(VENT_BLOCK, VENT_META))
+                // Hatch element - accepts energy, maintenance, input/output hatches at casing positions
+                .addElement(
+                    'H',
+                    buildHatchAdder(EFabricatorController.class)
+                        .atLeast(Energy, Maintenance, InputBus, OutputBus, InputHatch, OutputHatch)
+                        .casingIndex(CASING_META)
+                        .hint(1)
+                        .buildAndChain(ofBlock(CASING_BLOCK, CASING_META)))
                 .build();
         }
         return structureDefinition;
@@ -372,13 +387,13 @@ public class EFabricatorController extends ECOAEExtendedPowerMultiBlockBase<EFab
 
     // Shape definition: [y][z][x] convention
     // 3x3x3 fixed section with controller at center (1,1,1)
-    // y=0 (bottom): 3x3 casings with ME channel at (1,0,1)
-    // y=1 (middle): casings + controller at center + vent
-    // y=2 (top): 3x3 casings
-    private static final String[][] STRUCTURE_SHAPE = new String[][] { { "CCC", "CMC", "CCC" }, // y=0 (bottom, M = ME
+    // y=0 (bottom): 3x3 casings/hatches with ME channel at (1,0,1)
+    // y=1 (middle): casings/hatches + controller at center + vent
+    // y=2 (top): 3x3 casings/hatches
+    private static final String[][] STRUCTURE_SHAPE = new String[][] { { "HHH", "HMH", "HHH" }, // y=0 (bottom, M = ME
                                                                                                 // channel at (1,0,1))
-        { "CCC", "C~C", "CKC" }, // y=1 (middle, ~ = controller at (1,1,1), K = vent at (1,1,2))
-        { "CCC", "CCC", "CCC" } // y=2 (top)
+        { "HHH", "H~H", "HKH" }, // y=1 (middle, ~ = controller at (1,1,1), K = vent at (1,1,2))
+        { "HHH", "HHH", "HHH" } // y=2 (top)
     };
 
     @Override
