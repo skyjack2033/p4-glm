@@ -242,8 +242,9 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             return false;
         }
 
-        // Count components in stackable layers by scanning the world
+        // Count components and register hatches in stackable layers by scanning the world
         countComponents(aBaseMetaTileEntity);
+        registerHatches(aBaseMetaTileEntity);
 
         // Ensure cellStacks list has entries for all installed cell drives
         while (cellStacks.size() < installedCellDrives) {
@@ -283,6 +284,40 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
                             installedEnergyCells++;
                         } else if (meta == BlockLoader.ESTORAGE_META_VENT) {
                             installedVents++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Scan the structure for GT5U hatches (energy, maintenance, etc.) and register them.
+     * This is called after checkPiece() validates the structure.
+     */
+    private void registerHatches(IGregTechTileEntity base) {
+        int cx = base.getXCoord();
+        int cy = base.getYCoord();
+        int cz = base.getZCoord();
+
+        // Scan all layers for hatches
+        // Base layer: y=cy
+        // Stackable layers: y=cy+1 to y=cy+segmentCount
+        // Top layer: y=cy+segmentCount+1
+        int totalLayers = segmentCount + 2; // base + stackable + top
+        for (int layer = 0; layer < totalLayers; layer++) {
+            int currentY = cy + layer;
+            for (int dx = 0; dx <= 1; dx++) {
+                for (int dz = 0; dz <= 1; dz++) {
+                    // Skip controller position
+                    if (layer == 0 && dx == 0 && dz == 0) continue;
+
+                    net.minecraft.tileentity.TileEntity te = base.getWorld()
+                        .getTileEntity(cx + dx, currentY, cz + dz);
+                    if (te instanceof IGregTechTileEntity) {
+                        IGregTechTileEntity gtte = (IGregTechTileEntity) te;
+                        if (gtte.getMetaTileEntity() != null) {
+                            addToMachineList(gtte, BlockLoader.ESTORAGE_META_CASING);
                         }
                     }
                 }

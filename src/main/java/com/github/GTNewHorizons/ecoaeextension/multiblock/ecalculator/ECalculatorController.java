@@ -289,6 +289,9 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
             return false;
         }
 
+        // Register hatches found in the structure
+        registerHatches(aBaseMetaTileEntity);
+
         // Fixed 3x3x3 structure provides base component counts.
         // Component counts are configurable via Config.java.
         installedThreadCores = Math.max(1, baseThreadCores);
@@ -298,6 +301,34 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
         onStructureFormed();
         return true;
+    }
+
+    /**
+     * Scan the structure for GT5U hatches (energy, maintenance, etc.) and register them.
+     */
+    private void registerHatches(IGregTechTileEntity base) {
+        int cx = base.getXCoord();
+        int cy = base.getYCoord();
+        int cz = base.getZCoord();
+
+        // Scan all positions in the 3x3x3 structure
+        for (int dy = 0; dy < 3; dy++) {
+            for (int dz = 0; dz < 3; dz++) {
+                for (int dx = 0; dx < 3; dx++) {
+                    // Skip controller position (1,1,1)
+                    if (dx == 1 && dy == 1 && dz == 1) continue;
+
+                    net.minecraft.tileentity.TileEntity te = base.getWorld()
+                        .getTileEntity(cx + dx - 1, cy + dy - 1, cz + dz - 1);
+                    if (te instanceof gregtech.api.interfaces.tileentity.IGregTechTileEntity) {
+                        gregtech.api.interfaces.tileentity.IGregTechTileEntity gtte = (gregtech.api.interfaces.tileentity.IGregTechTileEntity) te;
+                        if (gtte.getMetaTileEntity() != null) {
+                            addToMachineList(gtte, BlockLoader.ECALC_META_CASING);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // =========================================================================
