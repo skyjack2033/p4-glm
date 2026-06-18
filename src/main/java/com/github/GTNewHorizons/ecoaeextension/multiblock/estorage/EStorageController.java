@@ -1,9 +1,6 @@
 package com.github.GTNewHorizons.ecoaeextension.multiblock.estorage;
 
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
-import static gregtech.api.enums.HatchElement.Energy;
-import static gregtech.api.enums.HatchElement.Maintenance;
-import static gregtech.api.util.GTStructureUtility.buildHatchAdder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -170,12 +167,12 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
     private static final String STRUCTURE_PIECE_TOP = "top";
 
     // Shape definitions using [y][z][x] convention
-    // Base layer: Controller at (0,0,0), ME channel at (1,0,1), hatches elsewhere
-    private static final String[][] BASE_SHAPE = new String[][] { { "~H", "HM" } // y=0: z=0: "~H", z=1: "HM"
+    // Base layer: Controller at (0,0,0), ME channel at (1,0,1), casings elsewhere
+    private static final String[][] BASE_SHAPE = new String[][] { { "~C", "CM" } // y=0: z=0: "~C", z=1: "CM"
     };
 
-    // Stackable layer: 2x2 of casings/hatches (cell drives, energy cells, vents accepted)
-    private static final String[][] LAYER_SHAPE = new String[][] { { "HH", "HH" } // y=0: z=0: "HH", z=1: "HH"
+    // Stackable layer: 2x2 of casings (cell drives, energy cells, vents accepted)
+    private static final String[][] LAYER_SHAPE = new String[][] { { "CC", "CC" } // y=0: z=0: "CC", z=1: "CC"
     };
 
     // Top layer: 2x2 of casings (end cap)
@@ -190,13 +187,6 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
             .addShape(STRUCTURE_PIECE_TOP, StructureUtility.transpose(TOP_SHAPE))
             .addElement('C', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING))
             .addElement('M', ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_ME_CHANNEL))
-            // Hatch element - accepts energy and maintenance hatches at casing positions
-            .addElement(
-                'H',
-                buildHatchAdder(EStorageController.class).atLeast(Energy, Maintenance)
-                    .casingIndex(BlockLoader.ESTORAGE_META_CASING)
-                    .hint(1)
-                    .buildAndChain(ofBlock(BlockLoader.estorageBlocks, BlockLoader.ESTORAGE_META_CASING)))
             .build();
     }
 

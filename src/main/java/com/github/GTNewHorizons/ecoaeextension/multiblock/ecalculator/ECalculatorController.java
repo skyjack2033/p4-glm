@@ -1,9 +1,6 @@
 package com.github.GTNewHorizons.ecoaeextension.multiblock.ecalculator;
 
 import static com.gtnewhorizon.structurelib.structure.StructureUtility.ofBlock;
-import static gregtech.api.enums.HatchElement.Energy;
-import static gregtech.api.enums.HatchElement.Maintenance;
-import static gregtech.api.util.GTStructureUtility.buildHatchAdder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -237,13 +234,6 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
                 com.gtnewhorizon.structurelib.structure.StructureUtility.transpose(STRUCTURE_SHAPE))
             .addElement('C', ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING))
             .addElement('M', ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_ME_CHANNEL))
-            // Hatch element - accepts energy and maintenance hatches at casing positions
-            .addElement(
-                'H',
-                buildHatchAdder(ECalculatorController.class).atLeast(Energy, Maintenance)
-                    .casingIndex(BlockLoader.ECALC_META_CASING)
-                    .hint(1)
-                    .buildAndChain(ofBlock(BlockLoader.ecalculatorBlocks, BlockLoader.ECALC_META_CASING)))
             .build();
     }
 
@@ -256,12 +246,12 @@ public class ECalculatorController extends ECOAEExtendedPowerMultiBlockBase<ECal
 
     // Shape definition: [y][z][x] convention
     // 3x3x3 fixed section with controller at center (1,1,1)
-    // y=0 (bottom): 3x3 casings/hatches
-    // y=1 (middle): casings/hatches + controller at center + ME channel
-    // y=2 (top): 3x3 casings/hatches
-    private static final String[][] STRUCTURE_SHAPE = new String[][] { { "HHH", "HHH", "HHH" }, // y=0 (bottom)
-        { "HHH", "H~H", "HMH" }, // y=1 (middle, ~ = controller at (1,1,1), M = ME channel at (1,1,2))
-        { "HHH", "HHH", "HHH" } // y=2 (top)
+    // y=0 (bottom): 3x3 casings
+    // y=1 (middle): casings + controller at center + ME channel
+    // y=2 (top): 3x3 casings
+    private static final String[][] STRUCTURE_SHAPE = new String[][] { { "CCC", "CCC", "CCC" }, // y=0 (bottom)
+        { "CCC", "C~C", "CMC" }, // y=1 (middle, ~ = controller at (1,1,1), M = ME channel at (1,1,2))
+        { "CCC", "CCC", "CCC" } // y=2 (top)
     };
 
     @Override
