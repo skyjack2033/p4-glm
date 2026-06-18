@@ -217,21 +217,33 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
         installedVents = 0;
         segmentCount = 0;
 
+        ECOAEExtension.LOG.info(
+            "EStorage checkMachine: validating base layer at ({}, {}, {})",
+            aBaseMetaTileEntity.getXCoord(),
+            aBaseMetaTileEntity.getYCoord(),
+            aBaseMetaTileEntity.getZCoord());
+
         // Validate base layer
         if (!checkPiece(STRUCTURE_PIECE_BASE, 0, 0, 0)) {
+            ECOAEExtension.LOG.info("EStorage checkMachine: base layer validation FAILED");
             return false;
         }
+        ECOAEExtension.LOG.info("EStorage checkMachine: base layer OK");
 
         // Scan for stackable layers above the base
         int layerCount = 0;
         while (layerCount < MAX_SEGMENTS) {
             if (!checkPiece(STRUCTURE_PIECE_LAYER, 0, layerCount + 1, 0)) {
+                ECOAEExtension.LOG
+                    .info("EStorage checkMachine: layer {} validation failed, stopping scan", layerCount + 1);
                 break;
             }
             layerCount++;
         }
+        ECOAEExtension.LOG.info("EStorage checkMachine: found {} stackable layers", layerCount);
 
         if (layerCount < MIN_SEGMENTS) {
+            ECOAEExtension.LOG.info("EStorage checkMachine: not enough layers ({} < {})", layerCount, MIN_SEGMENTS);
             return false;
         }
 
@@ -239,8 +251,11 @@ public class EStorageController extends ECOAEExtendedPowerMultiBlockBase<EStorag
 
         // Validate top layer (end cap)
         if (!checkPiece(STRUCTURE_PIECE_TOP, 0, segmentCount + 1, 0)) {
+            ECOAEExtension.LOG
+                .info("EStorage checkMachine: top layer validation FAILED at y offset {}", segmentCount + 1);
             return false;
         }
+        ECOAEExtension.LOG.info("EStorage checkMachine: structure VALID with {} segments", segmentCount);
 
         // Count components and register hatches in stackable layers by scanning the world
         countComponents(aBaseMetaTileEntity);
